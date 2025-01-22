@@ -18,30 +18,34 @@ public class PostServiceValidator {
     UserServiceClient userServiceClient;
     ProjectServiceClient projectServiceClient;
 
-    public void validatePostDto(PostRequestDto postRequestDto) {
+    void validatePostDto(PostRequestDto postRequestDto) {
         Long authorId = postRequestDto.authorId();
         Long projectId = postRequestDto.projectId();
 
         checkAuthorship(authorId, projectId);
-        checkAuthorExists(authorId);
-        checkProjectExists(projectId);
+        if (authorId != null) {
+            checkAuthorExists(authorId);
+        }
+        if (projectId != null) {
+            checkProjectExists(projectId);
+        }
     }
 
-    public void validatePostExists(Long postId, Post post) {
+    void validatePostExists(Long postId, Post post) {
         if (post.getId() == null) {
             log.error("Unable to find post with id = {}", postId);
             throw new IllegalArgumentException("Unable to find post with id = " + postId);
         }
     }
 
-    public void validatePostBeforePublish(Post post) {
+    void validatePostBeforePublish(Post post) {
         if (post.isPublished()) {
             log.error("The post is already published! Post Id: {}", post.getId());
             throw new IllegalArgumentException("The post is already published!");
         }
     }
 
-    public void validatePostBeforeUpdate(Post sourcePost, Post targetPost) {
+    void validatePostBeforeUpdate(Post sourcePost, Post targetPost) {
         if (sourcePost.getAuthorId() != null && !sourcePost.getAuthorId().equals(targetPost.getAuthorId())) {
             log.error("Unable to change author id to post id {}", sourcePost.getId());
             throw new IllegalArgumentException("Unable to change author id to post!");
@@ -79,6 +83,4 @@ public class PostServiceValidator {
             throw new IllegalArgumentException("Unable to find project with id = " + projectId);
         }
     }
-
-
 }
