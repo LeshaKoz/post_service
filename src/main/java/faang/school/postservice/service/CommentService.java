@@ -7,6 +7,7 @@ import faang.school.postservice.dto.comment.UpdateCommentRequest;
 import faang.school.postservice.dto.comment.UpdatedCommentResponse;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,11 +30,11 @@ public class CommentService {
 
     @Transactional
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
-        verificationCreatingData(createCommentRequest.getAuthorId(),
+        Post post = verificationCreatingData(createCommentRequest.getAuthorId(),
                 createCommentRequest.getPostId());
 
         Comment entity = commentMapper.toEntity(createCommentRequest);
-        entity.setPost(postService.getPost(createCommentRequest.getPostId()));
+        entity.setPost(post);
         commentRepository.save(entity);
         return commentMapper.toResponse(entity);
     }
@@ -69,15 +70,14 @@ public class CommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
     }
 
-    private void verificationCreatingData(Long authorId, Long postId) {
+    private Post verificationCreatingData(Long authorId, Long postId) {
         if (userServiceClient.getUser(authorId) == null) {
             throw new EntityNotFoundException(String.format("User with id: %s not found",
                     authorId));
         }
-        if (postRepository.findById(postId).isEmpty()) {
-            throw new EntityNotFoundException(String.format("Post with id: %s not found",
-                    postId));
-        }
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        return post;
     }
 
     private Comment validateForUpdate(Long commentId, Long authorId, String content) {
