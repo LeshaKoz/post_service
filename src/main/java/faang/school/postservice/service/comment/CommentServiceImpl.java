@@ -28,9 +28,9 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
 
     @Override
-    public CommentResponseDto createComment(long postId, CommentRequestDto commentDto) {
+    public CommentResponseDto createComment(CommentRequestDto commentDto) {
         validateUser(commentDto);
-        Post post = getPostById(postId);
+        Post post = getPostById(commentDto.postId());
         Comment comment = commentMapper.toCommentEntity(commentDto);
         comment.setPost(post);
         comment.setCreatedAt(LocalDateTime.now());
@@ -74,7 +74,7 @@ public class CommentServiceImpl implements CommentService {
     private Post getPostById(long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(()
-                        -> new EntityNotFoundException(String.format("Post with id %s not found.", postId))
+                        -> new IllegalArgumentException(String.format("Post with id %s not found.", postId))
                 );
     }
 

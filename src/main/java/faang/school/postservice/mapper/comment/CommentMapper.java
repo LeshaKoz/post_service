@@ -15,9 +15,11 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CommentMapper {
 
+    @Mapping(target = "post", ignore = true)
     Comment toCommentEntity(CommentRequestDto commentRequestDto);
 
     @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapLikes")
+    @Mapping(source = "post.id", target = "postId")
     CommentResponseDto toCommentResponseDto(Comment comment);
 
     @Named("mapLikes")

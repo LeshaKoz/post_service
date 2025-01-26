@@ -21,10 +21,9 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
 
-    @PostMapping("/{postId}")
-    public CommentResponseDto createComment(@PathVariable long postId,
-                                            @RequestBody CommentRequestDto commentRequestDto) {
-        return commentService.createComment(postId, commentRequestDto);
+    @PostMapping
+    public CommentResponseDto createComment(@RequestBody CommentRequestDto commentRequestDto) {
+        return commentService.createComment(commentRequestDto);
     }
 
     @DeleteMapping("/{commentId}")

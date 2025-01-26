@@ -6,7 +6,7 @@ import faang.school.postservice.dto.comment.CommentResponseDto;
 import java.util.List;
 
 public interface CommentService {
-    CommentResponseDto createComment(long postId, CommentRequestDto commentDto);
+    CommentResponseDto createComment(CommentRequestDto commentDto);
 
     CommentResponseDto updateComment(long commentId, CommentRequestDto commentDto);
 

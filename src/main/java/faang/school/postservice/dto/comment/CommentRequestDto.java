@@ -5,5 +5,6 @@ import lombok.Builder;
 @Builder
 public record CommentRequestDto(
         Long authorId,
+        Long postId,
         String content
 ) { }
