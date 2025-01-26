@@ -66,4 +66,9 @@ public class CommentService {
         }
         commentRepository.deleteById(commentId);
     }
+
+    public boolean existsById(long commentId) {
+        return commentRepository.existsById(commentId);
+    }
+
 }

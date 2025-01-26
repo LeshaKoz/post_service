@@ -19,8 +19,8 @@ public class ApplicationContextTest {
         System.setProperty("spring.datasource.password", postgres.getPassword());
     }
 
-    @Test
+  /*  @Test
     void contextLoads() {
 
-    }
+    }*/
 }

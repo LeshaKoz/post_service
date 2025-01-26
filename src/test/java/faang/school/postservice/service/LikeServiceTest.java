@@ -5,6 +5,7 @@ import faang.school.postservice.dto.like.LikeCommentRequest;
 import faang.school.postservice.dto.like.LikePostRequest;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.exceptions.UserServiceConnectException;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
@@ -13,6 +14,7 @@ import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 import java.util.Optional;
 
 import static org.mockito.Mockito.verify;
@@ -29,23 +36,32 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class LikeServiceTest {
+
     @Mock
     private LikeRepository likeRepository;
     @Mock
     private PostRepository postRepository;
+    @Mock
+    private PostService postService;
     @Mock
     private CommentRepository commentRepository;
     @Mock
     private UserServiceClient userServiceClient;
     @InjectMocks
     private LikeService likeService;
+    @Mock
+    private CommentService commentService;
 
+    private List<UserDto> userList;
+
+    private Stream<Like> likeStream;
     private Post post;
     private Comment comment;
     private UserDto userDto;
 
     @BeforeEach
-    public void init() {
+    public void setUp() {
+
         post = Post.builder()
                 .id(1L)
                 .authorId(13L)
@@ -60,6 +76,18 @@ public class LikeServiceTest {
                 .id(1L)
                 .username("Bob")
                 .build();
+
+        likeStream = Stream.of(
+                Like.builder().id(1).userId(1L).build(),
+                Like.builder().id(2).userId(2L).build(),
+                Like.builder().id(3).userId(3L).build()
+        );
+
+        userList = List.of(
+                new UserDto(1L, "user1", "user1@gmail.com"),
+                new UserDto(2L, "user2", "user2@gmail.com"),
+                new UserDto(3L, "user3", "user3@gmail.com")
+        );
     }
 
     @Test
@@ -167,4 +195,89 @@ public class LikeServiceTest {
             likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
         });
     }
+
+
+    @Test
+    @DisplayName("Test getLikedUsersToPost Success")
+    public void testGetLikedUsersToPostSuccess() {
+        when(postService.existsById(1L)).thenReturn(true);
+        when(likeRepository.findAllByPostId(1L)).thenReturn(likeStream);
+        when(userServiceClient.getUsersByIds(List.of(1L, 2L, 3L))).thenReturn(userList);
+
+        List<UserDto> result = likeService.getLikedUsersToPost(1L);
+
+        assertEquals(userList, result);
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    @DisplayName("Test getLikedUsersToPostNotExistsById Error")
+    public void testGetLikedUsersToPostNotExistsById() {
+        when(postService.existsById(2L)).thenReturn(false);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                likeService.getLikedUsersToPost(2L)
+        );
+
+        assertEquals("Post with id 2 does not exist", exception.getMessage());
+        verify(postService, times(1)).existsById(2L);
+    }
+
+    @Test
+    @DisplayName("Test getLikedUsersToPostUserServiceError Error")
+    public void testGetLikedUsersToPostUserServiceError() {
+        when(postService.existsById(1L)).thenReturn(true);
+        when(likeRepository.findAllByPostId(1L)).thenReturn(likeStream);
+        when(userServiceClient.getUsersByIds(List.of(1L, 2L, 3L))).thenThrow(new RuntimeException());
+
+        UserServiceConnectException exception = assertThrows(UserServiceConnectException.class, () ->
+                likeService.getLikedUsersToPost(1L)
+        );
+
+        assertEquals("Failed users service", exception.getMessage());
+        verify(userServiceClient, times(1)).getUsersByIds(List.of(1L, 2L, 3L));
+    }
+
+    @Test
+    @DisplayName("Test getLikedUsersToComment Success")
+    public void testGetLikedUsersToCommentSuccess() {
+        when(commentService.existsById(1L)).thenReturn(true);
+        when(likeRepository.findAllByCommentId(1L)).thenReturn(likeStream);
+        when(userServiceClient.getUsersByIds(List.of(1L, 2L, 3L))).thenReturn(userList);
+
+        List<UserDto> result = likeService.getLikedUsersToComment(1L);
+
+        assertEquals(userList, result);
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    @DisplayName("Test getLikedUsersToCommentNotExistsById Error")
+    public void testGetLikedUsersToCommentNotExistsById() {
+        when(commentService.existsById(2L)).thenReturn(false);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                likeService.getLikedUsersToComment(2L)
+        );
+
+        assertEquals("Comment with id 2 does not exist", exception.getMessage());
+        verify(commentService, times(1)).existsById(2L);
+    }
+
+    @Test
+    @DisplayName("Test getLikedUsersToCommentUserServiceError Error")
+    public void testGetLikedUsersToCommentUserServiceError() {
+        when(commentService.existsById(1L)).thenReturn(true);
+        when(likeRepository.findAllByCommentId(1L)).thenReturn(likeStream);
+        when(userServiceClient.getUsersByIds(List.of(1L, 2L, 3L))).thenThrow(new RuntimeException());
+
+        UserServiceConnectException exception = assertThrows(UserServiceConnectException.class, () ->
+                likeService.getLikedUsersToComment(1L)
+        );
+
+        assertEquals("Failed users service", exception.getMessage());
+        verify(userServiceClient, times(1)).getUsersByIds(List.of(1L, 2L, 3L));
+    }
+
+
 }
