@@ -9,7 +9,6 @@ import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,6 @@ public class CommentService {
 
     private final PostService postService;
     private final UserServiceClient userServiceClient;
-    private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
 
@@ -75,9 +73,8 @@ public class CommentService {
             throw new EntityNotFoundException(String.format("User with id: %s not found",
                     authorId));
         }
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        return post;
+
+        return postService.getPost(postId);
     }
 
     private Comment validateForUpdate(Long commentId, Long authorId, String content) {

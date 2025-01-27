@@ -8,8 +8,8 @@ import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.CommentService;
+import faang.school.postservice.service.PostService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +44,7 @@ public class CommentServiceTest {
     private CommentRepository commentRepository;
 
     @Mock
-    private PostRepository postRepository;
+    private PostService postService;
 
     @Spy
     private CommentMapper commentMapper = Mappers.getMapper(CommentMapper.class);
@@ -69,7 +69,7 @@ public class CommentServiceTest {
         request.setPostId(1L);
         when(userServiceClient.getUser(request.getAuthorId()))
                 .thenReturn(new UserDto(1L, "Any", "Any"));
-        when(postRepository.findById(request.getPostId())).thenReturn(Optional.empty());
+        when(postService.getPost(request.getPostId())).thenThrow(new EntityNotFoundException("Post not found"));
 
         assertThrows(EntityNotFoundException.class, () -> commentService.createComment(request));
     }
@@ -87,7 +87,7 @@ public class CommentServiceTest {
         comment.setContent("Title");
         when(userServiceClient.getUser(request.getAuthorId()))
                 .thenReturn(new UserDto(1L, "Any", "Any"));
-        when(postRepository.findById(request.getPostId())).thenReturn(Optional.of(post));
+        when(postService.getPost(request.getPostId())).thenReturn(post);
         when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
         commentService.createComment(request);

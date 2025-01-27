@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,17 +33,17 @@ public class CommentController {
     }
 
     @PostMapping("/update")
-    public UpdatedCommentResponse updateComment(UpdateCommentRequest updateCommentRequest) {
+    public UpdatedCommentResponse updateComment(@RequestBody UpdateCommentRequest updateCommentRequest) {
         return commentService.updateComment(updateCommentRequest);
     }
 
-    @GetMapping("/listComments")
-    public List<Comment> getListComment(Long postId) {
+    @GetMapping("/getComments/{postId}")
+    public List<Comment> getListComment(@PathVariable Long postId) {
         return commentService.getListComment(postId);
     }
 
-    @DeleteMapping("/delete")
-    public void deleteComment(Long commentId) {
+    @DeleteMapping("/delete/{commentId}")
+    public void deleteComment(@PathVariable Long commentId) {
         commentService.deleteComment(commentId);
     }
 }
