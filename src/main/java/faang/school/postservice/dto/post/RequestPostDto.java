@@ -14,18 +14,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class RequestPostDto {
     private Long id;
+
     @NotBlank(message = "Content shoudn't be blank")
     private String content;
+
     @Positive
     private Long authorId;
+
     @Positive
     private Long projectId;
-    boolean published;
+
     @PastOrPresent
     private LocalDateTime publishedAt;
+
     private LocalDateTime scheduledAt;
+
     @PastOrPresent
     private LocalDateTime createdAt;
+
     @PastOrPresent
     private LocalDateTime updatedAt;
 }

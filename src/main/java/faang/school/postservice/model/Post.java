@@ -82,4 +82,20 @@ public class Post {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Override
+    public String toString() {
+        return "Post{" +
+            "id=" + id +
+            ", content='" + content + '\'' +
+            ", authorId=" + authorId +
+            ", projectId=" + projectId +
+            ", published=" + published +
+            ", publishedAt=" + publishedAt +
+            ", scheduledAt=" + scheduledAt +
+            ", deleted=" + deleted +
+            ", createdAt=" + createdAt +
+            ", updatedAt=" + updatedAt +
+            '}';
+    }
 }
