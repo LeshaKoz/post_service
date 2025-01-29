@@ -5,6 +5,8 @@ import faang.school.postservice.dto.like.LikeCommentRequest;
 import faang.school.postservice.dto.like.LikePostRequest;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.exceptions.CommentWasNotFoundException;
+import faang.school.postservice.exceptions.PostWasNotFoundException;
 import faang.school.postservice.exceptions.UserServiceConnectException;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
@@ -44,13 +46,14 @@ public class LikeServiceTest {
     @Mock
     private PostService postService;
     @Mock
-    private CommentRepository commentRepository;
-    @Mock
     private UserServiceClient userServiceClient;
-    @InjectMocks
-    private LikeService likeService;
     @Mock
     private CommentService commentService;
+    @Mock
+    private CommentRepository commentRepository;
+    @Mock
+    @InjectMocks
+    private LikeService likeService;
 
     private List<UserDto> userList;
 
@@ -215,7 +218,7 @@ public class LikeServiceTest {
     public void testGetLikedUsersToPostNotExistsById() {
         when(postService.existsById(2L)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        PostWasNotFoundException exception = assertThrows(PostWasNotFoundException.class, () ->
                 likeService.getLikedUsersToPost(2L)
         );
 
@@ -256,7 +259,7 @@ public class LikeServiceTest {
     public void testGetLikedUsersToCommentNotExistsById() {
         when(commentService.existsById(2L)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+        CommentWasNotFoundException exception = assertThrows(CommentWasNotFoundException.class, () ->
                 likeService.getLikedUsersToComment(2L)
         );
 
