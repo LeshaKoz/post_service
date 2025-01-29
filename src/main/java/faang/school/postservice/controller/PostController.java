@@ -1,7 +1,8 @@
 package faang.school.postservice.controller;
 
-import faang.school.postservice.dto.post.PostRequestDto;
+import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,29 +19,28 @@ import static faang.school.postservice.utils.Constants.API_VERSION_1;
 public class PostController {
 
     private final PostService postService;
-    private final PostControllerValidator postControllerValidator;
 
-    @PutMapping("/create")
-    PostResponseDto createPostDraft(@RequestBody PostRequestDto postRequestDto) {
-        log.info("Create post draft: {}", postRequestDto);
-        postControllerValidator.validateCreateDto(postRequestDto);
-        return postService.createPostDraft(postRequestDto);
+    @PostMapping("/")
+    PostResponseDto createPostDraft(@RequestBody PostCreateRequestDto postCreateRequestDto) {
+        log.info("Create post draft: {}", postCreateRequestDto);
+        PostControllerValidator.validateCreateDto(postCreateRequestDto);
+        return postService.createPostDraft(postCreateRequestDto);
     }
 
-    @PostMapping("/publish/{id}")
+    @PatchMapping("/{id}/publish")
     PostResponseDto publishPostDraft(@PathVariable("id") Long postId) {
         log.info("Publish post id {}", postId);
         return postService.publishPostDraft(postId);
     }
 
-    @PatchMapping("/update")
-    PostResponseDto updatePost(@RequestBody PostRequestDto postRequestDto) {
-        log.info("Update post: {}", postRequestDto);
-        postControllerValidator.validateUpdateDto(postRequestDto);
-        return postService.updatePost(postRequestDto);
+    @PutMapping("/{id}")
+    PostResponseDto updatePost(@PathVariable("id") Long postId, @RequestBody PostUpdateRequestDto postUpdateRequestDto) {
+        log.info("Update post id = {}: {}",postId, postUpdateRequestDto);
+        PostControllerValidator.validateUpdateDto(postUpdateRequestDto);
+        return postService.updatePost(postId, postUpdateRequestDto);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     void deletePost(@PathVariable("id") Long postId) {
         log.info("Delete post id {}", postId);
         postService.deletePost(postId);

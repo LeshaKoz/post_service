@@ -2,7 +2,7 @@ package faang.school.postservice.service.impl;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.post.PostRequestDto;
+import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Post;
@@ -27,15 +27,14 @@ class PostServiceValidatorTest {
     UserServiceClient userServiceClient;
 
 
-    PostRequestDto validPostRequestDto;
+    PostCreateRequestDto validPostCreateRequestDto;
     UserDto userDto;
     ProjectDto projectDto;
     Post post;
 
     @BeforeEach
     void setUp() {
-        validPostRequestDto = PostRequestDto.builder()
-                .id(123L)
+        validPostCreateRequestDto = PostCreateRequestDto.builder()
                 .content("test content")
                 .authorId(111L)
                 .projectId(222L)
@@ -52,23 +51,20 @@ class PostServiceValidatorTest {
     @Test
     @DisplayName("Test authorship for post")
     void testValidateAuthorshipPostDto() {
-        PostRequestDto emptyAuthorsPostDto = PostRequestDto.builder()
-                .id(123L)
+        PostCreateRequestDto emptyAuthorsPostDto = PostCreateRequestDto.builder()
                 .content("test")
                 .build();
         Assert.assertThrows(IllegalArgumentException.class,
                 () -> postServiceValidator.validatePostDto(emptyAuthorsPostDto));
 
-        PostRequestDto emptyAuthorIdIsZeroPostDto = PostRequestDto.builder()
-                .id(123L)
+        PostCreateRequestDto emptyAuthorIdIsZeroPostDto = PostCreateRequestDto.builder()
                 .authorId(0L)
                 .content("test")
                 .build();
         Assert.assertThrows(IllegalArgumentException.class,
                 () -> postServiceValidator.validatePostDto(emptyAuthorIdIsZeroPostDto));
 
-        PostRequestDto emptyProjectIdIsZeroPostDto = PostRequestDto.builder()
-                .id(123L)
+        PostCreateRequestDto emptyProjectIdIsZeroPostDto = PostCreateRequestDto.builder()
                 .projectId(0L)
                 .content("test")
                 .build();
@@ -78,7 +74,7 @@ class PostServiceValidatorTest {
         Mockito.when(userServiceClient.getUser(111L)).thenReturn(userDto);
         Mockito.when(projectServiceClient.getProject(222L)).thenReturn(projectDto);
 
-        postServiceValidator.validatePostDto(validPostRequestDto);
+        postServiceValidator.validatePostDto(validPostCreateRequestDto);
     }
 
     @Test
@@ -86,8 +82,7 @@ class PostServiceValidatorTest {
     void testValidateAuthorAndProjectPostDto() {
         Mockito.when(userServiceClient.getUser(11111111L)).thenReturn(new UserDto(null, null, null));
         Mockito.when(projectServiceClient.getProject(222222222L)).thenReturn(new ProjectDto(0, null));
-        PostRequestDto unknownAuthorPostDto = PostRequestDto.builder()
-                .id(123L)
+        PostCreateRequestDto unknownAuthorPostDto = PostCreateRequestDto.builder()
                 .authorId(11111111L)
                 .content("test")
                 .build();
@@ -95,24 +90,12 @@ class PostServiceValidatorTest {
         Assert.assertThrows(IllegalArgumentException.class,
                 () -> postServiceValidator.validatePostDto(unknownAuthorPostDto));
 
-        PostRequestDto unknownProjectPostDto = PostRequestDto.builder()
-                .id(123L)
+        PostCreateRequestDto unknownProjectPostDto = PostCreateRequestDto.builder()
                 .projectId(222222222L)
                 .content("test")
                 .build();
         Assert.assertThrows(IllegalArgumentException.class,
                 () -> postServiceValidator.validatePostDto(unknownProjectPostDto));
-    }
-
-    @Test
-    @DisplayName("Test post exists")
-    void testValidatePostExists() {
-        Post post = Post.builder()
-                .content("some content")
-                .authorId(222L)
-                .build();
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postServiceValidator.validatePostExists(123L, post));
     }
 
     @Test

@@ -1,16 +1,17 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.post.PostRequestDto;
+import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.PostUpdateRequestDto;
 
 import java.util.List;
 
 public interface PostService {
-    PostResponseDto createPostDraft(PostRequestDto postRequestDto);
+    PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto);
 
     PostResponseDto publishPostDraft(Long postId);
 
-    PostResponseDto updatePost(PostRequestDto postRequestDto);
+    PostResponseDto updatePost(Long postId, PostUpdateRequestDto postUpdateRequestDto);
 
     void deletePost(Long postId);
 

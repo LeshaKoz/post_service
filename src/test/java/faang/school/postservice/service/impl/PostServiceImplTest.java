@@ -1,7 +1,8 @@
 package faang.school.postservice.service.impl;
 
-import faang.school.postservice.dto.post.PostRequestDto;
+import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -22,7 +23,6 @@ import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceImplTest {
-
     @Mock
     private PostServiceValidator postServiceValidatorMock;
     @Mock
@@ -30,22 +30,21 @@ class PostServiceImplTest {
     @Spy
     private PostMapperImpl postMapper;
     private PostService postService;
-    private PostRequestDto postRequestDto;
+    private PostCreateRequestDto postCreateRequestDto;
+    private PostUpdateRequestDto postUpdateRequestDto;
     private final List<Post> somePosts = TestData.getSomePosts();
 
     @BeforeEach
     void setUp() {
         postService = new PostServiceImpl(postRepositoryMock, postServiceValidatorMock, postMapper);
 
-        postRequestDto = PostRequestDto.builder()
+        postCreateRequestDto = PostCreateRequestDto.builder()
                 .content("Test content")
                 .authorId(111L)
                 .build();
 
-        postRequestDto = PostRequestDto.builder()
-                .id(123L)
+        postUpdateRequestDto = PostUpdateRequestDto.builder()
                 .content("Test content")
-                .authorId(111L)
                 .build();
     }
 
@@ -54,15 +53,15 @@ class PostServiceImplTest {
     void testCreatePostDraft() {
         Post post = Post.builder()
                 .id(123L)
-                .content(postRequestDto.content())
-                .authorId(postRequestDto.authorId())
-                .projectId(postRequestDto.projectId())
+                .content(postCreateRequestDto.content())
+                .authorId(postCreateRequestDto.authorId())
+                .projectId(postCreateRequestDto.projectId())
                 .build();
         Mockito.when(postRepositoryMock.save(Mockito.any())).thenReturn(post);
-        PostResponseDto resultPostResponseDto = postService.createPostDraft(postRequestDto);
-        Assertions.assertEquals(postRequestDto.authorId(), resultPostResponseDto.authorId());
-        Assertions.assertEquals(postRequestDto.projectId(), resultPostResponseDto.projectId());
-        Assertions.assertEquals(postRequestDto.content(), resultPostResponseDto.content());
+        PostResponseDto resultPostResponseDto = postService.createPostDraft(postCreateRequestDto);
+        Assertions.assertEquals(postCreateRequestDto.authorId(), resultPostResponseDto.authorId());
+        Assertions.assertEquals(postCreateRequestDto.projectId(), resultPostResponseDto.projectId());
+        Assertions.assertEquals(postCreateRequestDto.content(), resultPostResponseDto.content());
     }
 
     @Test
@@ -71,15 +70,15 @@ class PostServiceImplTest {
         Long postId = 123L;
         Post postBefore = Post.builder()
                 .id(postId)
-                .content(postRequestDto.content())
-                .authorId(postRequestDto.authorId())
-                .projectId(postRequestDto.projectId())
+                .content(postCreateRequestDto.content())
+                .authorId(postCreateRequestDto.authorId())
+                .projectId(postCreateRequestDto.projectId())
                 .build();
         Post postAfter = Post.builder()
                 .id(postId)
-                .content(postRequestDto.content())
-                .authorId(postRequestDto.authorId())
-                .projectId(postRequestDto.projectId())
+                .content(postCreateRequestDto.content())
+                .authorId(postCreateRequestDto.authorId())
+                .projectId(postCreateRequestDto.projectId())
                 .published(true)
                 .publishedAt(LocalDateTime.now())
                 .build();
@@ -98,21 +97,21 @@ class PostServiceImplTest {
         String newContent = "edited content";
         Post postBefore = Post.builder()
                 .id(postId)
-                .content(postRequestDto.content())
-                .authorId(postRequestDto.authorId())
-                .projectId(postRequestDto.projectId())
+                .content(postCreateRequestDto.content())
+                .authorId(postCreateRequestDto.authorId())
+                .projectId(postCreateRequestDto.projectId())
                 .build();
         Post postAfter = Post.builder()
                 .id(postId)
                 .content(newContent)
-                .authorId(postRequestDto.authorId())
-                .projectId(postRequestDto.projectId())
+                .authorId(postCreateRequestDto.authorId())
+                .projectId(postCreateRequestDto.projectId())
                 .published(true)
                 .publishedAt(LocalDateTime.now())
                 .build();
         Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.ofNullable(postBefore));
         Mockito.when(postRepositoryMock.save(Mockito.any())).thenReturn(postAfter);
-        PostResponseDto updatedPostResponseDto = postService.updatePost(postRequestDto);
+        PostResponseDto updatedPostResponseDto = postService.updatePost(postId, postUpdateRequestDto);
         Mockito.verify(postRepositoryMock, Mockito.times(1)).save(Mockito.any());
         Assertions.assertEquals(newContent, updatedPostResponseDto.content());
     }
@@ -120,6 +119,8 @@ class PostServiceImplTest {
     @Test
     @DisplayName("Test delete post")
     void testDeletePost() {
+        Long postId = 123L;
+        Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.of(new Post()));
         postService.deletePost(123L);
         Mockito.verify(postRepositoryMock, Mockito.times(1)).save(Mockito.any());
     }
@@ -128,6 +129,7 @@ class PostServiceImplTest {
     @DisplayName("Test get post")
     void testGetPost() {
         Long postId = 123L;
+        Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.of(new Post()));
         postService.getPost(postId);
         Mockito.verify(postRepositoryMock, Mockito.times(1)).findById(postId);
     }

@@ -1,7 +1,8 @@
 package faang.school.postservice.service.impl;
 
-import faang.school.postservice.dto.post.PostRequestDto;
+import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -26,9 +27,9 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
 
     @Override
-    public PostResponseDto createPostDraft(PostRequestDto postRequestDto) {
-        postServiceValidator.validatePostDto(postRequestDto);
-        Post post = postMapper.toPostEntity(postRequestDto);
+    public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
+        postServiceValidator.validatePostDto(postCreateRequestDto);
+        Post post = postMapper.toPostEntity(postCreateRequestDto);
         Post draftPost = postRepository.save(post);
         return postMapper.toPostResponseDto(draftPost);
     }
@@ -44,12 +45,10 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponseDto updatePost(PostRequestDto postRequestDto) {
-        postServiceValidator.validatePostDto(postRequestDto);
-        Long postId = postRequestDto.id();
+    public PostResponseDto updatePost(Long postId, PostUpdateRequestDto postUpdateRequestDto) {
         Post postToUpdate = getPostById(postId);
-        postServiceValidator.validatePostBeforeUpdate(postToUpdate, postMapper.toPostEntity(postRequestDto));
-        Post requestPost  = postMapper.toPostEntity(postRequestDto);
+        Post requestPost = postMapper.toPostEntity(postUpdateRequestDto);
+        postServiceValidator.validatePostBeforeUpdate(postToUpdate, requestPost);
         Post updatedPost = postRepository.save(copyPostData(requestPost, postToUpdate));
         return postMapper.toPostResponseDto(updatedPost);
     }
@@ -117,13 +116,10 @@ public class PostServiceImpl implements PostService {
 
     private Post getPostById(Long postId) {
         Optional<Post> optionalPost = postRepository.findById(postId);
-        Post post = optionalPost.orElse(new Post());
-        postServiceValidator.validatePostExists(postId, post);
-        return post;
+        return optionalPost.orElseThrow();
     }
 
-    private Post copyPostData(Post sourcePost, Post targetPost)
-    {
+    private Post copyPostData(Post sourcePost, Post targetPost) {
         targetPost.setContent(sourcePost.getContent());
         return targetPost;
     }

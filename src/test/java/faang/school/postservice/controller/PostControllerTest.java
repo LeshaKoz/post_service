@@ -1,6 +1,7 @@
 package faang.school.postservice.controller;
 
-import faang.school.postservice.dto.post.PostRequestDto;
+import faang.school.postservice.dto.post.PostCreateRequestDto;
+import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.service.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,36 +16,30 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PostControllerTest {
     @Mock
     private PostService postServiceMock;
-    @Mock
-    private PostControllerValidator postControllerValidator;
     @InjectMocks
     private PostController postController;
-    private PostRequestDto validPostRequestDto;
-    private PostRequestDto validUpdatedPostRequestDto;
+    private PostCreateRequestDto validPostCreateRequestDto;
+    private PostUpdateRequestDto validUpdatedPostRequestDto;
 
     @BeforeEach
     void setUp() {
-        postController = new PostController(postServiceMock, postControllerValidator);
-        validPostRequestDto = PostRequestDto.builder()
-                .id(1L)
+        postController = new PostController(postServiceMock);
+        validPostCreateRequestDto = PostCreateRequestDto.builder()
                 .content("test content")
                 .authorId(111L)
                 .projectId(222L)
                 .build();
-        validUpdatedPostRequestDto = PostRequestDto.builder()
-                .id(1L)
+        validUpdatedPostRequestDto = PostUpdateRequestDto.builder()
                 .content("test content updated")
-                .authorId(111L)
-                .projectId(222L)
                 .build();
     }
 
     @Test
     @DisplayName("Test create draft")
     void testCreatePostDraftByValidDto() {
-        postController.createPostDraft(validPostRequestDto);
+        postController.createPostDraft(validPostCreateRequestDto);
         Mockito.verify(postServiceMock, Mockito.times(1))
-                .createPostDraft(validPostRequestDto);
+                .createPostDraft(validPostCreateRequestDto);
     }
 
     @Test
@@ -59,9 +54,10 @@ class PostControllerTest {
     @Test
     @DisplayName("Test update post")
     void testUpdatePost() {
-        postController.updatePost(validUpdatedPostRequestDto);
+        Long postId = 1L;
+        postController.updatePost(postId, validUpdatedPostRequestDto);
         Mockito.verify(postServiceMock, Mockito.times(1))
-                .updatePost(validUpdatedPostRequestDto);
+                .updatePost(postId, validUpdatedPostRequestDto);
     }
 
     @Test
