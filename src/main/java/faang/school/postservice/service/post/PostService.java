@@ -27,7 +27,7 @@ public class PostService {
 
     @Transactional
     public void createPostByUserId(Long userId, Post post) {
-        doesUserExist(userId);
+        //   doesUserExist(userId);
         post.setAuthorId(userId);
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
