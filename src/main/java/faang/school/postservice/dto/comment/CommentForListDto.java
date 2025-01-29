@@ -5,9 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class UpdatedCommentResponse {
+public class CommentForListDto {
     private Long id;
-    private Long postId;
+    private Long authorId;
     private String content;
-    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt;
 }

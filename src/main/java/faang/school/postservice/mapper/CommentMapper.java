@@ -1,5 +1,6 @@
 package faang.school.postservice.mapper;
 
+import faang.school.postservice.dto.comment.CommentForListDto;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.dto.comment.CreateCommentResponse;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
@@ -17,11 +18,13 @@ public interface CommentMapper {
     @Mapping(target = "post", ignore = true)
     Comment toEntity(CreateCommentRequest commentRequest);
 
-    @Mapping(source = "post.id", target = "postId")
-    CreateCommentResponse toResponse(Comment comment);
+    CommentForListDto toListDto(Comment comment);
 
     @Mapping(source = "post.id", target = "postId")
-    UpdatedCommentResponse toUpdatedComment(Comment comment);
+    CreateCommentResponse toCreateResponse(Comment comment);
+
+    @Mapping(source = "post.id", target = "postId")
+    UpdatedCommentResponse toUpdateResponse(Comment comment);
 
 
     void updateComment(@MappingTarget Comment comment, UpdateCommentRequest updateCommentRequest);

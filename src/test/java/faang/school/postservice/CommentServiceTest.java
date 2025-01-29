@@ -1,15 +1,14 @@
 package faang.school.postservice;
 
-import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
-import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.validator.CommentValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,13 +38,13 @@ public class CommentServiceTest {
     private CommentService commentService;
 
     @Mock
-    private UserServiceClient userServiceClient;
-
-    @Mock
     private CommentRepository commentRepository;
 
     @Mock
     private PostService postService;
+
+    @Mock
+    private CommentValidator commentValidator;
 
     @Spy
     private CommentMapper commentMapper = Mappers.getMapper(CommentMapper.class);
@@ -52,24 +52,25 @@ public class CommentServiceTest {
     @Captor
     private ArgumentCaptor<Comment> commentCaptor;
 
-
-    @Test
-    public void createComment_commend_not_found() {
-        CreateCommentRequest request = new CreateCommentRequest();
-        request.setAuthorId(1L);
-        when(userServiceClient.getUser(request.getAuthorId())).thenReturn(null);
-
-        assertThrows(EntityNotFoundException.class, () -> commentService.createComment(request));
-    }
-
     @Test
     public void createComment_post_not_found() {
         CreateCommentRequest request = new CreateCommentRequest();
         request.setAuthorId(1L);
         request.setPostId(1L);
-        when(userServiceClient.getUser(request.getAuthorId()))
-                .thenReturn(new UserDto(1L, "Any", "Any"));
+
         when(postService.getPost(request.getPostId())).thenThrow(new EntityNotFoundException("Post not found"));
+
+        assertThrows(EntityNotFoundException.class, () -> commentService.createComment(request));
+    }
+
+    @Test
+    public void createComment_authorIsNull() {
+        CreateCommentRequest request = new CreateCommentRequest();
+        request.setAuthorId(1L);
+        request.setPostId(1L);
+
+        when(postService.getPost(request.getPostId())).thenReturn(new Post());
+        doThrow(EntityNotFoundException.class).when(commentValidator).verificationCreatingData(any(Post.class));
 
         assertThrows(EntityNotFoundException.class, () -> commentService.createComment(request));
     }
@@ -85,8 +86,6 @@ public class CommentServiceTest {
         comment.setAuthorId(request.getAuthorId());
         comment.setPost(post);
         comment.setContent("Title");
-        when(userServiceClient.getUser(request.getAuthorId()))
-                .thenReturn(new UserDto(1L, "Any", "Any"));
         when(postService.getPost(request.getPostId())).thenReturn(post);
         when(commentRepository.save(any(Comment.class))).thenReturn(comment);
 
@@ -106,27 +105,15 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void updateComment_you_are_not_author() {
-        UpdateCommentRequest request = new UpdateCommentRequest();
-        request.setId(1L);
-        request.setAuthorId(1L);
-        Comment comment = new Comment();
-        comment.setAuthorId(2L);
-        when(commentRepository.findById(request.getId())).thenReturn(Optional.of(comment));
-
-        assertThrows(IllegalArgumentException.class, () -> commentService.updateComment(request));
-    }
-
-    @Test
     public void updateComment_the_comment_has_not_been_changed() {
         UpdateCommentRequest request = new UpdateCommentRequest();
         request.setId(1L);
-        request.setAuthorId(1L);
         request.setContent("Text");
         Comment comment = new Comment();
         comment.setAuthorId(1L);
         comment.setContent("Text");
         when(commentRepository.findById(request.getId())).thenReturn(Optional.of(comment));
+        doThrow(IllegalArgumentException.class).when(commentValidator).validateForUpdate(comment, request);
 
         assertThrows(IllegalArgumentException.class, () -> commentService.updateComment(request));
     }
@@ -135,7 +122,6 @@ public class CommentServiceTest {
     public void testUpdateComment() {
         UpdateCommentRequest request = new UpdateCommentRequest();
         request.setId(1L);
-        request.setAuthorId(1L);
         request.setContent("Text updated");
         Comment comment = new Comment();
         comment.setAuthorId(1L);
@@ -169,7 +155,7 @@ public class CommentServiceTest {
 
     @Test
     public void testDeleteComment() {
-        Comment comment  = new Comment();
+        Comment comment = new Comment();
         comment.setId(1L);
         when(commentRepository.findById(comment.getId())).thenReturn(Optional.of(comment));
 

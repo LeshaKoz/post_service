@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.comment.CommentForListDto;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.dto.comment.CreateCommentResponse;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
@@ -9,6 +9,7 @@ import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.validator.CommentValidator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,39 +23,39 @@ import java.util.List;
 public class CommentService {
 
     private final PostService postService;
-    private final UserServiceClient userServiceClient;
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
+    private final CommentValidator commentValidator;
 
     @Transactional
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
-        Post post = verificationCreatingData(createCommentRequest.getAuthorId(),
-                createCommentRequest.getPostId());
+        Post post = postService.getPost(createCommentRequest.getPostId());
+        commentValidator.verificationCreatingData(post);
 
         Comment entity = commentMapper.toEntity(createCommentRequest);
         entity.setPost(post);
         commentRepository.save(entity);
-        return commentMapper.toResponse(entity);
+        return commentMapper.toCreateResponse(entity);
     }
 
 
     @Transactional
     public UpdatedCommentResponse updateComment(UpdateCommentRequest updateCommentRequest) {
-        Comment comment = validateForUpdate(updateCommentRequest.getId(),
-                updateCommentRequest.getAuthorId(),
-                updateCommentRequest.getContent());
+        Comment comment = getComment(updateCommentRequest.getId());
+        commentValidator.validateForUpdate(comment,updateCommentRequest);
 
         commentMapper.updateComment(comment, updateCommentRequest);
         commentRepository.save(comment);
-        return commentMapper.toUpdatedComment(comment);
+        return commentMapper.toUpdateResponse(comment);
     }
 
-
     @Transactional(readOnly = true)
-    public List<Comment> getListComment(Long postId) {
+    public List<CommentForListDto> getListComment(Long postId) {
         return commentRepository.findAllByPostId(postId).stream()
                 .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())
+                .map(commentMapper::toListDto)
                 .toList();
+
     }
 
     @Transactional
@@ -63,29 +64,10 @@ public class CommentService {
         commentRepository.deleteById(comment.getId());
     }
 
-    public Comment getComment(Long commentId) {
+    private Comment getComment(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
-    }
-
-    private Post verificationCreatingData(Long authorId, Long postId) {
-        if (userServiceClient.getUser(authorId) == null) {
-            throw new EntityNotFoundException(String.format("User with id: %s not found",
-                    authorId));
-        }
-
-        return postService.getPost(postId);
-    }
-
-    private Comment validateForUpdate(Long commentId, Long authorId, String content) {
-        Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
-        if (!comment.getAuthorId().equals(authorId)) {
-            throw new IllegalArgumentException("You are not the author of this comment.");
-        }
-        if (comment.getContent().equals(content)) {
-            throw new IllegalArgumentException("The comment has not been changed.");
-        }
-        return comment;
     }
+
 }
+
