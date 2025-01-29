@@ -3,29 +3,25 @@ package faang.school.postservice.dto.post;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 
 import java.time.LocalDateTime;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Value
 public class RequestPostDto {
-    private Long id;
+    Long id;
     @NotBlank(message = "Content shoudn't be blank")
-    private String content;
+    String content;
     @Positive
-    private Long authorId;
+    Long authorId;
     @Positive
-    private Long projectId;
+    Long projectId;
     boolean published;
     @PastOrPresent
-    private LocalDateTime publishedAt;
-    private LocalDateTime scheduledAt;
+    LocalDateTime publishedAt;
+    LocalDateTime scheduledAt;
     @PastOrPresent
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
     @PastOrPresent
-    private LocalDateTime updatedAt;
+    LocalDateTime updatedAt;
 }

@@ -121,7 +121,6 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public void savePost(Post post) {
         postRepository.save(post);
     }
