@@ -1,10 +1,9 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.exceptions.ErrorResponse;
+import faang.school.postservice.exceptions.UserServiceConnectException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import faang.school.postservice.dto.error.ErrorResponse;
-import faang.school.postservice.exceptions.UserServiceConnectException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
