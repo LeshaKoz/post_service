@@ -7,6 +7,7 @@ import faang.school.postservice.exceptions.FileIsEmptyException;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.utils.ImageService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

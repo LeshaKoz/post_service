@@ -1,4 +1,4 @@
-package faang.school.postservice.service;
+package faang.school.postservice.utils;
 
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;

@@ -17,7 +17,7 @@ public class ValidateService {
             throw new IllegalArgumentException("userId should not be null");
         }
 
-        //userServiceClient.getUser(userId);
+        userServiceClient.getUser(userId);
     }
 
     public void validatePost(Long postId) {
@@ -25,6 +25,6 @@ public class ValidateService {
             throw new IllegalArgumentException("postId should not be null");
         }
 
-        //projectServiceClient.getProject(postId);
+        projectServiceClient.getProject(postId);
     }
 }

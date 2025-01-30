@@ -3,11 +3,14 @@ package faang.school.postservice.service;
 import faang.school.postservice.dto.comment.CommentResponse;
 import faang.school.postservice.dto.comment.CommentUpdateRequest;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
+import faang.school.postservice.exceptions.FileIsEmptyException;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.utils.ImageService;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -15,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,9 +26,14 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,6 +50,9 @@ class CommentServiceTest {
 
     @Mock
     private CommentRepository commentRepository;
+
+    @Mock
+    private ImageService imageService;
 
     @InjectMocks
     private CommentService commentService;
@@ -132,5 +144,79 @@ class CommentServiceTest {
         assertThrows(EntityNotFoundException.class, () -> commentService.delete(commentId));
         verify(commentRepository).existsById(commentId);
         verify(commentRepository, never()).deleteById(any());
+    }
+
+    @Test
+    @DisplayName("Успешная загрузка изображений для комментария")
+    void uploadImage_Success() {
+        // Данные теста
+        Long commentId = 1L;
+        String smallImageId = "small-img-123";
+        String largeImageId = "large-img-456";
+        MultipartFile mockFile = mock(MultipartFile.class);
+
+        // Мокаем возвращаемое значение
+        when(mockFile.isEmpty()).thenReturn(false);
+        when(imageService.saveImage(any(MultipartFile.class), anyInt(), anyString()))
+                .thenReturn(smallImageId)
+                .thenReturn(largeImageId);
+        // Мокаем комментарий
+        Comment mockComment = new Comment();
+        when(commentRepository.findById(commentId)).thenReturn(Optional.of(mockComment));
+
+        // Вызываем тестируемый метод
+        commentService.uploadImage(commentId, mockFile);
+
+        // Проверяем, что `setSmallImageFileKey` и `setLargeImageFileKey` вызвались корректно
+        assertEquals(smallImageId, mockComment.getSmallImageFileKey());
+        assertEquals(largeImageId, mockComment.getLargeImageFileKey());
+
+        // Проверяем, что `saveImage` вызвался дважды
+        verify(imageService, times(2)).saveImage(any(MultipartFile.class), anyInt(), anyString());
+    }
+
+    @Test
+    @DisplayName("Ошибка при загрузке пустого файла")
+    void uploadImage_ThrowsFileIsEmptyException() {
+        // Данные теста
+        Long commentId = 1L;
+        Comment comment = new Comment();
+
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+        when(mockFile.isEmpty()).thenReturn(true);
+
+        // Проверяем, что выбрасывается исключение
+        assertThrows(FileIsEmptyException.class, () -> commentService.uploadImage(commentId, mockFile));
+
+        // Проверяем, что `saveImage` НЕ вызывался
+        verify(imageService, never()).saveImage(any(), anyInt(), anyString());
+    }
+
+    @Test
+    @DisplayName("Ошибка при сохранении изображения в ImageService")
+    void uploadImage_SaveImageFailure() {
+        // Данные теста
+        Long commentId = 1L;
+        MultipartFile mockFile = mock(MultipartFile.class);
+        when(mockFile.isEmpty()).thenReturn(false);
+
+        // Мокаем исключение в `saveImage`
+        when(imageService.saveImage(any(MultipartFile.class), anyInt(), anyString()))
+                .thenThrow(new RuntimeException("Ошибка при сохранении изображения"));
+
+        Comment mockComment = new Comment();
+        when(commentRepository.findById(commentId)).thenReturn(java.util.Optional.of(mockComment));
+
+        // Проверяем, что метод выбрасывает RuntimeException
+        assertThrows(RuntimeException.class, () -> commentService.uploadImage(commentId, mockFile));
+
+        // Проверяем, что `setSmallImageFileKey` не вызывался
+        assertNull(mockComment.getSmallImageFileKey());
+        assertNull(mockComment.getLargeImageFileKey());
+
+        // Проверяем, что `saveImage` вызвался только один раз (и упал)
+        verify(imageService, times(1)).saveImage(eq(mockFile), eq(170), anyString());
+        verify(imageService, never()).saveImage(any(MultipartFile.class), eq(1080), anyString());
     }
 }

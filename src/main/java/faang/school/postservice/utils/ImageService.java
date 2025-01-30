@@ -1,4 +1,4 @@
-package faang.school.postservice.service;
+package faang.school.postservice.utils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
