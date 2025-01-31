@@ -53,7 +53,7 @@ public class CommentServiceTest {
     private ArgumentCaptor<Comment> commentCaptor;
 
     @Test
-    public void createComment_post_not_found() {
+    public void createComment_CommentNotFound() {
         CreateCommentRequest request = new CreateCommentRequest();
         request.setAuthorId(1L);
         request.setPostId(1L);
@@ -64,13 +64,13 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void createComment_authorIsNull() {
+    public void createComment_AuthorIsNull() {
         CreateCommentRequest request = new CreateCommentRequest();
         request.setAuthorId(1L);
         request.setPostId(1L);
 
         when(postService.getPost(request.getPostId())).thenReturn(new Post());
-        doThrow(EntityNotFoundException.class).when(commentValidator).verificationCreatingData(any(Post.class));
+        doThrow(EntityNotFoundException.class).when(commentValidator).verificationCreatingData(any(Comment.class));
 
         assertThrows(EntityNotFoundException.class, () -> commentService.createComment(request));
     }
@@ -96,7 +96,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void updateComment_comment_not_found() {
+    public void updateComment_CommentNotFound() {
         UpdateCommentRequest request = new UpdateCommentRequest();
         request.setId(1L);
         when(commentRepository.findById(request.getId())).thenReturn(Optional.empty());
@@ -105,7 +105,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void updateComment_the_comment_has_not_been_changed() {
+    public void updateComment_TheCommentHasNotBeenChanged() {
         UpdateCommentRequest request = new UpdateCommentRequest();
         request.setId(1L);
         request.setContent("Text");
@@ -146,7 +146,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void deleteComment_comment_not_found() {
+    public void deleteComment_CommentNotFound() {
         Long commentId = 1L;
         when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
 

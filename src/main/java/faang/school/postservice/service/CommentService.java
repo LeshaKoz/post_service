@@ -30,19 +30,19 @@ public class CommentService {
     @Transactional
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
         Post post = postService.getPost(createCommentRequest.getPostId());
-        commentValidator.verificationCreatingData(post);
-
         Comment entity = commentMapper.toEntity(createCommentRequest);
+        commentValidator.verificationCreatingData(entity);
+
         entity.setPost(post);
-        commentRepository.save(entity);
-        return commentMapper.toCreateResponse(entity);
+        Comment saved = commentRepository.save(entity);
+        return commentMapper.toCreateResponse(saved);
     }
 
 
     @Transactional
     public UpdatedCommentResponse updateComment(UpdateCommentRequest updateCommentRequest) {
         Comment comment = getComment(updateCommentRequest.getId());
-        commentValidator.validateForUpdate(comment,updateCommentRequest);
+        commentValidator.validateForUpdate(comment, updateCommentRequest);
 
         commentMapper.updateComment(comment, updateCommentRequest);
         commentRepository.save(comment);
@@ -60,11 +60,10 @@ public class CommentService {
 
     @Transactional
     public void deleteComment(Long commentId) {
-        Comment comment = getComment(commentId);
-        commentRepository.deleteById(comment.getId());
+        commentRepository.deleteById(getComment(commentId).getId());
     }
 
-    private Comment getComment(Long commentId) {
+    public Comment getComment(Long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
     }

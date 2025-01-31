@@ -3,7 +3,6 @@ package faang.school.postservice.validator;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
 import faang.school.postservice.model.Comment;
-import faang.school.postservice.model.Post;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,10 +12,12 @@ import org.springframework.stereotype.Component;
 public class CommentValidator {
     private final UserServiceClient userServiceClient;
 
-    public void verificationCreatingData(Post post) {
-        if (userServiceClient.getUser(post.getAuthorId()) == null) {
-            throw new EntityNotFoundException(String.format("User with id: %s not found",
-                    post.getAuthorId()));
+    public void verificationCreatingData(Comment comment) {
+        if (userServiceClient.getUser(comment.getAuthorId()) == null) {
+            throw new EntityNotFoundException("you are not registered in our registered!");
+        }
+        if (comment.getContent().isBlank()) {
+            throw new IllegalArgumentException("A comment cannot be empty!");
         }
     }
 
