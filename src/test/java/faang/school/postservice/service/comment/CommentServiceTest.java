@@ -1,8 +1,10 @@
 package faang.school.postservice.service.comment;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.comment.CommentFiltersDto;
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
+import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.comment.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
@@ -74,7 +76,8 @@ public class CommentServiceTest {
     private List<Like> likes;
     private List<Long> likeIds;
     private CommentRequestDto commentRequestDto;
-    private CommentRequestDto commentUpdateDto;
+    private CommentUpdateDto commentUpdateDto;
+    private CommentFiltersDto commentFiltersDto;
 
     @BeforeEach
     void setUp() {
@@ -86,7 +89,12 @@ public class CommentServiceTest {
         userDto = createUserDto(authorId, "Author", "email");
         commentRequestDto = createCommentRequestDto("Текстовый комментарий", authorId, postId);
         comment = createComment(commentId, commentRequestDto.content(), authorId, post);
-        commentUpdateDto = createCommentRequestDto("Новый текст комментария", authorId, postId);
+        commentUpdateDto = CommentUpdateDto.builder()
+                .content("Новый текст комментария")
+                .build();
+        commentFiltersDto = CommentFiltersDto.builder()
+                .postId(postId)
+                .build();
         like1 = createLike(1L, authorId, post, comment);
         like2 = createLike(2L, 2L, post, comment);
         like3 = createLike(3L, 3L, post, comment);
@@ -150,7 +158,7 @@ public class CommentServiceTest {
                     return savedComment;
                 });
         CommentResponseDto commentResponseDtoFromDb;
-        commentResponseDtoFromDb = commentService.updateComment(commentId, commentUpdateDto);
+        commentResponseDtoFromDb = commentService.updateComment(commentId, authorId, commentUpdateDto);
 
         verifyNoMoreInteractions(userServiceClient, commentRepository, postRepository);
         verify(commentRepository, Mockito.times(1))
@@ -159,8 +167,8 @@ public class CommentServiceTest {
 
         assertNotNull(commentResponseDtoFromDb);
         assertEquals(commentId, commentResponseDtoFromDb.id());
-        assertEquals(commentUpdateDto.authorId(), commentResponseDtoFromDb.authorId());
-        assertEquals(commentUpdateDto.postId(), commentResponseDtoFromDb.postId());
+        assertEquals(authorId, commentResponseDtoFromDb.authorId());
+        assertEquals(postId, commentResponseDtoFromDb.postId());
         assertEquals(commentUpdateDto.content(), commentResponseDtoFromDb.content());
         assertEquals(likeIds, commentResponseDtoFromDb.likeIds());
     }
@@ -169,10 +177,8 @@ public class CommentServiceTest {
     void testUpdateCommentIfUserNotAuthorFailed() {
         Long wrongAuthorId = 5L;
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
-        CommentRequestDto commentUpdateDto = createCommentRequestDto("Новый текст комментария",
-                wrongAuthorId, postId);
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> commentService.updateComment(commentId, commentUpdateDto));
+                () -> commentService.updateComment(commentId, wrongAuthorId, commentUpdateDto));
         assertEquals(String.format("User with id %s is not allowed to update this comment.", wrongAuthorId),
                 exception.getMessage());
     }
@@ -181,7 +187,7 @@ public class CommentServiceTest {
     void testUpdateCommentIfCommentNotFoundFailed() {
         when(commentRepository.findById(anyLong())).thenReturn(Optional.empty());
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> commentService.updateComment(commentId, commentUpdateDto));
+                () -> commentService.updateComment(commentId, authorId, commentUpdateDto));
         assertEquals(String.format("Comment with id %d not found", commentId), exception.getMessage());
     }
 
@@ -211,7 +217,7 @@ public class CommentServiceTest {
         List<Comment> comments = List.of(comment, comment1, comment2, comment3);
         when(commentRepository.findAllByPostId(post.getId())).thenReturn(comments);
 
-        List<CommentResponseDto> responseDtos = commentService.getComments(post.getId());
+        List<CommentResponseDto> responseDtos = commentService.getComments(commentFiltersDto);
 
         assertNotNull(responseDtos);
         assertEquals(responseDtos.size(), comments.size());
