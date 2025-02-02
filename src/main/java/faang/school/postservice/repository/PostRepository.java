@@ -30,20 +30,39 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
 
-/*    @Query(value = "SELECT id " +
+/*    @Query(value = "SELECT * " +
             "FROM post " +
             "WHERE jsonb_exists(hashtags, :hashtag)", nativeQuery = true)
-    List<Long> findPostIdsByHashtag(@Param("hashtag") String hashtag);*/
+    List<Post> findPostsByHashtag(@Param("hashtag") String hashtag);*/
 
 /*    @Query("SELECT p.id " +
             "FROM Post p " +
             "WHERE :hashtag MEMBER OF p.hashtags")
     List<Long> findPostIdsByHashtag(@Param("hashtag") String hashtag);*/
-
+/*
     @Query(nativeQuery = true,
             value = """
             SELECT * FROM post
-            WHERE hashtags @> CAST(:hashtag AS jsonb) ORDER BY created_at ASC
+            WHERE hashtags @> CAST(:hashtag AS jsonb)
+        """)
+    List<Post> findPostsByHashtag(@Param("hashtag") String hashtag);*/
+
+    @Query(nativeQuery = true,
+            value = """
+           SELECT * FROM post WHERE hashtags @> CAST(:hashtag AS jsonb)
+        """)
+    List<Post> findPostsByHashtag(@Param("hashtag") String hashtag);
+
+/*    @Query(nativeQuery = true,
+            value = """
+            SELECT * FROM post
+            WHERE hashtags @> '[hashtag]';
             """)
-    List<Post> findPostIdsByHashtag(@Param("hashtag") String hashtag);
+    List<Post> findPostsByHashtag(@Param("hashtag") String hashtag);*/
+
+
+ /*   @Query(value = "SELECT * " +
+            "FROM post " +
+            "WHERE hashtags @> :hashtag", nativeQuery = true)
+    List<Post> findPostsByHashtag(@Param("hashtag") String hashtag);*/
 }

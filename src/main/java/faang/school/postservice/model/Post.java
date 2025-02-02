@@ -1,5 +1,6 @@
 package faang.school.postservice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import faang.school.postservice.model.ad.Ad;
 import jakarta.persistence.CascadeType;
@@ -26,7 +27,8 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
+
+import static faang.school.postservice.service.post.LocalDateTimePatterns.DATE_TIME_PATTERN;
 
 @Data
 @NoArgsConstructor
@@ -34,6 +36,7 @@ import java.util.Set;
 @Builder
 @Entity
 @Convert(attributeName = "jsonb", converter = JsonBinaryType.class)
+//@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 @Table(name = "post")
 public class Post {
 
@@ -68,10 +71,12 @@ public class Post {
     @Column(name = "published", nullable = false)
     private boolean published;
 
+    @JsonFormat(pattern = DATE_TIME_PATTERN)
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
+    @JsonFormat(pattern = DATE_TIME_PATTERN)
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
@@ -79,11 +84,13 @@ public class Post {
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
 
+    @JsonFormat(pattern = DATE_TIME_PATTERN)
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @JsonFormat(pattern = DATE_TIME_PATTERN)
     @UpdateTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
@@ -91,5 +98,7 @@ public class Post {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "hashtags")
-    private Set<String> hashtags;
+ /*   @Type(type = "jsonb")
+    @Column(columnDefinition = "jsonb", name = "hashtags")*/
+    private List<String> hashtags;
 }

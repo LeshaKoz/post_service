@@ -11,6 +11,7 @@ import faang.school.postservice.repository.PostRepository;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -132,6 +133,13 @@ public class PostService {
         } catch (FeignException.NotFound e) {
             throw new UserNotFoundException("User with id " + userId + " not found");
         }
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "postsByHashtag", key = "#hashtag")
+    public List<Post> getPostsByHashtag(String hashtag) {
+        String str = "[\"" + hashtag + "\"]";
+        return postRepository.findPostsByHashtag(str);
     }
 
     private void doesProjectExist(Long projectId) {

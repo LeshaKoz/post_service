@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -19,13 +21,15 @@ import java.util.List;
 public class PostHashtagService {
     //  private PostHashtegRepository postHashtegRepository;
     private final PostRepository postRepository;
+    private final PostService postService;
 
     @Transactional
     public void createHashtag(Long postId, String postHashtag) {
         Post post = getPost(postId);
 
         if (post.getHashtags() == null) {
-            post.setHashtags(new HashSet<>());
+          //  post.setHashtags(new HashSet<>());
+            post.setHashtags(new ArrayList<>());
         }
         post.getHashtags().add(postHashtag);
 
@@ -34,14 +38,12 @@ public class PostHashtagService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "posts-cache", key = "#hashtag")
-    public List<Post> getPostsFromCache(String hashtag) {
-
-        log.info("Fetching posts for hashtag: {}", hashtag);
-       // return postRepository.findPostIdsByHashtag(hashtag);
-        List<Post> posts = postRepository.findPostIdsByHashtag(hashtag);
-        log.info("Found post ids: {}", posts);
-        return posts;
+    public List<Post> getLimitedPostsByHashtag(String hashtag, int limit) {
+        List<Post> allPosts = postService.getPostsByHashtag(hashtag);
+        return allPosts.stream()
+                .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     private Post getPost(Long postId) {
@@ -49,3 +51,15 @@ public class PostHashtagService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
