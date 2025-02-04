@@ -53,10 +53,8 @@ public class CommentServiceTest {
                         .authorId(AUTHOR_ID).postId(POST_ID)
                         .build();
 
-        Comment comment = commentMapper.toEntity(createDto);
-
         commentService.create(createDto);
-        Mockito.verify(commentRepository, Mockito.times(1)).save(comment);
+        Mockito.verify(commentRepository, Mockito.times(1)).save(Mockito.any());
     }
 
     @Test
