@@ -28,8 +28,8 @@ import java.util.stream.IntStream;
 @Service
 public class PostService {
 
-    @Value("${post-service.publish.batch-size")
-    private final int batchSize;
+    @Value("${post-service.publish.batch-size}")
+    private int batchSize;
 
     private final PostRepository postRepository;
     private final UserServiceClient userServiceClient;
@@ -146,24 +146,26 @@ public class PostService {
     }
 
     public void publishScheduledPosts() {
-        List<Post> readyToPublish = postRepository.findReadyToPublish();
+        List<Post> readyToPublishPosts = postRepository.findReadyToPublish();
 
-        if (readyToPublish.isEmpty()) {
+        if (readyToPublishPosts.isEmpty()) {
             log.info("No one post ready to publish");
             return;
         }
 
-        int postsAmount = readyToPublish.size();
+        int postsAmount = readyToPublishPosts.size();
         int totalBatches = (postsAmount + batchSize - 1) / batchSize;
 
         List<CompletableFuture<Void>> futures = IntStream.range(0, totalBatches)
                 .mapToObj(i -> {
                     int start = i * batchSize;
                     int end = Math.min(batchSize + start, postsAmount);
-                    List<Post> currentBatch = readyToPublish.subList(start, end);
+                    List<Post> currentBatch = readyToPublishPosts.subList(start, end);
                     return CompletableFuture.runAsync(() -> publishBatch(currentBatch), executorService);
                 })
                 .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
     private void doesProjectExist(Long projectId) {

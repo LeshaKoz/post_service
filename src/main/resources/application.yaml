@@ -51,5 +51,5 @@ springdoc:
 post-service:
   publish:
     scheduled:
-      cron: "0 * * * * ?"
+      cron: "0 * * * * *"
     batch-size: 1000

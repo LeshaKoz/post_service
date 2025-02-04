@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class ScheduledPostPublisher {
     private final PostService postService;
 
-    @Scheduled(cron = "${post-service.publish.scheduled.cron")
+    @Scheduled(cron = "${post-service.publish.scheduled.cron}")
     public void startPublishPosts() {
         postService.publishScheduledPosts();
     }
