@@ -5,11 +5,13 @@ import java.io.Serializable;
 import java.util.LinkedHashSet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.redis.core.RedisHash;
 
 @Builder
+@Data
 @RedisHash("Feed")
 @AllArgsConstructor
 @NoArgsConstructor

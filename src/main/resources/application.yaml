@@ -92,6 +92,9 @@ payment-service:
 newsfeed:
   subscribers:
     batch-size: 3
+  posts:
+    limit: 500
+    clean: 50
 
 executor-service:
   core-pool-size: 5
