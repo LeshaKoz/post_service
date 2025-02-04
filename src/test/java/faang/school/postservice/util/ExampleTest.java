@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(MockitoExtension.class)
 public class ExampleTest {
+
     @Test
     void test() {
         fail("Тест ради теста");
