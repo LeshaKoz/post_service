@@ -1,5 +1,9 @@
-package faang.school.postservice.model;
+package faang.school.postservice.model.post;
 
+import faang.school.postservice.model.Album;
+import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.Like;
+import faang.school.postservice.model.Resource;
 import faang.school.postservice.model.ad.Ad;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -82,4 +86,7 @@ public class Post {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToMany(mappedBy = "posts")
+    private List<Hashtag> hashtags;
 }
