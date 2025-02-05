@@ -32,12 +32,19 @@ logging:
   level:
     root: info
 
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 15000
+        readTimeout: 15000
+        loggerLevel: BASIC
+domain:
+  base-path: /api/v1
+
 user-service:
-  host: localhost
-  port: 8080
+  url: localhost:8080/api/v1
 project-service:
-  host: localhost
-  port: 8082
+  url: localhost:8082/api/v1
 payment-service:
-  host: localhost
-  port: 9080
+  url: localhost:9080
