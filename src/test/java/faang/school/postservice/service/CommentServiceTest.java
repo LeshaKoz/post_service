@@ -1,4 +1,4 @@
-package faang.school.postservice.util.service;
+package faang.school.postservice.service;
 
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
@@ -7,9 +7,6 @@ import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.service.CommentService;
-import faang.school.postservice.service.PostService;
-import faang.school.postservice.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
