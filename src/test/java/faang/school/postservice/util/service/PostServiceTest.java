@@ -1,10 +1,10 @@
 package faang.school.postservice.util.service;
 
-import faang.school.postservice.client.ProjectServiceClient;
-import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.ExternalServiceValidationException;
 import faang.school.postservice.exception.PostNotFoundException;
+import faang.school.postservice.gateway.ProjectServiceGateway;
+import faang.school.postservice.gateway.UserServiceGateway;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -35,9 +35,9 @@ public class PostServiceTest {
     @Mock
     private PostRepository postRepository;
     @Mock
-    private UserServiceClient userServiceClient;
+    private UserServiceGateway userServiceGateway;
     @Mock
-    private ProjectServiceClient projectServiceClient;
+    private ProjectServiceGateway projectServiceGateway;
     @Mock
     private PostMapper postMapper;
     @InjectMocks
@@ -59,7 +59,7 @@ public class PostServiceTest {
         PostDto actualPost = postService.createDraft(inputPost);
 
         assertEquals(expectedPost, actualPost);
-        verify(userServiceClient).getUser(TEST_USER_ID);
+        verify(userServiceGateway).getUser(TEST_USER_ID);
         verify(postMapper).toEntity(inputPost);
         verify(postRepository).save(postEntity);
         verify(postMapper).toDto(postEntity);
@@ -75,7 +75,7 @@ public class PostServiceTest {
         );
 
         assertEquals(POSTS_MUST_HAVE_ONE_AUTHOR, exception.getMessage());
-        verifyNoInteractions(postRepository, postMapper, userServiceClient, projectServiceClient);
+        verifyNoInteractions(postRepository, postMapper, userServiceGateway, projectServiceGateway);
     }
 
 

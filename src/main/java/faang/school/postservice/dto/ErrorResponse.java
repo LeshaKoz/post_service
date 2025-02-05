@@ -1,4 +1,11 @@
 package faang.school.postservice.dto;
 
-public record ErrorResponse(String message) {
+import org.springframework.http.HttpStatus;
+
+public record ErrorResponse(
+        String serviceName,
+        HttpStatus status,
+        String errorCode,
+        String errorMessage
+) {
 }
