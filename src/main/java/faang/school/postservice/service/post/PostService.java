@@ -135,7 +135,7 @@ public class PostService {
   }
 
   private void savePostToCache(Post post, UserDto userDto) {
-    PostCache postCache = postMapper.toPostChache(post);
+    PostCache postCache = postMapper.toPostCache(post);
     postCache.setAuthorName(userDto.getUsername());
     postCacheRepository.save(postCache);
   }

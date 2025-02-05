@@ -43,5 +43,5 @@ public interface PostMapper {
     return resources.stream().map(Resource::getId).toList();
   }
 
-  PostCache toPostChache(Post post);
+  PostCache toPostCache(Post post);
 }

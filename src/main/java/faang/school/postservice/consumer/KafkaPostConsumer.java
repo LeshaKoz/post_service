@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class Listener {
+public class KafkaPostConsumer {
 
   private final FeedService feedService;
 
@@ -21,8 +21,8 @@ public class Listener {
   @KafkaListener(topics = "post_topic", containerFactory = "kafkaListenerContainerFactory", groupId = "feed-group-id")
   public void handle(PostEventDto dto, Acknowledgment acknowledgment) {
 
-    logger.info("MESSAGE SUCCESSFULLY RECEIVED BY CONSUMER. BUT NOT PROCESSED YET");
-    logger.info("message received {}", dto.getFollowers());
+    logger.info("MESSAGE SUCCESSFULLY RECEIVED BY CONSUMER. POST ID = {}", dto.getPosId());
+    logger.info("FOLLOWERS FEEDS TO Update {}", dto.getFollowers());
 
     feedService.processPostEvent(dto);
 
