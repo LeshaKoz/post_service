@@ -34,9 +34,13 @@ logging:
   level:
     root: info
 
-post-moderation:
-  partition-size: 5
+post:
+  batch-size: 5
   cronPeriod: "0 0 0 * * *"
+
+thread:
+  pool:
+    size: 10
 
 user-service:
   host: localhost

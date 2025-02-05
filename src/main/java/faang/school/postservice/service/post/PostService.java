@@ -34,7 +34,7 @@ public class PostService {
     private final ModerationDictionary moderationDictionary;
     private final ExecutorService executorService;
 
-    @Value("${post-moderation.partition-size}")
+    @Value("${post.batch-size}")
     private final int partitionSize = 5;
 
     public PostReadDto createPostDraft(PostCreateDto dto) {

@@ -11,7 +11,7 @@ public class ModerationScheduler {
 
     private final PostService postService;
 
-    @Scheduled(cron = "${post-moderation.cronPeriod}")
+    @Scheduled(cron = "${post.cronPeriod}")
     public void scheduledVerifyPosts() {
         postService.moderatePosts();
     }
