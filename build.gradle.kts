@@ -148,7 +148,7 @@ tasks.bootJar {
 checkstyle {
     toolVersion = "10.17.0"
     configFile =
-        file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+        file("${project.rootDir}/src/main/java/school/faang/post_service/config/checkstyle/checkstyle.xml")
     checkstyle.enableExternalDtdLoad.set(true)
 }
 
