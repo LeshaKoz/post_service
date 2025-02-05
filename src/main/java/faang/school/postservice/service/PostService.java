@@ -84,7 +84,7 @@ public class PostService {
         groups.forEach(group -> {
             scheduledPublishPostThreadPool.submit(() -> {
                group.forEach(item -> {
-                   publishPost(item.getId());
+                  publishPost(item.getId());
                });
             });
         });
