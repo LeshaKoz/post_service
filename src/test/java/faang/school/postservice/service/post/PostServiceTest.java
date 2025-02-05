@@ -1,4 +1,4 @@
-package faang.school.postservice.service;
+package faang.school.postservice.service.post;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
@@ -13,18 +13,19 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.post.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,9 +45,12 @@ public class PostServiceTest {
     private PostRepository postRepository;
     @Mock
     private UserContext userContext;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    @Mock
+    private ModerationDictionary moderationDictionary;
     @Spy
     private PostMapper postMapper = new PostMapperImpl();
-    @InjectMocks
+
     private PostService postService;
 
     private Post post;
@@ -60,6 +64,15 @@ public class PostServiceTest {
                 .content("content")
                 .id(1L)
                 .build();
+        postService = new PostService(
+                userServiceClient,
+                projectServiceClient,
+                postRepository,
+                postMapper,
+                userContext,
+                moderationDictionary,
+                executorService
+        );
     }
 
     @Test
@@ -197,6 +210,42 @@ public class PostServiceTest {
         long projectId = 1;
         postService.getAllPublished(projectId, PostOwnerType.PROJECT);
         verify(postRepository, atLeastOnce()).findAllPublishedByProjectId(projectId);
+    }
+
+    @Test
+    void testModeratePostsSuccessCase() {
+        var posts = List.of(
+                createPostWithContent("Content"),
+                createPostWithContent("Bad Content"),
+                createPostWithContent("Bad Content"),
+                createPostWithContent("Content"),
+                createPostWithContent("Content"),
+                createPostWithContent("Content")
+
+        );
+        when(postRepository.findAllNotVerified()).thenReturn(posts);
+        when(moderationDictionary.isAllowed("Content")).thenReturn(true);
+        when(moderationDictionary.isAllowed("Bad Content")).thenReturn(false);
+        ArgumentCaptor<List<Post>> argumentCaptor = ArgumentCaptor.forClass(List.class);
+
+        postService.moderatePosts();
+
+        verify(postRepository, atLeastOnce()).saveAll(argumentCaptor.capture());
+        List<Post> capturedPosts = argumentCaptor.getValue();
+        assertEquals(4, capturedPosts.size());
+        assertTrue(
+                capturedPosts
+                        .stream()
+                        .allMatch(
+                                post -> post.isVerified()
+                                && post.getVerifiedDate() != null
+                                && post.getContent().equals("Content")
+                        )
+        );
+    }
+
+    private Post createPostWithContent(String content) {
+        return Post.builder().content(content).build();
     }
 
     private void mockGetPostById(long id) {

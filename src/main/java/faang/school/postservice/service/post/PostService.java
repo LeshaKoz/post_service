@@ -35,7 +35,7 @@ public class PostService {
     private final ExecutorService executorService;
 
     @Value("${post-moderation.partition-size}")
-    private int partitionSize;
+    private final int partitionSize = 5;
 
     public PostReadDto createPostDraft(PostCreateDto dto) {
         validateCreateDraftDto(dto);
