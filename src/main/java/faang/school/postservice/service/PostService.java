@@ -83,9 +83,9 @@ public class PostService {
 
         groups.forEach(group -> {
             scheduledPublishPostThreadPool.submit(() -> {
-                group.forEach(item -> {
-                    publishPost(item.getId());
-                });
+               group.forEach(item -> {
+                   publishPost(item.getId());
+               });
             });
         });
     }
@@ -151,6 +151,7 @@ public class PostService {
         return postRepository.findById(id)
                 .orElseThrow(() -> new PostWasNotFoundException("No posts was found!"));
     }
+
     public boolean existsById(long id) {
         return postRepository.existsById(id);
     }
