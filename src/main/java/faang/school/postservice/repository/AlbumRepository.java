@@ -1,18 +1,18 @@
 package faang.school.postservice.repository;
 
 import faang.school.postservice.model.Album;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Repository
-public interface AlbumRepository extends CrudRepository<Album, Long> {
+public interface AlbumRepository extends JpaRepository<Album, Long> {
 
-    List<Album> findByAuthorId(long authorId);
+    List<Album> findAllByAuthorId(long authorId);
 
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN TRUE ELSE FALSE END " +
             "FROM Album a " +
@@ -34,4 +34,5 @@ public interface AlbumRepository extends CrudRepository<Album, Long> {
 
     @Query(value = "SELECT album_id FROM favorite_albums WHERE user_id = :userId", nativeQuery = true)
     List<Album> findFavoriteAlbumsByUserId(long userId);
+
 }

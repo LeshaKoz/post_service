@@ -1,5 +1,6 @@
 package faang.school.postservice.dto.album;
 
+
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
