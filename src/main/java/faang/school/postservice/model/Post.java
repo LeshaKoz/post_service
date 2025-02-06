@@ -44,6 +44,9 @@ public class Post {
     @Column(name = "project_id")
     private Long projectId;
 
+    @Column(name = "verified")
+    private boolean verified;
+
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Like> likes;
 
