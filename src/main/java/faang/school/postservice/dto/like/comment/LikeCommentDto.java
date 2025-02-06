@@ -6,13 +6,11 @@ import jakarta.validation.constraints.NotNull;
 
 public record LikeCommentDto(
 
-        @NotNull(groups = {After.class})
-        Long id,
-        @NotNull(groups = {Before.class, After.class})
+        @NotNull(groups = {Before.class})
         Long userId,
         @NotNull(groups = {Before.class, After.class})
         Long postId,
-        @NotNull(groups = {Before.class, After.class})
+        @NotNull(groups = {Before.class})
         Long commentId
 ) implements Publication {
     public interface After {

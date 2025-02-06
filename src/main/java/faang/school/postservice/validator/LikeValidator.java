@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class LikeValidator {
+
     private final UserServiceClient userServiceClient;
     private final LikeRepository likeRepository;
     private final PostService postService;

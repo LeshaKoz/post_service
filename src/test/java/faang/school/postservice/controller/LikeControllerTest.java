@@ -56,8 +56,8 @@ class LikeControllerTest {
     public void setUp() {
 
         mockMvc = MockMvcBuilders.standaloneSetup(likeController).build();
-        likePostDto = new LikePostDto(1L, 2L, 3L);
-        likeCommentDto = new LikeCommentDto(1L, 2L, 3L, 4L);
+        likePostDto = new LikePostDto(2L, 3L);
+        likeCommentDto = new LikeCommentDto(2L, 3L, 4L);
         likePostDtoResponse = new LikePostDtoResponse(1L, 2L, 3L);
         likeCommentDtoResponse = new LikeCommentDtoResponse(1L, 2L, 3L, 4L);
     }
@@ -107,7 +107,7 @@ class LikeControllerTest {
     @Test
     void testLikeForPostShouldReturn400WhenInvalidData() throws Exception {
 
-        LikePostDto invalidRequest = new LikePostDto(null, null, null);
+        LikePostDto invalidRequest = new LikePostDto(null, null);
         mockMvc.perform(post(END_POINT_LIKES_POST)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))

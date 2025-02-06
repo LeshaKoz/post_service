@@ -49,8 +49,8 @@ class LikeServiceImplTest {
     @BeforeEach
     void setUp() {
 
-        likePostDto = new LikePostDto(1L, 2L, 3L);
-        likeCommentDto = new LikeCommentDto(1L, 2L, 3L, 4L);
+        likePostDto = new LikePostDto(2L, 3L);
+        likeCommentDto = new LikeCommentDto(2L, 3L, 4L);
         like = new Like();
         like.setId(1L);
         like.setUserId(2L);

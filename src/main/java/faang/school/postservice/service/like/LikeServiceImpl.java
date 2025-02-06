@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class LikeServiceImpl implements LikeService {
+
     private final LikeRepository likeRepository;
     private final LikeMapper likeMapper;
     private final UserContext userContext;
@@ -80,9 +81,7 @@ public class LikeServiceImpl implements LikeService {
 
     private long getUserId(Publication publication) {
 
-        final long userId = publication.userId();
-        likeValidator.validateUserId(userId);
-        return userId;
+        return publication.userId();
     }
 
     private long getUserId() {
