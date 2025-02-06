@@ -45,6 +45,7 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.5.3.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
     implementation("com.google.guava:guava:32.0.0-jre")
+    implementation("org.springframework.retry:spring-retry")
 
     /**
      * Test containers
