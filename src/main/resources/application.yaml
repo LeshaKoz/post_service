@@ -51,6 +51,7 @@ redis:
 
 hashtags:
   limit: 5
+
 author:
   ban:
     cron: "0 0 0 * * *" # every day at midnight

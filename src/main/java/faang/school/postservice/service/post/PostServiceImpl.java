@@ -27,7 +27,6 @@ public class PostServiceImpl implements PostService {
     private final PostProperties postProperties;
     private final RedisPublisher redisPublisher;
 
-
     @Cacheable(key = "#hashtag", value = "postsByHashtag")
     @Override
     public List<PostResponseDto> getPostsByHashtag(String hashtag) {
