@@ -1,4 +1,9 @@
 spring:
+  mvc:
+    servlet:
+      path:
+        '/api/v1'
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -24,6 +29,9 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+
+springdoc:
+  packages-to-scan: faang.school.postservice.controller
 
 server:
   port: 8081
