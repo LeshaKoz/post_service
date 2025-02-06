@@ -25,6 +25,7 @@ public class PostService {
     private final PostMapper postMapper;
     private final PostRepository postRepository;
     private final PostUtil postUtil;
+    private final RewriterService rewriterService;
 
     @Transactional
     public PostResultResponse createPost(PostCreatingRequest postCreatingDto) {
@@ -35,7 +36,6 @@ public class PostService {
                 .build();
 
         log.info("Creating the post with id : {}", post.getId());
-
         log.info("Validating the post creator with id : {}", post.getId());
         int result = postUtil.validateCreator(postCreatingDto.authorId(), postCreatingDto.projectId());
         switch (result) {
@@ -124,6 +124,7 @@ public class PostService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Post findPostById(long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new PostWasNotFoundException("No posts was found!"));
@@ -135,6 +136,10 @@ public class PostService {
 
 
     public void postCorrections() {
-
+        List<Post> posts = postRepository.findReadyToPublish();
+        posts.forEach(post -> {
+            String newText = rewriterService.rewriteText(post.getContent());
+            post.setContent(newText);
+        });
     }
 }
