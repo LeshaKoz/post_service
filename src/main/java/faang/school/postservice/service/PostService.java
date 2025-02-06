@@ -133,4 +133,8 @@ public class PostService {
         return postRepository.existsById(id);
     }
 
+
+    public void postCorrections() {
+
+    }
 }
