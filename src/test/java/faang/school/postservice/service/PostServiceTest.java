@@ -139,11 +139,10 @@ public class PostServiceTest {
         var newContent = "new content";
         mockGetPostById(postId);
 
-        postService.updatePost(postId, new PostUpdateDto(newContent));
+        postService.updatePost(postId, new PostUpdateDto(newContent, null));
         verify(postRepository, atLeastOnce()).save(postArgumentCaptor.capture());
         Post capturedPost = postArgumentCaptor.getValue();
         assertEquals(newContent, capturedPost.getContent());
-
     }
 
     @Test
