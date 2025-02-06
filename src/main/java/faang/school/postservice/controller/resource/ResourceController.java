@@ -33,15 +33,15 @@ public class ResourceController {
         return resourceService.addFileToPost(postId, file);
     }
 
-    @DeleteMapping("/removeFile")
+/*    @DeleteMapping("/removeFile")
     public void removeFileFromPost(@RequestBody @Valid ResourceRequest resourceRequest) {
         resourceService.removeFileFromPost(resourceRequest);
-    }
+    }*/
+
     @GetMapping("{postId}/getFiles")
-    public List<ResponseEntity<byte[]>> getFilesForPost(@PathVariable long postId) {
+    public List<byte[]> getFilesForPost(@PathVariable long postId) {
 
         List<InputStream> inputStreams = resourceService.getFilesForPost(postId);
-
         return inputStreams.stream()
                 .map(input -> {
                     try {

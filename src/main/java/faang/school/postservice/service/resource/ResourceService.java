@@ -17,7 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -96,15 +98,11 @@ public class ResourceService {
                 // горизонтальное – ширина больше 1080 и высота больше 566, либо квадратное – больше 1080
                 if ((width != height && width > 1080 && height > 566) || (width == height && width > 1080)) {
                     log.info("Изображение {} превышает заданные разрешения, выполняется ресайз", file.getOriginalFilename());
-                    // Вызываем метод saveImage из ImageService, который выполняет ресайз и загружает изображение в Minio.
-                    // Метод возвращает идентификатор загруженного файла.
                     uploadedFileId = imageService.saveImage(file, 1080, BUCKET_NAME);
                 } else {
-                    // Если изменение размера не требуется – загружаем файл без изменений.
                     uploadedFileId = minioService.uploadFile(file.getBytes(), file.getContentType(), BUCKET_NAME);
                 }
             } else {
-                // Если не удалось прочитать изображение – загружаем файл как есть.
                 uploadedFileId = minioService.uploadFile(file.getBytes(), file.getContentType(), BUCKET_NAME);
             }
         } catch (IOException e) {
@@ -132,4 +130,18 @@ public class ResourceService {
         resource.setPost(post);
         return resource;
     }
+
+    public List<InputStream> getFilesForPost(long postId) {
+        // Получаем список ресурсов для поста из БД
+        List<Resource> resources = resourceRepository.findByPostId(postId);
+
+        // Для каждого ресурса получаем файл из Minio по ключу, оборачиваем в ByteArrayInputStream и возвращаем список потоков
+        return resources.stream()
+                .map(resource -> {
+                    byte[] fileBytes = minioService.getFile("post-images", resource.getKey());
+                    return new ByteArrayInputStream(fileBytes);
+                })
+                .collect(Collectors.toList());
+    }
+
 }
