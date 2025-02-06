@@ -35,7 +35,8 @@ logging:
     root: info
 
 post:
-  batch-size: 5
+  batch-size: 10
+  page-size: 20
   cronPeriod: "0 0 0 * * *"
 
 thread:

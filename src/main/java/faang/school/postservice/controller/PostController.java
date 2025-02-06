@@ -4,7 +4,7 @@ import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
-import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.post.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;

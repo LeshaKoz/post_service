@@ -3,6 +3,7 @@ package faang.school.postservice.service.post;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.config.props.PostProperties;
 import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostUpdateDto;
@@ -21,6 +22,10 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,6 +56,8 @@ public class PostServiceTest {
     private ModerationDictionary moderationDictionary;
     @Spy
     private PostMapper postMapper = new PostMapperImpl();
+    @Spy
+    private PostProperties postProperties;
 
     private PostService postService;
 
@@ -71,7 +79,8 @@ public class PostServiceTest {
                 postMapper,
                 userContext,
                 moderationDictionary,
-                executorService
+                executorService,
+                postProperties
         );
     }
 
@@ -214,34 +223,45 @@ public class PostServiceTest {
 
     @Test
     void testModeratePostsSuccessCase() {
-        var posts = List.of(
-                createPostWithContent("Content"),
-                createPostWithContent("Bad Content"),
-                createPostWithContent("Bad Content"),
-                createPostWithContent("Content"),
+        int pageSize = 2;
+        postProperties.setPageSize(pageSize);
+        postProperties.setBatchSize(1);
+        var firstPagePosts = List.of(
                 createPostWithContent("Content"),
                 createPostWithContent("Content")
+        );
+        var secondPagePosts = List.of(
+                createPostWithContent("Content"),
+                createPostWithContent("Bad Content")
 
         );
-        when(postRepository.findAllNotVerified()).thenReturn(posts);
+        Pageable firstPageable = PageRequest.of(0, pageSize);
+        Pageable secondPageable = PageRequest.of(1, pageSize);
+        Page<Post> firstPage = new PageImpl<>(firstPagePosts, firstPageable, 4);
+        Page<Post> secondPage = new PageImpl<>(secondPagePosts, secondPageable, 4);
+
+        when(postRepository.findAllNotVerified(firstPageable)).thenReturn(firstPage);
+        when(postRepository.findAllNotVerified(secondPageable)).thenReturn(secondPage);
         when(moderationDictionary.isAllowed("Content")).thenReturn(true);
         when(moderationDictionary.isAllowed("Bad Content")).thenReturn(false);
         ArgumentCaptor<List<Post>> argumentCaptor = ArgumentCaptor.forClass(List.class);
 
         postService.moderatePosts();
 
-        verify(postRepository, atLeastOnce()).saveAll(argumentCaptor.capture());
-        List<Post> capturedPosts = argumentCaptor.getValue();
-        assertEquals(4, capturedPosts.size());
-        assertTrue(
-                capturedPosts
-                        .stream()
-                        .allMatch(
-                                post -> post.isVerified()
-                                && post.getVerifiedDate() != null
-                                && post.getContent().equals("Content")
-                        )
-        );
+        verify(postRepository, times(2))
+                .saveAll(argumentCaptor.capture());
+        List<Post> capturedPosts1 = argumentCaptor.getAllValues().get(0);
+        List<Post> capturedPosts2 = argumentCaptor.getAllValues().get(1);
+        assertEquals(2, capturedPosts1.size());
+        assertEquals(1, capturedPosts2.size());
+        assertTrue(isVerified(capturedPosts2.get(0)));
+        assertTrue(capturedPosts1.stream().allMatch(this::isVerified));
+    }
+
+    private boolean isVerified(Post post) {
+        return post.isVerified()
+                && post.getVerifiedDate() != null
+                && post.getContent().equals("Content");
     }
 
     private Post createPostWithContent(String content) {

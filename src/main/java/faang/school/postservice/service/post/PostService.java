@@ -3,6 +3,7 @@ package faang.school.postservice.service.post;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.config.props.PostProperties;
 import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostReadDto;
@@ -13,7 +14,9 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,9 +36,7 @@ public class PostService {
     private final UserContext userContext;
     private final ModerationDictionary moderationDictionary;
     private final ExecutorService executorService;
-
-    @Value("${post.batch-size}")
-    private final int partitionSize = 5;
+    private final PostProperties postProperties;
 
     public PostReadDto createPostDraft(PostCreateDto dto) {
         validateCreateDraftDto(dto);
@@ -95,15 +96,28 @@ public class PostService {
     }
 
     public void moderatePosts() {
-        List<Post> notVerifiedPosts = postRepository.findAllNotVerified();
+        int pageSize = postProperties.getPageSize();
+        Pageable firstPageable = PageRequest.of(0, pageSize);
+        Page<Post> firstPage = postRepository.findAllNotVerified(firstPageable);
+        int totalPages = firstPage.getTotalPages();
+
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            Page<Post> page = postRepository.findAllNotVerified(pageable);
+            moderatePostsPage(page.getContent());
+        }
+    }
+
+    private void moderatePostsPage(List<Post> notVerifiedPosts) {
         int notVerifiedPostsSize = notVerifiedPosts.size();
+        int batchSize = postProperties.getBatchSize();
         List<CompletableFuture<List<Post>>> futuresList = new ArrayList<>();
 
-        for (int i = 0; i < notVerifiedPostsSize; i += partitionSize) {
-            int end = Math.min(i + partitionSize, notVerifiedPostsSize);
+        for (int i = 0; i < notVerifiedPostsSize; i += batchSize) {
+            int end = Math.min(i + batchSize, notVerifiedPostsSize);
             List<Post> partition = notVerifiedPosts.subList(i, end);
             futuresList.add(CompletableFuture.supplyAsync(
-                    () -> verifyPosts(partition),
+                    () -> moderatePostsBatch(partition),
                     executorService
             ));
         }
@@ -115,7 +129,7 @@ public class PostService {
         postRepository.saveAll(posts);
     }
 
-    private List<Post> verifyPosts(List<Post> posts) {
+    private List<Post> moderatePostsBatch(List<Post> posts) {
         LocalDateTime verifiedDate = LocalDateTime.now();
         return posts.stream()
                 .filter(post -> moderationDictionary.isAllowed(post.getContent()))
