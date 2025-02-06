@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.LikeMapperImpl;
@@ -14,28 +15,56 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class LikeServiceTest {
     @Mock
     private UserService userService;
     @Mock
+    private UserServiceClient userServiceClient;
+    @Mock
     private LikeRepository likeRepository;
     @Mock
     private LikeValidator likeValidator;
     @Mock
     private LikeMapperImpl likeMapperImpl;
+
     @InjectMocks
     private LikeService likeService;
+
     private LikeDto likeDtoPost;
     private LikeDto likeDtoComment;
+    private UserDto userDto;
+    private Like like;
+    private List<Like> likes;
+    private List<UserDto> usersDto;
 
     @BeforeEach
     public void init() {
         likeDtoPost = LikeDto.builder().postId(1L).userId(1L).build();
         likeDtoComment = LikeDto.builder().commentId(1L).userId(1L).build();
+
+        userDto = UserDto.builder()
+                .id(1L)
+                .username("name")
+                .email("email")
+                .build();
+        like = Like.builder()
+                .id(1L)
+                .userId(1L)
+                .build();
+        likes = List.of(like);
+        usersDto = List.of(userDto);
     }
 
     @Test
@@ -70,4 +99,33 @@ public class LikeServiceTest {
         verify(likeRepository, times(1)).deleteLikeByCommentIdAndUserId(likeDtoComment.commentId(), likeDtoComment.userId());
     }
 
+    @Test
+    public void tesGetAllUsersWhoLikedPost() {
+        when(likeRepository.findAllByPostId(anyLong())).thenReturn(likes);
+        when(userServiceClient.getUsersByIds(anyList())).thenReturn(usersDto);
+
+        List<UserDto> expected = new ArrayList<>(usersDto);
+        List<UserDto> result = likeService.getAllUsersWhoLikedPost(1L);
+
+        assertNotNull(result);
+        assertEquals(expected, result);
+
+        verify(likeRepository, times(1)).findAllByPostId(anyLong());
+        verify(userServiceClient, times(1)).getUsersByIds(anyList());
+    }
+
+    @Test
+    public void testGetAllUsersWhoLikedComment() {
+        when(likeRepository.findAllByCommentId(anyLong())).thenReturn(likes);
+        when(userServiceClient.getUsersByIds(anyList())).thenReturn(usersDto);
+
+        List<UserDto> expected = new ArrayList<>(usersDto);
+        List<UserDto> result = likeService.getAllUsersWhoLikedComment(1L);
+
+        assertNotNull(result);
+        assertEquals(expected, result);
+
+        verify(likeRepository, times(1)).findAllByCommentId(anyLong());
+        verify(userServiceClient, times(1)).getUsersByIds(anyList());
+    }
 }
