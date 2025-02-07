@@ -43,7 +43,18 @@ spring:
             read-timeout: 5000
 
 scheduling:
-  publishing-cron: "0 0 1 * * *"
+  publishing-cron: "0 * * * * *"
+  #  moderation-cron: "0 0 1 * * *"
+  moderation-cron: "0 * * * * *"
+
+moderation:
+  batch-size: 10
+  dictionary:
+    file: /dictionary/moderation_dictionary.txt
+
+task:
+  executor:
+    pool-size: 10
 
 server:
   port: 8081

@@ -8,7 +8,7 @@ CREATE TABLE post (
     scheduled_at timestamptz,
     deleted boolean DEFAULT false NOT NULL,
     verified_date timestamptz,
-    verified boolean DEFAULT false NOT NULL,
+    verified boolean,
     created_at timestamptz DEFAULT current_timestamp,
     updated_at timestamptz DEFAULT current_timestamp
 );
