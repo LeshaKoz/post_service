@@ -92,7 +92,9 @@ public class CommentService {
     public Comment deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException("There is no comment with id + " + commentId));
+
         commentValidator.validateAuthor(comment, userId);
+        clearCommentResourcesIfExist(comment);
 
         commentRepository.delete(comment);
 
