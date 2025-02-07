@@ -106,13 +106,13 @@ public class PostServiceImpl implements PostService {
         return postRepository.publishingPostsOnSchedule();
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     @Override
     public void moderationPostsOnSchedule() {
         Pageable pageable = PageRequest.of(0, batchSize, Sort.by(Sort.Direction.ASC, "id"));
 
         while (true) {
-            List<Post> unverifiedPosts = postRepository.findAllByVerifiedDateIsNullOrderById(pageable);
+//            List<Post> unverifiedPosts = postRepository.findAllByVerifiedDateIsNullOrderById(pageable);
+            List<Post> unverifiedPosts = getUnverifiedPosts(pageable);
             if (unverifiedPosts.isEmpty()) {
                 break;
             }
@@ -126,7 +126,13 @@ public class PostServiceImpl implements PostService {
         }
     }
 
-    private void moderatePostsBatch(List<Post> posts) {
+    @Transactional(readOnly = true)
+    public List<Post> getUnverifiedPosts(Pageable pageable) {
+        return postRepository.findAllByVerifiedDateIsNullOrderById(pageable);
+    }
+
+    @Transactional
+    public void moderatePostsBatch(List<Post> posts) {
         for (Post post : posts) {
             boolean containsProfanity = moderationDictionary.containsProfanity(post.getContent());
             post.setVerified(!containsProfanity);
