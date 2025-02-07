@@ -9,6 +9,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.List;
+
 @Mapper(componentModel = "Spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostMapper {
     String DATE_FORMAT = Constants.DATE_FORMAT;
@@ -26,6 +28,8 @@ public interface PostMapper {
     @Mapping(source = "publishedAt", target = "publishedAt", dateFormat = DATE_FORMAT)
     @Mapping(source = "published", target = "isPublished")
     PostResponseDto toPostResponseDto(Post post);
+
+    List<PostResponseDto> toPostResponseDtos(List<Post> posts);
 
 
 }

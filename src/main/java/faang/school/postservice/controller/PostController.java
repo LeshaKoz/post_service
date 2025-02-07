@@ -1,6 +1,7 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.post.PostCreateRequestDto;
+import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.service.PostService;
@@ -8,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -45,24 +45,17 @@ public class PostController {
     }
 
     @GetMapping("/")
-    public List<PostResponseDto> getFilteredPosts(@RequestParam String filter,
+    public List<PostResponseDto> getFilteredPosts(@RequestParam Boolean isPublished,
                                              @RequestParam(required = false) Long projectId,
-                                             @RequestParam(required = false) Long userId) {
-        List<PostResponseDto> responseDtos = new ArrayList<>();
-        if ("draft".equals(filter)) {
-            if (projectId != null) {
-                responseDtos = postService.getProjectPostDrafts(projectId);
-            } else if (userId != null) {
-                responseDtos = postService.getUserPostDrafts(userId);
-            }
-        } else if ("post".equals(filter)) {
-            if (projectId != null) {
-                responseDtos = postService.getProjectPosts(projectId);
-            } else if (userId != null) {
-                responseDtos = postService.getUserPosts(userId);
-            }
-        }
-        return responseDtos;
+                                             @RequestParam(required = false) Long authorId) {
+
+        PostFilterDto postFilter = PostFilterDto.builder()
+                .authorId(authorId)
+                .projectId(projectId)
+                .isPublished(isPublished)
+                .build();
+
+        return postService.findAllByFilter(postFilter);
     }
 
 }

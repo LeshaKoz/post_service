@@ -1,8 +1,13 @@
 package faang.school.postservice.service.impl;
 
 import faang.school.postservice.dto.post.PostCreateRequestDto;
+import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
+import faang.school.postservice.filter.post.AuthorSpecification;
+import faang.school.postservice.filter.post.PostSpecificationFilter;
+import faang.school.postservice.filter.post.ProjectSpecification;
+import faang.school.postservice.filter.post.PublishedSpecification;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -18,6 +23,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,10 +40,20 @@ class PostServiceImplTest {
     private PostCreateRequestDto postCreateRequestDto;
     private PostUpdateRequestDto postUpdateRequestDto;
     private final List<Post> somePosts = TestData.getSomePosts();
+    private final List<PostSpecificationFilter> postSpecificationFilters = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
-        postService = new PostServiceImpl(postRepositoryMock, postServiceValidatorMock, postMapper);
+
+        PostSpecificationFilter authorSpec = new AuthorSpecification();
+        PostSpecificationFilter projectSpec = new ProjectSpecification();
+        PostSpecificationFilter publishedSpec = new PublishedSpecification();
+
+        postSpecificationFilters.add(authorSpec);
+        postSpecificationFilters.add(projectSpec);
+        postSpecificationFilters.add(publishedSpec);
+
+        postService = new PostServiceImpl(postRepositoryMock, postServiceValidatorMock, postMapper, postSpecificationFilters);
 
         postCreateRequestDto = PostCreateRequestDto.builder()
                 .content("Test content")
@@ -136,42 +152,12 @@ class PostServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test get post drafts by project")
-    void testGetProjectPostDrafts() {
+    @DisplayName("Test get posts by filter")
+    void testGetPostsByFilter() {
         long projectId = 222L;
-        Mockito.when(postRepositoryMock.findByProjectId(projectId)).thenReturn(somePosts);
-        List<PostResponseDto> resultDtos = postService.getProjectPostDrafts(projectId);
-        Assertions.assertEquals(1, resultDtos.size());
+        PostFilterDto draftsProjectFilter = PostFilterDto.builder().isPublished(false).projectId(projectId).build();
+        postService.findAllByFilter(draftsProjectFilter);
+        Mockito.verify(postRepositoryMock, Mockito.times(1)).findAll(Mockito.any());
     }
 
-    @Test
-    @DisplayName("Test get post drafts by author")
-    void testGetUserPostDrafts() {
-        long userId = 111L;
-        Mockito.when(postRepositoryMock.findByAuthorId(userId)).thenReturn(somePosts);
-        List<PostResponseDto> resultDtos = postService.getUserPostDrafts(userId);
-        Assertions.assertEquals(1, resultDtos.size());
-    }
-
-    @Test
-    @DisplayName("Test get posts by project")
-    void testGetProjectPosts() {
-        long projectId = 222L;
-        Mockito.when(postRepositoryMock.findByProjectId(projectId)).thenReturn(somePosts);
-        List<PostResponseDto> resultDtos = postService.getProjectPosts(projectId);
-        Assertions.assertEquals(2, resultDtos.size());
-        Assertions.assertEquals(5, resultDtos.stream().filter(dto -> dto.id() == 5).toList().get(0).id());
-        Assertions.assertEquals(6, resultDtos.stream().filter(dto -> dto.id() == 6).toList().get(0).id());
-    }
-
-    @Test
-    @DisplayName("Test get posts by user")
-    void testGetUserPosts() {
-        long userId = 111L;
-        Mockito.when(postRepositoryMock.findByAuthorId(userId)).thenReturn(somePosts);
-        List<PostResponseDto> resultDtos = postService.getUserPosts(userId);
-        Assertions.assertEquals(2, resultDtos.size());
-        Assertions.assertEquals(1, resultDtos.stream().filter(dto -> dto.id() == 1).toList().get(0).id());
-        Assertions.assertEquals(2, resultDtos.stream().filter(dto -> dto.id() == 2).toList().get(0).id());
-    }
 }

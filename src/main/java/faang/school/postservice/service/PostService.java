@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.post.PostCreateRequestDto;
+import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
 
@@ -17,13 +18,5 @@ public interface PostService {
 
     PostResponseDto getPost(Long Id);
 
-    List<PostResponseDto> getProjectPostDrafts(Long projectId);
-
-    List<PostResponseDto> getUserPostDrafts(Long userId);
-
-    List<PostResponseDto> getProjectPosts(Long projectId);
-
-    List<PostResponseDto> getUserPosts(Long userId);
-
-
+    List<PostResponseDto> findAllByFilter(PostFilterDto filter);
 }

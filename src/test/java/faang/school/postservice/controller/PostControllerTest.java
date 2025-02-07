@@ -79,38 +79,11 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("Test get project's post drafts")
+    @DisplayName("Test get posts ")
     void testGetProjectPostDrafts() {
         Long projectId = 123L;
-        postController.getFilteredPosts("draft", projectId, null);
+        postController.getFilteredPosts(true, projectId, null);
         Mockito.verify(postServiceMock, Mockito.times(1))
-                .getProjectPostDrafts(projectId);
-    }
-
-    @Test
-    @DisplayName("Test get user's post drafts")
-    void testGetUserPostDrafts() {
-        Long userId = 123L;
-        postController.getFilteredPosts("draft", null, userId);
-        Mockito.verify(postServiceMock, Mockito.times(1))
-                .getUserPostDrafts(userId);
-    }
-
-    @Test
-    @DisplayName("Test get project's posts")
-    void testGetProjectPosts() {
-        Long projectId = 123L;
-        postController.getFilteredPosts("post", projectId, null);
-        Mockito.verify(postServiceMock, Mockito.times(1))
-                .getProjectPosts(projectId);
-    }
-
-    @Test
-    @DisplayName("Test get user's posts")
-    void testGetUserPosts() {
-        Long userId = 123L;
-        postController.getFilteredPosts("post", null, userId);
-        Mockito.verify(postServiceMock, Mockito.times(1))
-                .getUserPosts(userId);
+                .findAllByFilter(Mockito.any());
     }
 }

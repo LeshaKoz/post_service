@@ -1,20 +1,21 @@
 package faang.school.postservice.service.impl;
 
 import faang.school.postservice.dto.post.PostCreateRequestDto;
+import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
+import faang.school.postservice.filter.post.PostSpecificationFilter;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -25,6 +26,7 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostServiceValidator postServiceValidator;
     private final PostMapper postMapper;
+    private final List<PostSpecificationFilter> postSpecificationFilters;
 
     @Override
     public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
@@ -70,51 +72,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostResponseDto> getProjectPostDrafts(Long projectId) {
-        List<Post> posts = postRepository.findByProjectId(projectId);
-        return posts.stream()
-                .filter(post -> (Objects.equals(post.getProjectId(), projectId)
-                        && !post.isPublished()
-                        && !post.isDeleted()))
-                .sorted(Comparator.comparing(Post::getCreatedAt))
-                .map(postMapper::toPostResponseDto)
-                .toList();
-    }
-
-    @Override
-    public List<PostResponseDto> getUserPostDrafts(Long userId) {
-        List<Post> posts = postRepository.findByAuthorId(userId);
-        return posts.stream()
-                .filter(post -> (Objects.equals(post.getAuthorId(), userId)
-                        && !post.isPublished()
-                        && !post.isDeleted()))
-                .sorted(Comparator.comparing(Post::getCreatedAt))
-                .map(postMapper::toPostResponseDto)
-                .toList();
-    }
-
-    @Override
-    public List<PostResponseDto> getProjectPosts(Long projectId) {
-        List<Post> posts = postRepository.findByProjectId(projectId);
-        return posts.stream()
-                .filter(post -> (Objects.equals(post.getProjectId(), projectId)
-                        && post.isPublished()
-                        && !post.isDeleted()))
-                .sorted(Comparator.comparing(Post::getCreatedAt))
-                .map(postMapper::toPostResponseDto)
-                .toList();
-    }
-
-    @Override
-    public List<PostResponseDto> getUserPosts(Long userId) {
-        List<Post> posts = postRepository.findByAuthorId(userId);
-        return posts.stream()
-                .filter(post -> (Objects.equals(post.getAuthorId(), userId)
-                        && post.isPublished()
-                        && !post.isDeleted()))
-                .sorted(Comparator.comparing(Post::getCreatedAt))
-                .map(postMapper::toPostResponseDto)
-                .toList();
+    public List<PostResponseDto> findAllByFilter(PostFilterDto filter) {
+        Specification<Post> specification = getPostSpecification(filter);
+        return postMapper.toPostResponseDtos(postRepository.findAll(specification));
     }
 
     private Post getPostById(Long postId) {
@@ -125,5 +85,13 @@ public class PostServiceImpl implements PostService {
     private Post copyPostData(Post sourcePost, Post targetPost) {
         targetPost.setContent(sourcePost.getContent());
         return targetPost;
+    }
+
+    Specification<Post> getPostSpecification(PostFilterDto filter) {
+        return postSpecificationFilters.stream()
+                .filter(spec -> spec.isApplicable(filter))
+                .map(spec -> spec.apply(filter))
+                .reduce(Specification::and)
+                .orElse(null);
     }
 }
