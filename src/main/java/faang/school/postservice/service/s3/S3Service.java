@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -59,7 +60,7 @@ public class S3Service {
     }
 
     private void putObject(String key, MultipartFile file) {
-        try {
+        try (InputStream inputStream = file.getInputStream()) {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
@@ -68,7 +69,7 @@ public class S3Service {
 
             s3Client.putObject(
                     putObjectRequest,
-                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+                    RequestBody.fromInputStream(inputStream, file.getSize())
             );
         } catch (Exception e) {
             throw new MediaFileException(String.format("Failed to upload file %s to S3", file.getOriginalFilename()));

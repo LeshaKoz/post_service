@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 @Slf4j
 @Component
@@ -25,18 +26,20 @@ public class ImageResizer {
     private int maxSizeSquare;
 
     public MultipartFile resizeImage(MultipartFile file) throws IOException {
-        BufferedImage originalImage = ImageIO.read(file.getInputStream());
-        if (originalImage == null) {
-            throw new IOException("Failed to read image. The image file might be corrupted or in an unsupported format.");
-        }
+        try (InputStream inputStream = file.getInputStream()) {
+            BufferedImage originalImage = ImageIO.read(inputStream);
+            if (originalImage == null) {
+                throw new IOException("Failed to read image. The image file might be corrupted or in an unsupported format.");
+            }
 
-        if (isResizingRequired(originalImage)) {
-            BufferedImage resizedImage = applyResizing(originalImage);
-            byte[] resizedImageBytes = convertImageToBytes(resizedImage);
+            if (isResizingRequired(originalImage)) {
+                BufferedImage resizedImage = applyResizing(originalImage);
+                byte[] resizedImageBytes = convertImageToBytes(resizedImage);
 
-            return createMultipartFile(file, resizedImageBytes);
+                return createMultipartFile(file, resizedImageBytes);
+            }
+            return file;
         }
-        return file;
     }
 
     private boolean isResizingRequired(BufferedImage image) {
