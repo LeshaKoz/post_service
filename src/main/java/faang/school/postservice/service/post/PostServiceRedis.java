@@ -26,7 +26,7 @@ public class PostServiceRedis {
 
     public void save(PostEvent postEvent) {
         redisPostRepository.save(postEvent);
-        log.debug("Post added to Redis cache");
+        log.debug("Post {} added to Redis cache", postEvent.getId());
 
         List<Long> followersId = postRepository.findFollowersByAuthorId(postEvent.getAuthorId());
         postEvent.setFollowersId(followersId);
@@ -34,6 +34,6 @@ public class PostServiceRedis {
         UserDto author = userServiceClient.getUser(postEvent.getAuthorId());
         UserEvent userEvent =  userEventMapper.toEvent(author);
         redisUserRepository.save(userEvent);
-        log.debug("Author with id {} of the post added to Redis cache", author.getId());
+        log.debug("Author with id {} of the post {} added to Redis cache", author.getId(), postEvent.getId());
     }
 }

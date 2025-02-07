@@ -2,6 +2,7 @@ package faang.school.postservice.controller.feed;
 
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.model.event.PostEvent;
 import faang.school.postservice.service.FeedHeater;
 import faang.school.postservice.service.feed.FeedService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/feed")
@@ -21,7 +23,7 @@ public class FeedController {
     private final FeedHeater feedHeater;
 
     @GetMapping
-    public List<PostResponseDto> getUserFeed(@RequestParam(required = false) long postId) {
+    public Set<PostEvent> getUserFeed(@RequestParam(required = false) long postId) {
        return feedService.getUserFeed(postId, userContext.getUserId());
     }
 
