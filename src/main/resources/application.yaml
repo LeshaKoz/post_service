@@ -31,7 +31,6 @@ spring:
      region: US_EAST_1
      accessKey: user
      secretKey: password
-#     bucketName: post-bucket
      bucketName: corpbucket
 
   servlet:
