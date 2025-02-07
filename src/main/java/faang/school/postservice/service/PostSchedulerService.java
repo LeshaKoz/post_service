@@ -34,6 +34,9 @@ public class PostSchedulerService {
     @Value("${post.delay-multiplier}")
     private long delayMultiplier;
 
+    @Value("${post.batchCount}")
+    private int batchCount;
+
     public void publishScheduledPosts(int batchSize) {
         Page<Post> page = postRepository.findReadyToPublish(PageRequest.of(0, batchSize));
 
@@ -54,7 +57,7 @@ public class PostSchedulerService {
 
             futures.add(executorService.submit(() -> processBatch(postPage.getContent())));
 
-            if (futures.size() % 3 == 0) {
+            if (futures.size() % batchCount == 0) {
                 saveProcessedBatches(futures);
             }
         }

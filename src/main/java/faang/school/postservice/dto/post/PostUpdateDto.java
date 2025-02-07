@@ -24,6 +24,6 @@ public class PostUpdateDto {
     )
     private String content;
 
-    @FutureOrPresent(message = "Дата запланированной публикации не может быть в прошлом")
+    @FutureOrPresent(message = "Дата запланированной публикации не может быть меньше текущей")
     private LocalDateTime scheduledAt;
 }

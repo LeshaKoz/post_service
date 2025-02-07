@@ -51,3 +51,9 @@ post:
   timeout: 10
   initial-delay: 500
   delay-multiplier: 2
+  batchCount: 3
+
+
+thread:
+  pool:
+    size: 10
