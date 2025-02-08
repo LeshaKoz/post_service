@@ -88,7 +88,6 @@ public class PostServiceTest {
         verify(postRepository, never()).save(post);
     }
 
-
     @Test
     public void publishPost_ShouldSaveAndReturnWhenValid() {
         long postId = 1L;
