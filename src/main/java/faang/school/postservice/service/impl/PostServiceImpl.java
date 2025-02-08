@@ -33,7 +33,7 @@ public class PostServiceImpl implements PostService {
         postServiceValidator.validatePostDto(postCreateRequestDto);
         Post post = postMapper.toPostEntity(postCreateRequestDto);
         Post draftPost = postRepository.save(post);
-        log.info("Post draft created {}", draftPost);
+        log.info("Post draft created, id = {}", draftPost.getId());
         return postMapper.toPostResponseDto(draftPost);
     }
 
@@ -44,7 +44,7 @@ public class PostServiceImpl implements PostService {
         postToPublish.setPublished(true);
         postToPublish.setPublishedAt(LocalDateTime.now());
         Post publishedPost = postRepository.save(postToPublish);
-        log.info("Draft post is published {}", publishedPost);
+        log.info("Draft post is published, id = {}", publishedPost.getId());
         return postMapper.toPostResponseDto(publishedPost);
     }
 
@@ -53,7 +53,7 @@ public class PostServiceImpl implements PostService {
         Post postToUpdate = getPostById(postId);
         Post requestPost = postMapper.toPostEntity(postUpdateRequestDto);
         Post updatedPost = postRepository.save(copyPostData(requestPost, postToUpdate));
-        log.info("Post is updated {}", updatedPost);
+        log.info("Post is updated, id = {}", updatedPost.getId());
         return postMapper.toPostResponseDto(updatedPost);
     }
 
@@ -61,7 +61,7 @@ public class PostServiceImpl implements PostService {
     public void deletePost(Long postId) {
         Post postToDelete = getPostById(postId);
         postToDelete.setDeleted(true);
-        log.info("Post is deleted {}", postToDelete);
+        log.info("Post is deleted, id = {}", postToDelete.getId());
         postRepository.save(postToDelete);
     }
 
@@ -79,7 +79,7 @@ public class PostServiceImpl implements PostService {
 
     private Post getPostById(Long postId) {
         Optional<Post> optionalPost = postRepository.findById(postId);
-        return optionalPost.orElseThrow();
+        return optionalPost.orElseThrow(() -> new IllegalArgumentException("Post not found, Id = " + postId));
     }
 
     private Post copyPostData(Post sourcePost, Post targetPost) {
@@ -87,7 +87,7 @@ public class PostServiceImpl implements PostService {
         return targetPost;
     }
 
-    Specification<Post> getPostSpecification(PostFilterDto filter) {
+    private Specification<Post> getPostSpecification(PostFilterDto filter) {
         return postSpecificationFilters.stream()
                 .filter(spec -> spec.isApplicable(filter))
                 .map(spec -> spec.apply(filter))
