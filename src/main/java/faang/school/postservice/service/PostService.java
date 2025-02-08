@@ -8,11 +8,13 @@ import faang.school.postservice.exception.EntityNotFound;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import faang.school.postservice.validator.PostValidator;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import static java.lang.String.format;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -86,8 +88,10 @@ public class PostService {
     }
 
     private Post findPostById(@NotNull long id) {
+    public Post findById(@NotNull Long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFound(POST_NOT_FOUND+ " ID поста: " + id));
+                .orElseThrow(() -> new EntityNotFoundException(format("Пост с id=%d не найден", id)));
     }
 
     private List<PostResponseDto> getPosts(Long id, boolean published, boolean byAuthor) {
@@ -100,6 +104,7 @@ public class PostService {
 
         return postMapper.toDtoList(posts);
     }
+}
 
     public List<PostResponseDto> getFilteredPosts(FilterDto filterDto) {
         postValidator.validateFilterDto(filterDto);
