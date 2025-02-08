@@ -3,20 +3,35 @@ package faang.school.postservice.service;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.validation.ModerationDictionary;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @RequiredArgsConstructor
 @Service
 public class PostService {
+    private static final Logger log = LoggerFactory.getLogger(PostService.class);
     private final PostRepository postRepository;
     private final ExternalService externalService;
+    private final ModerationDictionary moderationDictionary;
+    private final AiModerationService aiModerationService;
+    @Value("${moderation.threadSize}")
+    private int threadSize;
+    private final ExecutorService executorService= Executors.newFixedThreadPool(4);
 
     public Post createDraft(Post post) {
         if (post.getAuthorId() != null && !externalService.userExists(post.getAuthorId())) {
@@ -88,5 +103,46 @@ public class PostService {
                 .filter(post -> !post.isDeleted() && post.isPublished())
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
                 .toList();
+    }
+
+    public void moderatePosts() {
+        List<Post> posts = postRepository.findByVerifiedDateIsNull();
+        List<List<Post>> threads = splitIntoThreads(posts);
+
+        List<Future<?>> futures = new ArrayList<>();
+        threads.forEach((thread)-> {
+            Future<?> future = executorService.submit(() -> moderateThread(thread));
+            futures.add(future);
+        });
+
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error while moderating posts: {}", e.getMessage(), e);
+            }
+        }
+
+        executorService.shutdown();
+    }
+
+    private void moderateThread(List<Post> posts) {
+        posts.forEach((post)->{
+            boolean hasBadWord = moderationDictionary.containsBadWord(post.getContent());
+            boolean isToxic = !hasBadWord && aiModerationService.isToxic(post.getContent());
+
+            post.setVerified(!(hasBadWord || isToxic));
+            post.setVerifiedDate(LocalDateTime.now());
+        });
+
+        postRepository.saveAll(posts);
+    }
+
+    private List<List<Post>> splitIntoThreads(List<Post> posts) {
+        List<List<Post>> threads = new ArrayList<>();
+        for (int i = 0; i < posts.size(); i += threadSize) {
+            threads.add(posts.subList(i, Math.min(posts.size(), i + threadSize)));
+        }
+        return threads;
     }
 }
