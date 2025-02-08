@@ -4,11 +4,13 @@ import faang.school.postservice.dto.ErrorDto;
 import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
+import faang.school.postservice.exception.UploadFileException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @Slf4j
@@ -20,6 +22,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ErrorDto handleDataValidationException(DataValidationException ex) {
         log.error(ex.getMessage(), ex);
         return new ErrorDto("Data validation exception", ex.getMessage());
+    }
+
+    @ExceptionHandler(UploadFileException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto handleFileIsEmptyException(UploadFileException ex) {
+        log.error(ex.getMessage(), ex);
+        return new ErrorDto("Upload file exception", ex.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        log.error(ex.getMessage(), ex);
+        return new ErrorDto("Upload file size is bigger than allowed", ex.getMessage());
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

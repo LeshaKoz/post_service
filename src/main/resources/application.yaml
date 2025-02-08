@@ -29,8 +29,16 @@ spring:
     servlet:
       path: /api/v1
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
 server:
   port: 8081
+
+  tomcat:
+    max-swallow-size: 5MB
 
 logging:
   level:
@@ -45,3 +53,9 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+aws:
+  url: http://localhost:9000
+  user: user
+  password: password
+  bucketName: commentbucket
