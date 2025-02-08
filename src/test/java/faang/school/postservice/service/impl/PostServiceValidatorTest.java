@@ -70,8 +70,6 @@ class PostServiceValidatorTest {
                 .content("test")
                 .build();
         postServiceValidator.validatePostDto(emptyAuthorsPostDto);
-        //Assert.assertThrows(IllegalArgumentException.class,
-        //        () -> postServiceValidator.validatePostDto(emptyAuthorsPostDto));
 
         long authorId = 0L;
         PostCreateRequestDto emptyAuthorIdIsZeroPostDto = PostCreateRequestDto.builder()
