@@ -21,6 +21,7 @@ spring:
     redis:
       port: 6379
       host: localhost
+      comment-max-size: 3
       channels:
         like: like_channel
         comment: comment_channel
@@ -41,6 +42,8 @@ spring:
           replicas: 2
           configs:
             min.insync.replicas: 2
+            min-insync-replicas: 2
+
   kafka:
     producer:
       bootstrap-servers: localhost:9091,localhost:9092,localhost:9093
@@ -53,6 +56,18 @@ spring:
         request.timeout.ms: 10000
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
+    consumer:
+      bootstrap-servers: localhost:9091,localhost:9092,localhost:9093
+      group-id: comment-consumer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      concurrency: 3
+      enable-auto-commit: false
+      ack-mode: MANUAL_IMMEDIATE
+      properties:
+        allow.auto.create.topics: false
+        spring.json.trusted.packages: '*'
+        spring.json.value.default.type: faang.school.postservice.dto.CommentEvent
     admin:
       properties:
         retries: 5

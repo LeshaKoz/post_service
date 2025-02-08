@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,6 +23,8 @@ public class PostDto {
     @NotNull(message = "content must be not null")
     @Size(max = 1000, message = "content must be shorter than 1000 characters")
     private String content;
+    List<Long> likesIds;
+    List<Long> commentsIds;
 
     private Boolean deleted;
     private LocalDateTime createdAt;
