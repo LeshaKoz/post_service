@@ -1,14 +1,20 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.exception.PostNotFoundException;
+import faang.school.postservice.config.RestTemplateConfig;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.SpellCheckResponse;
 import faang.school.postservice.repository.PostRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
+import java.net.http.HttpConnectTimeoutException;
 import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +24,7 @@ import java.util.Objects;
 public class PostService {
     private final PostRepository postRepository;
     private final ExternalService externalService;
+    private final RestTemplateConfig restTemplateConfig;
 
     public Post createDraft(Post post) {
         if (post.getAuthorId() != null && !externalService.userExists(post.getAuthorId())) {
@@ -89,5 +96,25 @@ public class PostService {
                 .filter(post -> !post.isDeleted() && post.isPublished())
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
                 .toList();
+    }
+
+    public void correctPosts() {
+        List<Post> unpublishedPosts = postRepository.findByPublishedFalse();
+        for (Post post : unpublishedPosts) {
+            String correctedText = correctTextWithYandexSpeller(post.getContent());
+            post.setContent(correctedText);
+            postRepository.save(post);
+        }
+    }
+
+    @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    private String correctTextWithYandexSpeller(String text) {
+        String url = "https://speller.yandex.net/services/spellservice.json/checkText?text=" + text;
+        SpellCheckResponse[] responses = restTemplateConfig.restTemplate().getForObject(url, SpellCheckResponse[].class);
+        return applyCorrection(text, responses);
+    }
+
+    private String applyCorrection(String text, SpellCheckResponse[] responses) {
+        return null;
     }
 }
