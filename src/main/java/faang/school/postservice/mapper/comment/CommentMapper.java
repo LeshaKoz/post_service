@@ -19,7 +19,7 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class CommentMapper {
     private LikeMapper likeMapper;
-    private PostMapper postMapper;
+    private PostMapperForComment postMapper;
 
     @Autowired
     public void setLikeMapper(LikeMapper likeMapper) {
@@ -27,7 +27,7 @@ public abstract class CommentMapper {
     }
 
     @Autowired
-    public void setPostMapper(PostMapper postMapper) {
+    public void setPostMapper(PostMapperForComment postMapper) {
         this.postMapper = postMapper;
     }
 

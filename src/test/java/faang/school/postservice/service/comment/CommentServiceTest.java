@@ -11,7 +11,7 @@ import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.comment.CommentMapperImpl;
 import faang.school.postservice.mapper.comment.LikeMapperImpl;
-import faang.school.postservice.mapper.comment.PostMapperImpl;
+import faang.school.postservice.mapper.comment.PostMapperForCommentImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
@@ -67,7 +67,7 @@ public class CommentServiceTest {
     private LikeMapperImpl likeMapper;
 
     @Spy
-    private PostMapperImpl postMapper;
+    private PostMapperForCommentImpl postMapper;
 
     @Mock
     private UserContext userContext;
