@@ -4,8 +4,6 @@ on:
   pull_request:
     branches:
       - triton-master-stream8
-      - triton-stream8/feature/*
-      - dev
 jobs:
   build:
     runs-on: ubuntu-20.04
