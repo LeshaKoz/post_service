@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({NoSuchElementException.class, EntityNotFoundException.class})
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleNotFoundExceptions(RuntimeException e) {
         log.error("Not found in database exception occurred, {}\n{}", e.getMessage(), e.getStackTrace());
         return e.getMessage();
