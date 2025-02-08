@@ -31,8 +31,8 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
-    private static final int SMALL_IMAGE_SIZE = 170;
-    private static final int LARGE_IMAGE_SIZE = 1080;
+    public static final int SMALL_IMAGE_SIZE = 170;
+    public static final int LARGE_IMAGE_SIZE = 1080;
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserServiceClient userServiceClient;
