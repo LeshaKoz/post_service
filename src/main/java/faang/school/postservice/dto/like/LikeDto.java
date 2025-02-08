@@ -13,9 +13,7 @@ public class LikeDto {
     @NotNull
     private Long userId;
 
-    @NotNull
     private Long postId;
 
-    @NotNull
     private Long commentId;
 }
