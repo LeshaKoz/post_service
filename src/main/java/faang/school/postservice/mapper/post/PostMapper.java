@@ -43,5 +43,6 @@ public interface PostMapper {
     return resources.stream().map(Resource::getId).toList();
   }
 
-  PostCache toPostCache(Post post);
+  PostCache toPostCache(Post post); // TODO перенести все новые для работы с Feed в FeedMapper???
+
 }

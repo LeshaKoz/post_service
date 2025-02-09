@@ -10,4 +10,6 @@ public interface FeedService {
   void updateUserFeed(Long userId, Long postId);
 
   FeedCache getUserFeed(Long userId);
+
+  FeedCache getUserFeed(Long userId, int previousPostId, int pageSize);
 }
