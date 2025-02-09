@@ -12,7 +12,9 @@ import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ import java.util.stream.IntStream;
 
 @Slf4j
 @RequiredArgsConstructor
+@EnableAsync
 @Service
 public class PostService {
 
@@ -34,7 +37,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
-    private final ExecutorService executorService;
+    private final AsyncPostPublishPerformer publishPerformer;
 
     @Transactional
     public void createPostByUserId(Long userId, Post post) {
@@ -145,27 +148,18 @@ public class PostService {
         }
     }
 
+    @Transactional
     public void publishScheduledPosts() {
         List<Post> readyToPublishPosts = postRepository.findReadyToPublish();
 
         if (readyToPublishPosts.isEmpty()) {
-            log.info("No one post ready to publish");
+            log.info("No one post to publish");
             return;
         }
 
-        int postsAmount = readyToPublishPosts.size();
-        int totalBatches = (postsAmount + batchSize - 1) / batchSize;
+        List<List<Post>> batches = ListUtils.partition(readyToPublishPosts, batchSize);
 
-        List<CompletableFuture<Void>> futures = IntStream.range(0, totalBatches)
-                .mapToObj(i -> {
-                    int start = i * batchSize;
-                    int end = Math.min(batchSize + start, postsAmount);
-                    List<Post> currentBatch = readyToPublishPosts.subList(start, end);
-                    return CompletableFuture.runAsync(() -> publishBatch(currentBatch), executorService);
-                })
-                .toList();
-
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        batches.forEach(publishPerformer::publishBatch);
     }
 
     private void doesProjectExist(Long projectId) {
@@ -181,12 +175,12 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
     }
 
-    private void publishBatch(List<Post> posts) {
-        posts.forEach(post -> {
-            post.setPublished(true);
-            post.setPublishedAt(LocalDateTime.now());
-        });
-        postRepository.saveAll(posts);
-        log.info("Scheduled task #Publish post# completed");
-    }
+//    private void publishBatch(List<Post> posts) {
+//        posts.forEach(post -> {
+//            post.setPublished(true);
+//            post.setPublishedAt(LocalDateTime.now());
+//        });
+//        postRepository.saveAll(posts);
+//        log.info("Scheduled task #Publish post# completed");
+//    }
 }

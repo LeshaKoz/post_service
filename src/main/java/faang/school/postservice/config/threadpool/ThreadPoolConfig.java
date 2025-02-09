@@ -1,6 +1,7 @@
 package faang.school.postservice.config.threadpool;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,10 +11,12 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 @Configuration
 public class ThreadPoolConfig {
-    private static final int THREAD_AMOUNT = 10;
 
-    @Bean(destroyMethod = "shutdown")
+    @Value("${post-service.publish.thread-amount}")
+    private int threadAmount;
+
+    @Bean(destroyMethod = "shutdown", name = "publishExecutor")
     public ExecutorService executorService() {
-        return Executors.newFixedThreadPool(THREAD_AMOUNT);
+        return Executors.newFixedThreadPool(threadAmount);
     }
 }

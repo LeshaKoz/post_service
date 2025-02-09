@@ -53,3 +53,4 @@ post-service:
     scheduled:
       cron: "0 * * * * *"
     batch-size: 1000
+    thread-amount: 10
