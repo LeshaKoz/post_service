@@ -59,6 +59,15 @@ logging:
 
 moderation:
   dictionary: classpath:obscene_words.txt
+  thread-pool-size: 5
+  thread-pool-max-size: 10
+  thread-pool-queue-capacity: 10
+  comment-limit: 500
+  batch-size: 100
+  cron: "0 0 3 * * ?"
+  dictionary-ban:
+    path: moderation/blacklist.txt
+
 
 user-service:
   host: localhost
@@ -74,3 +83,5 @@ minio:
   url: "${MINIO_URL:http://localhost:9000}"
   user: ${MINIO_USER:user}
   password: ${MINIO_PASSWORD:password}
+
+moderation:

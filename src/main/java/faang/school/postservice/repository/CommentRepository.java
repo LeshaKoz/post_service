@@ -11,4 +11,7 @@ public interface CommentRepository extends CrudRepository<Comment, Long> {
     @Query("SELECT c FROM Comment c WHERE c.post.id = :postId")
     List<Comment> findAllByPostId(long postId);
 
+    @Query("SELECT c FROM Comment c WHERE c.verifiedDate IS NULL ORDER BY c.createdAt ASC LIMIT :limit")
+    List<Comment> findUnverifiedWithLimit(int limit);
+
 }
