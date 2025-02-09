@@ -12,6 +12,8 @@ public interface PostService {
 
     PostResponseDto publishPostDraft(Long postId);
 
+    void publishScheduledPosts();
+
     PostResponseDto updatePost(Long postId, PostUpdateRequestDto postUpdateRequestDto);
 
     void deletePost(Long postId);
