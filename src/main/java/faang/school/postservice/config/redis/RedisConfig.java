@@ -32,6 +32,6 @@ public class RedisConfig {
 
     @Bean
     public ChannelTopic userBanTopic() {
-        return new ChannelTopic("user_ban");
+        return new ChannelTopic(USER_BAN_TOPIC);
     }
 }
