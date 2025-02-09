@@ -5,6 +5,11 @@ import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.service.comment.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -22,26 +27,52 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/comments")
+@Tag(name = "Comment Controller", description = "API for managing comments and uploading images")
 public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
+    @Operation(summary = "Create a new comment", description = "Creates a new comment with the provided details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comment created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input provided")
+    })
     public CommentResponseDto createComment(@Valid @RequestBody CommentRequestDto commentRequestDto) {
         return commentService.createComment(commentRequestDto);
     }
 
     @DeleteMapping("/{commentId}")
-    public void deleteComment(@NotNull @PathVariable Long commentId) {
+    @Operation(summary = "Delete a comment", description = "Deletes a comment by its ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comment deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Comment not found")
+    })
+    public void deleteComment(
+            @Parameter(description = "ID of the comment to delete", required = true)
+            @NotNull @PathVariable Long commentId) {
         commentService.deleteComment(commentId);
     }
 
     @PutMapping("/{commentId}")
-    public CommentResponseDto updateComment(@NotNull @PathVariable Long commentId,
+    @Operation(summary = "Update a comment", description = "Updates an existing comment with new details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comment updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input provided"),
+            @ApiResponse(responseCode = "404", description = "Comment not found")
+    })
+    public CommentResponseDto updateComment(
+            @Parameter(description = "ID of the comment to update", required = true)
+            @NotNull @PathVariable Long commentId,
                               @Valid @RequestBody CommentUpdateDto commentUpdateDto) {
         return commentService.updateComment(commentId, commentUpdateDto);
     }
 
     @GetMapping
+    @Operation(summary = "Get comments by filters", description = "Retrieves comments based on the provided filters")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid filters provided")
+    })
     public List<CommentResponseDto> getCommentsByFilters(@Valid CommentFiltersDto commentFiltersDto) {
         return commentService.getComments(commentFiltersDto);
     }

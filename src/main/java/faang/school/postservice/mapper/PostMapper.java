@@ -1,6 +1,7 @@
 package faang.school.postservice.mapper;
 
 import faang.school.postservice.dto.post.PostCreateRequestDto;
+import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.model.Post;
@@ -22,5 +23,5 @@ public interface PostMapper {
 
     List<PostResponseDto> toPostResponseDtos(List<Post> posts);
 
-
+    PostDto toPostDto(Post post);
 }
