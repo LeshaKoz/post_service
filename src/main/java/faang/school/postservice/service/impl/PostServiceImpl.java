@@ -8,6 +8,7 @@ import faang.school.postservice.filter.post.PostSpecificationFilter;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.schedule.ThreadPoolConfig;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +16,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
@@ -27,6 +31,8 @@ public class PostServiceImpl implements PostService {
     private final PostServiceValidator postServiceValidator;
     private final PostMapper postMapper;
     private final List<PostSpecificationFilter> postSpecificationFilters;
+    private final ThreadPoolConfig threadPoolConfig;
+    private final ExecutorService executorService;
 
     @Override
     public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
@@ -47,6 +53,75 @@ public class PostServiceImpl implements PostService {
         log.info("Draft post is published, id = {}", publishedPost.getId());
         return postMapper.toPostResponseDto(publishedPost);
     }
+
+    @Override
+    public void publishScheduledPosts() {
+        int batchSize = 2;
+        PostFilterDto postFilterDto = PostFilterDto.builder()
+                .isPublished(false)
+                .isDeleted(false)
+                //.scheduledAt(LocalDateTime.now())
+                .build();
+
+        List<Post> scheduledPosts = findAllPostsByFilter(postFilterDto);
+
+        List<List<Post>> postBatches = splitToBatch (scheduledPosts, batchSize);
+
+        //ExecutorService executorService = threadPoolConfig.PostScheduledThreadPool(10);
+
+        List<CompletableFuture<Void>> futurePostBatches = postBatches.stream()
+                .map(this::preparePostList)
+                .map(postsBatch -> CompletableFuture.runAsync(() -> {
+                    postRepository.saveAll(postsBatch);
+                }, executorService))
+                .toList();
+
+        long publishedPostsCount = futurePostBatches.stream()
+                .map(CompletableFuture :: join)
+                .count();
+        log.info("{} posts was published", publishedPostsCount);
+
+        //log.info("{} posts was published", processedSize);
+
+/*        log.info("Begin convertation records to entities");
+        List<CompletableFuture<Post>> futurePosts = scheduledPosts.stream()
+                .map(postResponseDto -> CompletableFuture.supplyAsync(() -> {
+                    Post post = postMapper.toPostEntity(postResponseDto);
+
+                    return post;
+                })).toList();
+
+        List<Post> posts = futurePosts.stream()
+                .map(CompletableFuture::join)
+                .toList();
+        log.info("End convertation records to entities");
+
+        postRepository.saveAll(posts);
+        log.info("Entities saved into DB");*/
+    }
+
+    private List<List<Post>> splitToBatch(List<Post> entities, int batchSize) {
+        List<List<Post>> batches = new ArrayList<>();
+
+        for (int i = 0; i < entities.size(); i += batchSize) {
+            List<Post> batch = new ArrayList<>(entities.subList(i, Math.min(entities.size(), i + batchSize)));
+            batches.add(batch);
+        }
+        return batches;
+    }
+
+    private List<Post> preparePostList(List<Post> posts) {
+        return posts.stream()
+                .map(this::preparePostToPublish)
+                .toList();
+    }
+
+    private Post preparePostToPublish(Post post) {
+        post.setPublished(true);
+        post.setPublishedAt(LocalDateTime.now());
+        return post;
+    }
+
 
     @Override
     public PostResponseDto updatePost(Long postId, PostUpdateRequestDto postUpdateRequestDto) {
@@ -73,8 +148,12 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostResponseDto> findAllByFilter(PostFilterDto filter) {
+        return postMapper.toPostResponseDtos(findAllPostsByFilter(filter));
+    }
+
+    private List<Post> findAllPostsByFilter(PostFilterDto filter) {
         Specification<Post> specification = getPostSpecification(filter);
-        return postMapper.toPostResponseDtos(postRepository.findAll(specification));
+        return postRepository.findAll(specification);
     }
 
     private Post getPostById(Long postId) {
