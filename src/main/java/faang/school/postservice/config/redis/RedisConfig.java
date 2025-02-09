@@ -12,9 +12,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.data.redis.topic.user-ban}")
     private static String USER_BAN_TOPIC;
 
+    public RedisConfig(@Value("${spring.data.redis.topic.user-ban}") String userBanTopic) {
+        USER_BAN_TOPIC = userBanTopic;
+    }
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
