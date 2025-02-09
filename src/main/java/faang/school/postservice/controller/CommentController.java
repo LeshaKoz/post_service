@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -29,6 +31,11 @@ public class CommentController {
     @PostMapping
     public CommentResponse create(@Valid @RequestBody CreateCommentRequest createRequest) {
         return commentService.create(createRequest);
+    }
+
+    @PostMapping("/{commentId}/image")
+    public void uploadImage(@PathVariable @Valid @Positive Long commentId, @RequestParam("file") MultipartFile file) {
+        commentService.uploadImage(commentId, file);
     }
 
     @PutMapping

@@ -35,7 +35,7 @@ public class ImageService {
         }
     }
 
-    public BufferedImage resizeImage(BufferedImage image, int targetSize) {
+    private BufferedImage resizeImage(BufferedImage image, int targetSize) {
         try {
             return Thumbnails.of(image)
                     .size(targetSize, targetSize)

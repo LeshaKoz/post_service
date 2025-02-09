@@ -1,6 +1,8 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.exceptions.ErrorResponse;
+import faang.school.postservice.exceptions.FileIsEmptyException;
+import faang.school.postservice.exceptions.UserServiceConnectException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,13 +20,27 @@ import java.util.Objects;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(UserServiceConnectException.class)
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    public ErrorResponse handlePostNotFoundException(Exception e, WebRequest webRequest) {
+        return buildErrorMessage(e, webRequest);
+    }
+
+    private ErrorResponse buildErrorMessage(Exception exception, WebRequest webRequest) {
+        String path = webRequest.getDescription(false).replace("uri=", "");
+        return ErrorResponse.builder()
+                .message(exception.getMessage())
+                .path(path)
+                .build();
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException e, WebRequest request) {
         List<Map<String, String>> fieldErrors = e.getBindingResult().getFieldErrors().stream().map(fieldError -> Map.of(
-              "field", fieldError.getField(),
-              "message", Objects.requireNonNull(fieldError.getDefaultMessage())
-            )).toList();
+                "field", fieldError.getField(),
+                "message", Objects.requireNonNull(fieldError.getDefaultMessage())
+        )).toList();
 
         log.error("MethodArgumentNotValidException: ", e);
         return ErrorResponse.builder()
@@ -34,7 +50,7 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({IllegalArgumentException.class, FileIsEmptyException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgumentException(IllegalArgumentException e, WebRequest request) {
         log.error("IllegalArgumentException: ", e);
