@@ -72,7 +72,7 @@ public class AlbumServiceImpl implements AlbumService {
                 new EntityNotFoundException(String.format("Album with id = %d not found", albumId)));
         long userId = userContext.getUserId();
         checkAuthor(userId, album);
-        checkVisibilityFroAlbum(album, SELECTED_USERS);
+        checkVisibilityForAlbum(album, SELECTED_USERS);
         albumUsersDto.usersIds().forEach(id -> albumRepository.addUserForVisibilityAtAlbum(album.getId(), id));
     }
 
@@ -84,7 +84,7 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private void checkVisibilityFroAlbum(Album album, Visibility visibility) {
+    private void checkVisibilityForAlbum(Album album, Visibility visibility) {
         if (!visibility.equals(album.getVisibility())) {
             log.error("Visibility isn't {} in album with id = {}", visibility, album.getId());
             throw new IllegalArgumentException(
