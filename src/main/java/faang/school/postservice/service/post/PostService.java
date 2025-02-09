@@ -20,10 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -153,7 +150,6 @@ public class PostService {
         List<Post> readyToPublishPosts = postRepository.findReadyToPublish();
 
         if (readyToPublishPosts.isEmpty()) {
-            log.info("No one post to publish");
             return;
         }
 
@@ -174,13 +170,4 @@ public class PostService {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
     }
-
-//    private void publishBatch(List<Post> posts) {
-//        posts.forEach(post -> {
-//            post.setPublished(true);
-//            post.setPublishedAt(LocalDateTime.now());
-//        });
-//        postRepository.saveAll(posts);
-//        log.info("Scheduled task #Publish post# completed");
-//    }
 }

@@ -7,10 +7,13 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.PostWasDeletedException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.post.AsyncPostPublishPerformer;
 import faang.school.postservice.service.post.PostService;
+import org.apache.commons.collections4.ListUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,7 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -49,7 +52,7 @@ public class PostServiceTest {
     private ProjectServiceClient projectServiceClient;
 
     @Mock
-    private ExecutorService executorService;
+    private AsyncPostPublishPerformer publishPerformer;
 
     @InjectMocks
     private PostService postService;
@@ -219,27 +222,29 @@ public class PostServiceTest {
 
     @Test
     public void testPublishScheduledPosts_Success() {
-        postService = new PostService(postRepository, userServiceClient, projectServiceClient, executorService);
-        int testBatchSize = 1500;
+        postService = new PostService(postRepository, userServiceClient, projectServiceClient, publishPerformer);
+        int testBatchSize = 2;
         ReflectionTestUtils.setField(postService, "batchSize", testBatchSize);
-        List<Post> posts = List.of(new Post(), new Post(), new Post());
+        List<Post> posts = List.of(new Post(), new Post(), new Post(), new Post(), new Post());
 
         when(postRepository.findReadyToPublish()).thenReturn(posts);
 
-        doAnswer(invocation -> {
-            Runnable task = invocation.getArgument(0);
-            task.run();
-            return null;
-        }).when(executorService).execute(any(Runnable.class));
-
         postService.publishScheduledPosts();
 
-        posts.forEach(post -> {
-            assertTrue(post.isPublished(), "Post must be published");
-            assertNotNull(post.getPublishedAt(), "Publication date must not be null");
-        });
+        ArgumentCaptor<List<Post>> batchCaptor = ArgumentCaptor.forClass(List.class);
+        verify(publishPerformer, atLeastOnce()).publishBatch(batchCaptor.capture());
+        List<List<Post>> actualBatches = batchCaptor.getAllValues();
 
-        verify(postRepository, times(1)).saveAll(anyList());
+        List<List<Post>> expectedBatches = ListUtils.partition(posts, testBatchSize);
+
+        assertEquals(expectedBatches.size(), actualBatches.size(), "Invalid amount invocations of publishBatch()");
+
+        IntStream.range(0, expectedBatches.size())
+                .forEach(i -> assertEquals(
+                        expectedBatches.get(i),
+                        actualBatches.get(i),
+                        String.format("Invalid data in batch #%d", i + 1)
+                ));
     }
 
     @Test
