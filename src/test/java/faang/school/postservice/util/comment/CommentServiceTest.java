@@ -5,6 +5,7 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.comment.CommentCheckService;
 import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.service.post.PostService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,13 +14,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,9 +36,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@TestPropertySource(locations = {"classpath:application-test.yaml"})
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
 
@@ -42,12 +53,17 @@ public class CommentServiceTest {
     @Mock
     private PostService postService;
 
+    @Mock
+    private CommentCheckService commentCheckService;
+
     @InjectMocks
     private CommentService commentService;
 
     private Comment comment;
     private Post post;
     private UserDto userDto;
+    @Value("${comment.check.size}")
+    private Integer pageSize;
 
     @BeforeEach
     public void setUp() {
@@ -168,5 +184,28 @@ public class CommentServiceTest {
 
         assertEquals("Comment not found", exception.getMessage());
         verify(commentRepository).findById(1L);
+    }
+
+    @Test
+    public void checkComments() {
+        List<Comment> comments = IntStream.range(0, 100)
+                .boxed()
+                .map(i -> Comment.builder()
+                        .id(Long.valueOf(i))
+                        .content("Content %d".formatted(i))
+                        .build())
+                .toList();
+        Page<Comment> page = new PageImpl<>(comments);
+        when(commentRepository.countByVerifiedDateIsNull()).thenReturn(1000L);
+        when(commentRepository.findAllByVerifiedDateIsNull(any())).thenReturn(page);
+        when(commentCheckService.checkComments(any())).thenReturn(CompletableFuture.completedFuture(comments));
+        when(commentRepository.saveAll(any())).thenReturn(comments);
+
+        assertDoesNotThrow(() -> commentService.checkComments());
+        verify(commentRepository, times(1)).countByVerifiedDateIsNull();
+        verify(commentRepository, times(10)).findAllByVerifiedDateIsNull(any());
+        verify(commentRepository, times(10)).saveAll(any());
+        verify(commentCheckService, times(10)).checkComments(any());
+
     }
 }

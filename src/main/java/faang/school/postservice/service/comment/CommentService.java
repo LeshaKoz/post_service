@@ -8,6 +8,9 @@ import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,7 +29,11 @@ import java.util.Objects;
 public class CommentService {
     private final UserServiceClient userServiceClient;
     private final CommentRepository commentRepository;
+    private final CommentCheckService commentCheckService;
     private final PostService postService;
+
+    @Value("${comment.check.size}")
+    private Integer pageSize;
 
     @Transactional
     public Comment createComment(Comment comment, Long postId) {
@@ -69,6 +78,25 @@ public class CommentService {
             commentRepository.deleteById(commentId);
             log.info("Comment #{} successfully deleted", commentId);
         }
+    }
+
+    public void checkComments() {
+        if (pageSize == null || pageSize <= 0) {
+            pageSize = 100;
+        }
+
+        int pageCount = (int) Math.ceil((double) commentRepository.countByVerifiedDateIsNull()
+                / pageSize);
+
+        List<CompletableFuture<List<Comment>>> commentsFuture = IntStream.range(0, pageCount).boxed()
+                .map(i -> {
+                    Pageable pageable = PageRequest.of(i, pageSize);
+                    List<Comment> notCheckedComments = commentRepository.findAllByVerifiedDateIsNull(pageable).toList();
+                    return commentCheckService.checkComments(notCheckedComments)
+                            .thenApply(commentRepository::saveAll);
+                })
+                .toList();
+        CompletableFuture.allOf(commentsFuture.toArray(new CompletableFuture[0])).join();
     }
 
     private void checkUserIsOwnerComment(Long savedId, Long receivedId) {
