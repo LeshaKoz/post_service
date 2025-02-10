@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -52,6 +53,12 @@ public class PostReadDto {
             accessMode = Schema.AccessMode.READ_ONLY
     )
     private LocalDateTime createdAt;
+    @Schema(
+            description = "Идентификаторы хэштегов",
+            example = "1",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private List<Long> hashtagIds;
     @Schema(
             description = "Опубликован ли пост",
             example = "true",

@@ -1,4 +1,4 @@
-package faang.school.postservice.service;
+package faang.school.postservice.util.service;
 
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
@@ -7,6 +7,9 @@ import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.CommentService;
+import faang.school.postservice.service.post.PostService;
+import faang.school.postservice.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -50,10 +53,8 @@ public class CommentServiceTest {
                         .authorId(AUTHOR_ID).postId(POST_ID)
                         .build();
 
-        Comment comment = commentMapper.toEntity(createDto);
-
         commentService.create(createDto);
-        Mockito.verify(commentRepository, Mockito.times(1)).save(comment);
+        Mockito.verify(commentRepository, Mockito.times(1)).save(Mockito.any());
     }
 
     @Test

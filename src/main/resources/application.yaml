@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: jdbc:postgresql://localhost:5432/post-service
     username: user
     password: password
 
@@ -24,6 +24,39 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+  cloud:
+    openfeign:
+      client:
+        config:
+            default:
+                connectTimeout: 5_000
+                readTimeout: 10_000
+
+resilience4j:
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 5s
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException
+  circuitbreaker:
+    instances:
+      default:
+        sliding-window-type: count_based
+        sliding-window-size: 5
+        failure-rate-threshold: 75
+        minimum-number-of-calls: 5
+        max-wait-duration-in-half-open-state: 10s
+        wait-duration-in-open-state: 10s
+        automatic-transition-from-open-to-half-open-enabled: true
+        permitted-number-of-calls-in-half-open-state: 2
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException
+
 
 server:
   port: 8081
@@ -34,9 +67,21 @@ logging:
   level:
     root: info
 
-external-services:
-  keys:
-    grammar-service: ${GRAMMAR_KEY}
+
+
+post:
+  moderation:
+    batch-size: 10
+    page-size: 20
+    cronPeriod: "0 0 0 * * *"
+  grammar:
+    cronPeriod: "0 0 0 * * *"
+    batch-size: 20
+    page-size: 20
+
+thread:
+  pool:
+    size: 10
 
 user-service:
   host: localhost

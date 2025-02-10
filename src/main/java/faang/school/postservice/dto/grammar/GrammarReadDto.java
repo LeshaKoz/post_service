@@ -6,15 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class GrammarReadDto {
-    private boolean status;
-    @JsonProperty("response.corrected")
-    private String corrected;
-    @JsonProperty("error_code")
-    private int errorCode;
-    private String description;
+    private String word;
+    @JsonProperty("s")
+    private List<String> hints;
 }
