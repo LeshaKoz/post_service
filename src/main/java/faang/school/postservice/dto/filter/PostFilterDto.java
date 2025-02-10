@@ -1,6 +1,6 @@
 package faang.school.postservice.dto.filter;
 
-public record FilterDto(
+public record PostFilterDto(
         Long authorId,
         Long projectId,
         boolean isPublished

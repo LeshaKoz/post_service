@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.filter.FilterDto;
+import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ReadPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
@@ -101,14 +101,14 @@ public class PostService {
         return postMapper.toDtoList(posts);
     }
 
-    public List<ReadPostDto> getFilteredPosts(FilterDto filterDto) {
+    public List<ReadPostDto> getFilteredPosts(PostFilterDto postFilterDto) {
 
-        postValidator.validateFilterDto(filterDto);
+        postValidator.validateFilterDto(postFilterDto);
 
-        if (filterDto.authorId() != null) {
-            return getPosts(filterDto.authorId(), filterDto.isPublished(), true);
+        if (postFilterDto.authorId() != null) {
+            return getPosts(postFilterDto.authorId(), postFilterDto.isPublished(), true);
         } else {
-            return getPosts(filterDto.projectId(), filterDto.isPublished(), false);
+            return getPosts(postFilterDto.projectId(), postFilterDto.isPublished(), false);
         }
     }
 }

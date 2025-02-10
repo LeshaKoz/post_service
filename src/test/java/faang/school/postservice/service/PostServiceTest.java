@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.filter.FilterDto;
+import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ReadPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
@@ -230,18 +230,18 @@ public class PostServiceTest {
     @Test
     void getFilteredPosts_ByAuthorId_ReturnsFilteredPosts() {
 
-        FilterDto filterDto = new FilterDto(AUTHOR_ID, null, false);
+        PostFilterDto postFilterDto = new PostFilterDto(AUTHOR_ID, null, false);
         List<Post> posts = Collections.singletonList(post);
         List<ReadPostDto> expectedDtos = Collections.singletonList(readPostDto);
 
         when(postRepository.findByAuthorId(AUTHOR_ID)).thenReturn(posts);
         when(postMapper.toDtoList(posts)).thenReturn(expectedDtos);
 
-        List<ReadPostDto> result = postService.getFilteredPosts(filterDto);
+        List<ReadPostDto> result = postService.getFilteredPosts(postFilterDto);
 
         assertNotNull(result);
         assertEquals(expectedDtos, result);
-        verify(postValidator).validateFilterDto(filterDto);
+        verify(postValidator).validateFilterDto(postFilterDto);
         verify(postRepository).findByAuthorId(AUTHOR_ID);
         verify(postMapper).toDtoList(posts);
     }
@@ -249,18 +249,18 @@ public class PostServiceTest {
     @Test
     void getFilteredPosts_ByProjectId_ReturnsFilteredPosts() {
 
-        FilterDto filterDto = new FilterDto(null, PROJECT_ID, false);
+        PostFilterDto postFilterDto = new PostFilterDto(null, PROJECT_ID, false);
         List<Post> posts = Collections.singletonList(post);
         List<ReadPostDto> expectedDtos = Collections.singletonList(readPostDto);
 
         when(postRepository.findByProjectId(PROJECT_ID)).thenReturn(posts);
         when(postMapper.toDtoList(posts)).thenReturn(expectedDtos);
 
-        List<ReadPostDto> result = postService.getFilteredPosts(filterDto);
+        List<ReadPostDto> result = postService.getFilteredPosts(postFilterDto);
 
         assertNotNull(result);
         assertEquals(expectedDtos, result);
-        verify(postValidator).validateFilterDto(filterDto);
+        verify(postValidator).validateFilterDto(postFilterDto);
         verify(postRepository).findByProjectId(PROJECT_ID);
         verify(postMapper).toDtoList(posts);
     }
@@ -268,18 +268,18 @@ public class PostServiceTest {
     @Test
     void getFilteredPosts_NoPostsFound_ReturnsEmptyList() {
 
-        FilterDto filterDto = new FilterDto(AUTHOR_ID, null, true);
+        PostFilterDto postFilterDto = new PostFilterDto(AUTHOR_ID, null, true);
         List<Post> emptyPosts = Collections.emptyList();
         List<ReadPostDto> emptyDtos = Collections.emptyList();
 
         when(postRepository.findByAuthorId(AUTHOR_ID)).thenReturn(emptyPosts);
         when(postMapper.toDtoList(emptyPosts)).thenReturn(emptyDtos);
 
-        List<ReadPostDto> result = postService.getFilteredPosts(filterDto);
+        List<ReadPostDto> result = postService.getFilteredPosts(postFilterDto);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(postValidator).validateFilterDto(filterDto);
+        verify(postValidator).validateFilterDto(postFilterDto);
         verify(postRepository).findByAuthorId(AUTHOR_ID);
         verify(postMapper).toDtoList(emptyPosts);
     }
