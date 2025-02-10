@@ -8,6 +8,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.adapter.PostRepositoryAdapter;
 import faang.school.postservice.validator.PostValidator;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.PredicatedMap;
@@ -52,6 +53,7 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    @Transactional
     public PostDTO updatePost(PostDTO updatePost) {
         Post post = postValidator.findPostWithId(updatePost.id());
         postValidator.validateAuthorForUpdate(post, updatePost);
@@ -63,6 +65,7 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    @Transactional
     public PostDTO deletePost(long postId) {
         Post post = postValidator.findPostWithId(postId);
 

@@ -37,7 +37,7 @@ public class PostController {
     }
 
     @PutMapping
-    public PostDTO updatePost(@RequestBody PostDTO postDTO) {
+    public PostDTO updatePost(@Valid @RequestBody PostDTO postDTO) {
         log.info("Endpoint <updatePost> called with URI='/api/v1/posts'");
         return postService.updatePost(postDTO);
     }
@@ -54,27 +54,27 @@ public class PostController {
         return postService.getPostById(postId);
     }
 
-    @GetMapping("/drafts/{authorId}")
+    @GetMapping("/drafts/user/{authorId}")
     public List<PostDTO> getAllDraftsByAuthorId(@PathVariable long authorId) {
-        log.info("Endpoint <getAllDraftsByAuthorId> called with URI='/api/v1/posts/drafts/{authorId}'");
+        log.info("Endpoint <getAllDraftsByAuthorId> called with URI='/api/v1/posts/drafts/user/{authorId}'");
         return postService.getAllDraftsByAuthorId(authorId);
     }
 
-    @GetMapping("/drafts/{projectId}")
+    @GetMapping("/drafts/project/{projectId}")
     public List<PostDTO> getAllDraftsByProjectId(@PathVariable long projectId) {
-        log.info("Endpoint <getAllDraftsByProjectId> called with URI='/api/v1/posts/drafts/{projectId}'");
+        log.info("Endpoint <getAllDraftsByProjectId> called with URI='/api/v1/posts/drafts/project/{projectId}'");
         return postService.getAllDraftsByProjectId(projectId);
     }
 
-    @GetMapping("/{authorId}")
+    @GetMapping("/user/{authorId}")
     public List<PostDTO> getAllPostsByAuthorId(@PathVariable long authorId) {
-        log.info("Endpoint <getAllPostsByAuthorId> called with URI='/api/v1/posts/{authorId}'");
+        log.info("Endpoint <getAllPostsByAuthorId> called with URI='/api/v1/posts/user/{authorId}'");
         return postService.getAllPostsByAuthorId(authorId);
     }
 
-    @GetMapping("/{projectId}")
+    @GetMapping("/project/{projectId}")
     public List<PostDTO> getAllPostsByProjectId(@PathVariable long projectId) {
-        log.info("Endpoint <getAllPostsByProjectId> called with URI='/api/v1/posts/{projectId}'");
+        log.info("Endpoint <getAllPostsByProjectId> called with URI='/api/v1/posts/project/{projectId}'");
         return postService.getAllPostsByProjectId(projectId);
     }
 }

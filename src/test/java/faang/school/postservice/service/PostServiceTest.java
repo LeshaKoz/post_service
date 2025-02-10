@@ -19,7 +19,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
@@ -151,7 +150,7 @@ class PostServiceTest {
     @Test
     @DisplayName("Test successful delete post")
     void deletingPost() {
-        postDTO.builder()
+        postDTO = PostDTO.builder()
                 .deleted(true)
                 .build();
 
