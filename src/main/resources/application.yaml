@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: jdbc:postgresql://localhost:5432/post-service
     username: user
     password: password
 
@@ -34,9 +34,19 @@ logging:
   level:
     root: info
 
-external-services:
-  keys:
-    grammar-service: ${GRAMMAR_KEY}
+post:
+  moderation:
+    batch-size: 10
+    page-size: 20
+    cronPeriod: "0 0 0 * * *"
+  grammar:
+    cronPeriod: "0 0 0 * * *"
+    batch-size: 20
+    page-size: 20
+
+thread:
+  pool:
+    size: 10
 
 user-service:
   host: localhost

@@ -2,48 +2,43 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.dto.grammar.GrammarReadDto;
 import faang.school.postservice.exception.ExternalServiceException;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import static java.util.Objects.requireNonNull;
 
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GrammarService {
     private final RestTemplate restTemplate;
 
-    @Value("${external-services.keys.grammar-service}")
-    private String key;
-
-    @PostConstruct
-    private void init() {
-        restTemplate.getInterceptors().add(
-                (request, body, execution) -> {
-                    request.getHeaders().add(
-                            "Authorization", "Basic " + key
-                    );
-                    return execution.execute(request, body);
-                }
-        );
-    }
-
-    public String checkGrammar(String text) {
-        String uri = UriComponentsBuilder.fromHttpUrl("https://api.textgears.com/correct")
-                .queryParam("text", text)
-                .queryParam("language", "en-GB")
+    public String correctText(String text) {
+        String uri = UriComponentsBuilder.fromHttpUrl(
+                        "https://speller.yandex.net/services/spellservice.json/checkText"
+                )
+                .queryParam("text", text.replaceAll(" ", "+"))
                 .toUriString();
 
-        GrammarReadDto dto = restTemplate.getForObject(uri, GrammarReadDto.class);
+        ResponseEntity<GrammarReadDto[]> response = restTemplate
+                .getForEntity(uri, GrammarReadDto[].class);
 
-        if (dto == null || !dto.isStatus()) {
-            throw new ExternalServiceException(dto == null ?
-                    "Grammar service returned null body" : dto.getDescription()
-            );
+        if (response.getStatusCode().isError()) {
+            log.error("Ошибка при вызове yandex speller. Код: {}, тело ответа: {}",
+                    response.getStatusCode(), response.getBody());
+            throw new ExternalServiceException("Ошибка при вызове сервиса орфографии");
         }
 
-        return dto.getCorrected();
+        GrammarReadDto[] dto = response.getBody();
+
+        for (var error : requireNonNull(dto)) {
+            text = text.replaceFirst(error.getWord(), error.getHints().get(0));
+        }
+        return text;
     }
 }

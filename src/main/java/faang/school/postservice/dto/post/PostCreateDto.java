@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,4 +24,5 @@ public class PostCreateDto {
     private Long projectId;
     @Schema(description = "Идентификатор автора", example = "1")
     private Long authorId;
+    private List<Long> hashtagIds;
 }
