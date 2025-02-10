@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Service
@@ -96,37 +97,10 @@ public class PostService {
     }
 
     public void moderatePosts() {
-        int pageSize = postProperties.getPageSize();
-        Pageable firstPageable = PageRequest.of(0, pageSize);
-        Page<Post> firstPage = postRepository.findAllNotVerified(firstPageable);
-        int totalPages = firstPage.getTotalPages();
-
-        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
-            Pageable pageable = PageRequest.of(pageNumber, pageSize);
-            Page<Post> page = postRepository.findAllNotVerified(pageable);
-            moderatePostsPage(page.getContent());
-        }
-    }
-
-    private void moderatePostsPage(List<Post> notVerifiedPosts) {
-        int notVerifiedPostsSize = notVerifiedPosts.size();
-        int batchSize = postProperties.getBatchSize();
-        List<CompletableFuture<List<Post>>> futuresList = new ArrayList<>();
-
-        for (int i = 0; i < notVerifiedPostsSize; i += batchSize) {
-            int end = Math.min(i + batchSize, notVerifiedPostsSize);
-            List<Post> partition = notVerifiedPosts.subList(i, end);
-            futuresList.add(CompletableFuture.supplyAsync(
-                    () -> moderatePostsBatch(partition),
-                    executorService
-            ));
-        }
-
-        List<Post> posts = futuresList
-                .stream()
-                .flatMap(future -> future.join().stream())
-                .toList();
-        postRepository.saveAll(posts);
+        concurrencyProcessPosts(
+                postRepository::findAllNotVerified,
+                this::moderatePostsBatch
+        );
     }
 
     private List<Post> moderatePostsBatch(List<Post> posts) {
@@ -138,6 +112,46 @@ public class PostService {
                     post.setVerifiedDate(verifiedDate);
                 })
                 .toList();
+    }
+
+    private void concurrencyProcessPosts(
+            Function<Pageable, Page<Post>> getPostsFunction,
+            Function<List<Post>, List<Post>> processFunction
+    ) {
+        int pageSize = postProperties.getPageSize();
+        Pageable firstPageable = PageRequest.of(0, pageSize);
+        Page<Post> firstPage = getPostsFunction.apply(firstPageable);
+        int totalPages = firstPage.getTotalPages();
+
+        for (int pageNumber = 0; pageNumber < totalPages; pageNumber++) {
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            Page<Post> page = getPostsFunction.apply(pageable);
+            concurrencyProcessPostsPages(page.getContent(), processFunction);
+        }
+    }
+
+    private void concurrencyProcessPostsPages(
+            List<Post> posts,
+            Function<List<Post>, List<Post>> processFunction
+    ) {
+        int notVerifiedPostsSize = posts.size();
+        int batchSize = postProperties.getBatchSize();
+        List<CompletableFuture<List<Post>>> futuresList = new ArrayList<>();
+
+        for (int i = 0; i < notVerifiedPostsSize; i += batchSize) {
+            int end = Math.min(i + batchSize, notVerifiedPostsSize);
+            List<Post> partition = posts.subList(i, end);
+            futuresList.add(CompletableFuture.supplyAsync(
+                    () -> processFunction.apply(partition),
+                    executorService
+            ));
+        }
+
+        List<Post> postsToSave = futuresList
+                .stream()
+                .flatMap(future -> future.join().stream())
+                .toList();
+        postRepository.saveAll(postsToSave);
     }
 
     private List<PostReadDto> getAllPostByCondition(
