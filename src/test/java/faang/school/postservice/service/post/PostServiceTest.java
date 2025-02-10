@@ -48,6 +48,8 @@ public class PostServiceTest {
     @Mock
     private ProjectServiceClient projectServiceClient;
     @Mock
+    private HashtagService hashtagService;
+    @Mock
     private PostRepository postRepository;
     @Mock
     private UserContext userContext;
@@ -124,6 +126,23 @@ public class PostServiceTest {
     }
 
     @Test
+    void testCreatePostDraftWithNonExistingHashtag() {
+        long userId = 1;
+        when(userServiceClient.getUser(userId))
+                .thenReturn(new UserDto(1L, "user", "user@gmail.com"));
+        var createDto = PostCreateDto.builder()
+                .content("content")
+                .authorId(userId)
+                .hashtagIds(List.of(1L, 2L))
+                .build();
+
+        when(hashtagService.isHashtagExist(1L)).thenReturn(false);
+        when(hashtagService.isHashtagExist(2L)).thenReturn(true);
+
+        assertThrows(EntityNotFoundException.class, () -> postService.createPostDraft(createDto));
+    }
+
+    @Test
     void testPublishPostWithPostAlreadyPublish() {
         long postId = 1;
         post.setPublished(true);
@@ -160,12 +179,26 @@ public class PostServiceTest {
     void testUpdatePostSuccessCase() {
         long postId = 1;
         var newContent = "new content";
+        List<Long> hashtagIds = null;
         mockGetPostById(postId);
 
-        postService.updatePost(postId, new PostUpdateDto(newContent));
+        postService.updatePost(postId, new PostUpdateDto(newContent, hashtagIds));
         verify(postRepository, atLeastOnce()).save(postArgumentCaptor.capture());
         Post capturedPost = postArgumentCaptor.getValue();
         assertEquals(newContent, capturedPost.getContent());
+
+    }
+
+    @Test
+    void testUpdatePostWithExistingHashtag() {
+        long postId = 1;
+        var newContent = "new content";
+        List<Long> hashtagIds = List.of(1L);
+        mockGetPostById(postId);
+
+        when(hashtagService.isHashtagExist(1L)).thenReturn(false);
+        assertThrows(EntityNotFoundException.class,
+                () -> postService.updatePost(postId, new PostUpdateDto(newContent, hashtagIds)));
 
     }
 

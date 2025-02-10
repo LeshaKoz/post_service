@@ -4,6 +4,8 @@ import faang.school.postservice.model.ad.Ad;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -45,6 +47,14 @@ public class Post extends BaseEntity {
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Comment> comments;
+
+    @ManyToMany
+    @JoinTable(
+            name = "post_to_hashtag",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "hashtag_id")
+    )
+    private List<Hashtag> hashtags;
 
     @ManyToMany(mappedBy = "posts")
     private List<Album> albums;
