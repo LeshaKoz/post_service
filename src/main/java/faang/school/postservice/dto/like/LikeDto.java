@@ -8,7 +8,7 @@ import lombok.Builder;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record LikeDto(
-        @NotNull
+        @NotNull(message = "ID пользователя не должно быть null")
         @Positive
         Long userId,
         Long commentId,

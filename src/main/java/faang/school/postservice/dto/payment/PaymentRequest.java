@@ -6,14 +6,13 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record PaymentRequest(
-        @NotNull
         long paymentNumber,
 
         @Min(1)
-        @NotNull
+        @NotNull(message = "Сумма платежа не должны быть null")
         BigDecimal amount,
 
-        @NotNull
+        @NotNull(message = "Тип валюты не должен быть null")
         Currency currency
 ) {
 }
