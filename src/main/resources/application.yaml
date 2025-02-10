@@ -1,7 +1,4 @@
 spring:
-  profiles:
-    active: local
-
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -62,6 +59,9 @@ services:
     secretKey: password
     bucketName: postbucket
     max_image_size: 5
+  grammar:
+    key: ${GRAMMAR_KEY}
+
 
 user-service:
   host: localhost

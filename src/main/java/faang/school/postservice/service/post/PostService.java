@@ -1,4 +1,4 @@
-package faang.school.postservice.service.post;
+package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
@@ -173,11 +173,15 @@ public class PostService {
         } while (!page.isLast());
     }
 
+    public void checkGrammar() {
+
+    }
+
     private List<PostReadDto> getAllPostByCondition(
             PostOwnerType ownerType,
             Supplier<List<Post>> authorSupplier,
             Supplier<List<Post>> projetcSupplier
-    ) {
+            ) {
         List<Post> postStream = switch (ownerType) {
             case AUTHOR:
                 yield authorSupplier.get();

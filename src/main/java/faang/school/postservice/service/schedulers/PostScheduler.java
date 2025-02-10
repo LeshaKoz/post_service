@@ -11,6 +11,11 @@ public class PostScheduler {
 
     private final PostService postService;
 
+
+    public void checkGrammar() {
+        postService.chc
+    }
+
     @Scheduled(cron = "${post.moderation.cronPeriod}")
     public void scheduledVerifyPosts() {
         postService.moderatePosts();
