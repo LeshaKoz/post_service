@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -167,7 +166,7 @@ public class PostService {
         postRepository.save(post);
         log.info("Rewriting post with id : {}", post.getId());
     }
-}
+
     public void moderationPosts() {
         log.info("Moderating posts");
         ModerationDictionary moderationDictionary = moderationDictionaryObjectFactory.getObject();
