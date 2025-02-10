@@ -17,6 +17,8 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.PaginationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostService {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
@@ -37,9 +40,12 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserContext userContext;
+    private final PostSchedulerService postSchedulerService;
     private final ModerationDictionary moderationDictionary;
     private final PaginationService paginationService;
     private final PostProperties postProperties;
+    @Value("${post.schedule.batch-size}")
+    private int batchSize;
 
     public PostReadDto createPostDraft(PostCreateDto dto) {
         validateCreateDraftDto(dto);
@@ -215,5 +221,9 @@ public class PostService {
         if (!missingHashtagIds.isEmpty()) {
             throw new EntityNotFoundException("Хэштеги со ID: " + missingHashtagIds + " не найдены");
         }
+    }
+
+    public void publishScheduledPosts() {
+        postSchedulerService.publishScheduledPosts(batchSize);
     }
 }

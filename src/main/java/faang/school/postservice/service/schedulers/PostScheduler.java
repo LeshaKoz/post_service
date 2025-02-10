@@ -15,4 +15,9 @@ public class PostScheduler {
     public void scheduledVerifyPosts() {
         postService.moderatePosts();
     }
+
+    @Scheduled(cron = "${post.schedule.scheduled-cron}")
+    public void publishScheduledPosts() {
+        postService.publishScheduledPosts();
+    }
 }
