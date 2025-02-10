@@ -39,6 +39,14 @@ post:
     batch-size: 10
     page-size: 20
     cronPeriod: "0 0 0 * * *"
+  schedule:
+    batch-size: 1000
+    scheduled-cron: "0 * * * * *"
+    max-retries: 5
+    timeout: 10
+    initial-delay: 500
+    delay-multiplier: 2
+    batchCount: 3
 
 thread:
   pool:
@@ -53,17 +61,3 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
-
-post:
-  schedule:
-    batch-size: 1000
-    scheduled-cron: "0 * * * * *"
-    max-retries: 5
-    timeout: 10
-    initial-delay: 500
-    delay-multiplier: 2
-    batchCount: 3
-
-thread:
-  pool:
-    size: 10

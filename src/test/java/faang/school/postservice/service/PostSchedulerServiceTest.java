@@ -2,6 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.post.PostSchedulerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,11 +52,11 @@ class PostSchedulerServiceTest {
     @Test
     void shouldPublishScheduledPosts_whenPostsAreAvailable() {
         Post post1 = new Post();
-        post1.setId(1L);
+        post1.setAuthorId(1L);
         post1.setPublished(false);
 
         Post post2 = new Post();
-        post2.setId(2L);
+        post2.setAuthorId(2L);
         post2.setPublished(false);
 
         List<Post> posts = List.of(post1, post2);
