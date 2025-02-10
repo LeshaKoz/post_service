@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,8 +29,7 @@ public class PostService {
     private static final Logger log = LoggerFactory.getLogger(PostService.class);
     private final PostRepository postRepository;
     private final ExternalService externalService;
-    private final ModerationDictionary moderationDictionary;
-    private final AiModerationService aiModerationService;
+    private final AsyncModerationService asyncModerationService;
     @Value("${moderation.threadSize}")
     private int threadSize;
     private final ExecutorService executorService= Executors.newFixedThreadPool(4);
@@ -105,37 +106,20 @@ public class PostService {
                 .toList();
     }
 
+    @Transactional
     public void moderatePosts() {
         List<Post> posts = postRepository.findByVerifiedDateIsNull();
         List<List<Post>> threads = splitIntoThreads(posts);
 
-        List<Future<?>> futures = new ArrayList<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
         threads.forEach((thread)-> {
-            Future<?> future = executorService.submit(() -> moderateThread(thread));
+            CompletableFuture<Void> future = asyncModerationService.moderateThreadAsync(thread);
             futures.add(future);
         });
 
-        for (Future<?> future : futures) {
-            try {
-                future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Error while moderating posts: {}", e.getMessage(), e);
-            }
+        for (CompletableFuture<Void> future : futures) {
+            future.join();
         }
-
-        executorService.shutdown();
-    }
-
-    private void moderateThread(List<Post> posts) {
-        posts.forEach((post)->{
-            boolean hasBadWord = moderationDictionary.containsBadWord(post.getContent());
-            boolean isToxic = !hasBadWord && aiModerationService.isToxic(post.getContent());
-
-            post.setVerified(!(hasBadWord || isToxic));
-            post.setVerifiedDate(LocalDateTime.now());
-        });
-
-        postRepository.saveAll(posts);
     }
 
     private List<List<Post>> splitIntoThreads(List<Post> posts) {

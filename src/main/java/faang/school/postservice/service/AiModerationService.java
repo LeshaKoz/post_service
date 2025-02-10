@@ -1,8 +1,10 @@
 package faang.school.postservice.service;
 
+import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -12,9 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@RequiredArgsConstructor
 public class AiModerationService {
-
-    private static final String API_URL = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=YOUR_API_KEY";
+    @Value("${moderation.api-url}")
+    private String API_URL;
+    private final RestTemplate restTemplate;
     private static final Logger log = LoggerFactory.getLogger(AiModerationService.class);
 
     public boolean isToxic(String text) {
@@ -24,7 +28,6 @@ public class AiModerationService {
         }
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
             JSONObject request = new JSONObject();
             request.put("comment", new JSONObject().put("text", text));
             request.put("languages", new String[]{"en"});
