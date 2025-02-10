@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -25,6 +27,7 @@ public class PostService {
     private final PostMapper postMapper;
     private final PostRepository postRepository;
     private final PostUtil postUtil;
+    private final RewriterService rewriterService;
 
     @Transactional
     public PostResultResponse createPost(PostCreatingRequest postCreatingDto) {
@@ -35,7 +38,6 @@ public class PostService {
                 .build();
 
         log.info("Creating the post with id : {}", post.getId());
-
         log.info("Validating the post creator with id : {}", post.getId());
         int result = postUtil.validateCreator(postCreatingDto.authorId(), postCreatingDto.projectId());
         switch (result) {
@@ -124,6 +126,7 @@ public class PostService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Post findPostById(long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new PostWasNotFoundException("No posts was found!"));
@@ -133,4 +136,26 @@ public class PostService {
         return postRepository.existsById(id);
     }
 
+
+    public void postCorrections() {
+        List<Post> posts = postRepository.findReadyToPublish();
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (Post post : posts) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> processRewritePost(post));
+            futures.add(future);
+        }
+
+        CompletableFuture.runAsync(() -> {
+            futures.forEach(CompletableFuture::join);
+            log.info("Successfully rewrited posts");
+        });
+    }
+
+    public void processRewritePost(Post post) {
+        String newText = rewriterService.rewriteText(post.getContent());
+        post.setContent(newText);
+        postRepository.save(post);
+        log.info("Rewriting post with id : {}", post.getId());
+    }
 }

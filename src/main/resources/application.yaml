@@ -32,6 +32,10 @@ spring:
 server:
   port: 8081
 
+rewriter:
+  api: https://tinq.ai/api/v2/rewrite
+  token: n41OhVC8oftZs1pl2B62fajVwluSm5g11SwIDbMW1c76c966
+
 logging:
   level:
     root: info
