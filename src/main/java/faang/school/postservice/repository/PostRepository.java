@@ -27,7 +27,7 @@ public interface PostRepository extends CrudRepository<Post, Long> {
             FROM post p
             WHERE p.verified = false
             GROUP BY p.author_id
-            HAVING COUNT(*) > 5
+            HAVING COUNT(*) > :rejectedPostsToBan
             """)
     List<Long> findAuthorsForBan(int rejectedPostsToBan);
 }
