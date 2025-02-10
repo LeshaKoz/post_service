@@ -48,4 +48,7 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     ORDER BY p.publishedAt DESC
     """)
     List<Post> findAllPublishedByProjectId(long projectId);
+
+    @Query("SELECT p FROM Post p JOIN p.hashtags h WHERE h.id = :hashtagId")
+    List<Post> findAllByHashtagId(long hashtagId);
 }

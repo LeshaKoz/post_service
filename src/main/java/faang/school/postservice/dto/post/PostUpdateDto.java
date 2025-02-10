@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,4 +22,5 @@ public class PostUpdateDto {
             requiredMode = Schema.RequiredMode.NOT_REQUIRED
     )
     private String content;
+    private List<Long> hashtagIds;
 }
