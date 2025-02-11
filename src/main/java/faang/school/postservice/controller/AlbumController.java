@@ -34,28 +34,24 @@ public class AlbumController {
 
     @PutMapping("/{albumId}/add-post/{postId}")
     public void addPostToAlbum(@PathVariable Long albumId,
-                               @PathVariable Long postId,
-                               @RequestHeader(name = "x-user-id") Long userId) {
-        albumService.addPostToAlbum(albumId, postId, userId);
+                               @PathVariable Long postId) {
+        albumService.addPostToAlbum(albumId, postId);
     }
 
     @DeleteMapping("/{albumId}/delete-post/{postId}")
     public void deletePostToAlbum(@PathVariable Long albumId,
-                                  @PathVariable Long postId,
-                                  @RequestHeader(name = "x-user-id") Long userId) {
-        albumService.deletePostToAlbum(albumId, postId, userId);
+                                  @PathVariable Long postId) {
+        albumService.deletePostToAlbum(albumId, postId);
     }
 
     @PutMapping("/{albumId}/add-favourite")
-    public void addAlbumToFavourite(@PathVariable Long albumId,
-                                    @RequestHeader(name = "x-user-id") Long userId) {
-        albumService.addAlbumToFavourite(albumId, userId);
+    public void addAlbumToFavourite(@PathVariable Long albumId) {
+        albumService.addAlbumToFavourite(albumId);
     }
 
     @DeleteMapping("/{albumId}/delete-favourite")
-    public void deleteAlbumToFavourite(@PathVariable Long albumId,
-                                       @RequestHeader(name = "x-user-id") Long userId) {
-        albumService.deleteAlbumToFavourite(albumId, userId);
+    public void deleteAlbumToFavourite(@PathVariable Long albumId) {
+        albumService.deleteByAlbumIdAndUserId(albumId);
     }
 
     @GetMapping("/{albumId}")
@@ -74,29 +70,25 @@ public class AlbumController {
     @GetMapping("/my")
     public List<AlbumDTO> getAllMyAlbums(
             @RequestParam(required = false) String title,
-            @RequestParam(required = false) LocalDate createdAt,
-            @RequestHeader(name = "x-user-id") Long userId) {
-        return albumService.getAllMyAlbums(title, createdAt, userId);
+            @RequestParam(required = false) LocalDate createdAt) {
+        return albumService.getAllMyAlbums(title, createdAt);
     }
 
     @GetMapping("/my/favourites")
     public List<AlbumDTO> getAllMyFavouriteAlbums(
             @RequestParam(required = false) String title,
-            @RequestParam(required = false) LocalDate createdAt,
-            @RequestHeader(name = "x-user-id") Long userId) {
-        return albumService.getFavoriteAlbums(title, createdAt, userId);
+            @RequestParam(required = false) LocalDate createdAt) {
+        return albumService.getFavoriteAlbums(title, createdAt);
     }
 
     @PutMapping("/{albumId}")
     public AlbumDTO update(@PathVariable Long albumId,
-                           @RequestBody @Valid AlbumDTO albumDTO,
-                           @RequestHeader(name = "x-user-id") Long userId) {
-        return albumService.update(albumDTO, userId, albumId);
+                           @RequestBody @Valid AlbumDTO albumDTO) {
+        return albumService.update(albumDTO, albumId);
     }
 
     @DeleteMapping("/{albumId}")
-    public void delete(@PathVariable Long albumId,
-                           @RequestHeader(name = "x-user-id") Long userId) {
-        albumService.delete(userId, albumId);
+    public void delete(@PathVariable Long albumId) {
+        albumService.delete(albumId);
     }
 }

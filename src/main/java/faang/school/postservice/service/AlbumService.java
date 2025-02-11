@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.album.AlbumDTO;
 import faang.school.postservice.exception.BadRequestException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -33,6 +34,7 @@ public class AlbumService {
     private final UserServiceClient userServiceClient;
     private final PostRepositoryAdapter postRepositoryAdapter;
     private final FavoriteAlbumRepositoryAdapter favoriteAlbumRepositoryAdapter;
+    private final UserContext userContext;
 
     @Transactional
     public AlbumDTO save(AlbumDTO albumDTO) {
@@ -47,20 +49,25 @@ public class AlbumService {
     }
 
     @Transactional
-    public void addPostToAlbum(Long albumId, Long postId, Long userId) {
+    public void addPostToAlbum(Long albumId, Long postId) {
+        Long userId = userContext.getUserId();
         Post post = postRepositoryAdapter.getById(postId);
-        Album album = validateAlbumOwnership(userId, albumId, "Unable to add post to album");
+        Album album = albumRepositoryAdapter.getById(albumId);
+        validateAlbumOwnership(userId, album, "Unable to add post to album");
         album.addPost(post);
     }
 
     @Transactional
-    public void deletePostToAlbum(Long albumId, Long postId, Long userId) {
-        Album album = validateAlbumOwnership(userId, albumId, "Unable to delete post from album");
+    public void deletePostToAlbum(Long albumId, Long postId) {
+        Long userId = userContext.getUserId();
+        Album album = albumRepositoryAdapter.getById(albumId);
+        validateAlbumOwnership(userId, album, "Unable to delete post from album");
         album.removePost(postId);
     }
 
     @Transactional
-    public void addAlbumToFavourite(Long albumId, Long userId) {
+    public void addAlbumToFavourite(Long albumId) {
+        Long userId = userContext.getUserId();
         validateUserExists(userId);
         Album album = albumRepositoryAdapter.getById(albumId);
         if (favoriteAlbumRepositoryAdapter.existsByAlbumAndAuthorId(album, userId)) {
@@ -73,7 +80,8 @@ public class AlbumService {
     }
 
     @Transactional
-    public void deleteAlbumToFavourite(Long albumId, Long userId) {
+    public void deleteByAlbumIdAndUserId(Long albumId) {
+        Long userId = userContext.getUserId();
         Album album = albumRepositoryAdapter.getById(albumId);
         favoriteAlbumRepositoryAdapter.deleteByAlbumAndUserId(album, userId);
     }
@@ -105,7 +113,8 @@ public class AlbumService {
         return albumMapper.toDtoList(albums);
     }
 
-    public List<AlbumDTO> getAllMyAlbums(String title, LocalDate createdAt, Long userId) {
+    public List<AlbumDTO> getAllMyAlbums(String title, LocalDate createdAt) {
+        Long userId = userContext.getUserId();
         List<Specification<Album>> specs = new ArrayList<>();
 
         if (title != null) {
@@ -125,7 +134,8 @@ public class AlbumService {
         return albumMapper.toDtoList(albums);
     }
 
-    public List<AlbumDTO> getFavoriteAlbums(String title, LocalDate createdAt, Long userId) {
+    public List<AlbumDTO> getFavoriteAlbums(String title, LocalDate createdAt) {
+        Long userId = userContext.getUserId();
         List<Specification<FavoriteAlbum>> specs = new ArrayList<>();
 
         if (title != null) {
@@ -149,8 +159,10 @@ public class AlbumService {
     }
 
     @Transactional
-    public AlbumDTO update(AlbumDTO albumDTO, Long userId, Long albumId) {
-        Album album = validateAlbumOwnership(userId, albumId, "Unable to update album");
+    public AlbumDTO update(AlbumDTO albumDTO, Long albumId) {
+        Long userId = userContext.getUserId();
+        Album album = albumRepositoryAdapter.getById(albumId);
+        validateAlbumOwnership(userId, album, "Unable to update album");
         if (albumRepositoryAdapter.existsByTitleAndAuthorId(albumDTO.getTitle(), albumDTO.getAuthorId())) {
             throw new BadRequestException(
                     "An album with this title already exists");
@@ -160,17 +172,17 @@ public class AlbumService {
     }
 
     @Transactional
-    public void delete(Long userId, Long albumId) {
-        Album album = validateAlbumOwnership(userId, albumId, "Unable to delete album");
+    public void delete(Long albumId) {
+        Long userId = userContext.getUserId();
+        Album album = albumRepositoryAdapter.getById(albumId);
+        validateAlbumOwnership(userId, album, "Unable to delete album");
         albumRepositoryAdapter.delete(album);
     }
 
-    private Album validateAlbumOwnership(Long userId, Long albumId, String msg) {
-        Album album = albumRepositoryAdapter.getById(albumId);
+    private void validateAlbumOwnership(Long userId, Album album, String msg) {
         if (album.getAuthorId() != userId) {
             throw new BadRequestException(msg);
         }
-        return album;
     }
 
     private void validateUserExists(Long userId) {
