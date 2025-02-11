@@ -149,6 +149,10 @@ public class PostService {
                 .orElseThrow(() -> new PostWasNotFoundException("No posts was found!"));
     }
 
+    public boolean existsById(long id) {
+        return postRepository.existsById(id);
+    }
+  
     private List<List<Post>> divideListIntoGroups(List<Post> items, int groupSize) {
         List<List<Post>> groups = new ArrayList<>();
         List<Post> currentGroup = new ArrayList<>();

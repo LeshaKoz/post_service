@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.stream.Stream;
+
+
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Long> {
     @Query("DELETE FROM Like l WHERE l.post.id = :postId AND l.userId = :userId")
@@ -12,4 +15,9 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
 
     @Query("DELETE FROM Like l WHERE l.comment.id = :commentId AND l.userId = :userId")
     void deleteByCommentIdAndUserId(Long commentId, Long userId);
+
+    Stream<Like> findAllByPostId(long postId);
+
+    Stream<Like> findAllByCommentId(long postId);
+
 }
