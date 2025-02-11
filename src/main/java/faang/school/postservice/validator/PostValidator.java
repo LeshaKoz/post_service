@@ -46,8 +46,8 @@ public class PostValidator {
     }
 
     @Retryable(retryFor = {FeignException.class},
-    noRetryFor = {FeignException.NotFound.class},
-    backoff = @Backoff(delay = 1000, multiplier = 2))
+            noRetryFor = {FeignException.NotFound.class},
+            backoff = @Backoff(delay = 1000, multiplier = 2))
     public void userOwnerOfThePost(Long userId) {
         try {
             userServiceClient.getUser(userId);

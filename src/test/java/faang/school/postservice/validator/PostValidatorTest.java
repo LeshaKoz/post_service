@@ -10,7 +10,6 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.adapter.PostRepositoryAdapter;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,10 +38,6 @@ class PostValidatorTest {
     private final Post post = new Post();
     private PostDTO postDto = new PostDTO();
 
-    @BeforeEach
-    void setUp() {
-
-    }
 
     @Test
     @DisplayName("Test must return exception when a post has not owner")

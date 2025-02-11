@@ -15,13 +15,13 @@ public record PostDTO(
         @JsonProperty("authorId") Long authorId,
         @JsonProperty("projectId") Long projectId,
         @JsonProperty("published") boolean published,
-        @JsonProperty("publishedAt") LocalDateTime publishedAt,
         @JsonProperty("deleted") boolean deleted,
+        @JsonProperty("publishedAt") LocalDateTime publishedAt,
         @JsonProperty("createdAt") LocalDateTime createdAt,
         @JsonProperty("updatedAt") LocalDateTime updatedAt) {
 
     public PostDTO() {
         this(null, "", null, null, false,
-                null, false, null, null);
+                false, null, null, null);
     }
 }

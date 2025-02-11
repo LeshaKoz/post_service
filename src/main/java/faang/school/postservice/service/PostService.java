@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dto.post.OwnerType;
 import faang.school.postservice.dto.post.PostDTO;
 import faang.school.postservice.exception.DataAlreadyDeletedException;
 import faang.school.postservice.exception.DataAlreadyExistException;
@@ -9,22 +10,32 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.adapter.PostRepositoryAdapter;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.map.PredicatedMap;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.LongFunction;
 import java.util.function.Predicate;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class PostService {
     private final PostValidator postValidator;
     private final PostMapper postMapper;
     private final PostRepositoryAdapter postRepositoryAdapter;
+    private final Map<OwnerType, LongFunction<List<Post>>> finders;
+
+    public PostService(PostValidator postValidator, PostMapper postMapper,
+                       PostRepositoryAdapter postRepositoryAdapter) {
+        this.postValidator = postValidator;
+        this.postMapper = postMapper;
+        this.postRepositoryAdapter = postRepositoryAdapter;
+        this.finders = Map.of(
+                OwnerType.AUTHOR, postRepositoryAdapter::findByAuthorId,
+                OwnerType.PROJECT, postRepositoryAdapter::findByProjectId);
+    }
 
     public PostDTO createDraft(PostDTO draftDTO) {
         postValidator.validatedOwnerPost(draftDTO);
@@ -96,7 +107,8 @@ public class PostService {
     public List<PostDTO> getAllDraftsByAuthorId(long authorId) {
         postValidator.userOwnerOfThePost(authorId);
 
-        List<PostDTO> allUserDrafts = getAllDrafts(authorId);
+        List<PostDTO> allUserDrafts = getAllPostsOrDrafts(authorId, OwnerType.AUTHOR,
+                post -> !post.isPublished() && !post.isDeleted());
 
         log.info("Drafts received successfully, author id = {}", authorId);
         return allUserDrafts;
@@ -105,7 +117,8 @@ public class PostService {
     public List<PostDTO> getAllDraftsByProjectId(long projectId) {
         postValidator.projectOwnerOfThePost(projectId);
 
-        List<PostDTO> allProjectDrafts = getAllDrafts(projectId);
+        List<PostDTO> allProjectDrafts = getAllPostsOrDrafts(projectId, OwnerType.PROJECT,
+                post -> !post.isPublished() && !post.isDeleted());
 
         log.info("Drafts received successfully, project id = {}", projectId);
         return allProjectDrafts;
@@ -114,7 +127,8 @@ public class PostService {
     public List<PostDTO> getAllPostsByAuthorId(long authorId) {
         postValidator.userOwnerOfThePost(authorId);
 
-        List<PostDTO> allUserPosts = getAllPosts(authorId);
+        List<PostDTO> allUserPosts = getAllPostsOrDrafts(authorId, OwnerType.AUTHOR,
+                post -> post.isPublished() && !post.isDeleted());
 
         log.info("Post received successfully, author id = {}", authorId);
         return allUserPosts;
@@ -123,22 +137,17 @@ public class PostService {
     public List<PostDTO> getAllPostsByProjectId(long projectId) {
         postValidator.projectOwnerOfThePost(projectId);
 
-        List<PostDTO> allProjectPosts = getAllPosts(projectId);
+        List<PostDTO> allProjectPosts = getAllPostsOrDrafts(projectId, OwnerType.PROJECT,
+                post -> post.isPublished() && !post.isDeleted());
 
         log.info("Posts received successfully, project id = {}", projectId);
         return allProjectPosts;
     }
 
-    private List<PostDTO> getAllDrafts(long ownerId) {
-        return getPosts(ownerId, post -> !post.isPublished() && !post.isDeleted());
-    }
+    private List<PostDTO> getAllPostsOrDrafts(long ownerId, OwnerType ownerType, Predicate<Post> filter) {
+        LongFunction<List<Post>> finder = finders.get(ownerType);
 
-    private List<PostDTO> getAllPosts(long ownerId) {
-        return getPosts(ownerId, post -> post.isPublished() && !post.isDeleted());
-    }
-
-    private List<PostDTO> getPosts(long ownerId, Predicate<Post> filter) {
-        return postRepositoryAdapter.findByAuthorId(ownerId)
+        return finder.apply(ownerId)
                 .stream()
                 .filter(filter)
                 .sorted((post1, post2) -> post2.getCreatedAt().compareTo(post1.getCreatedAt()))
