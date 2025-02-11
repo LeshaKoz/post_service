@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.album.AlbumDTO;
 import faang.school.postservice.exception.BadRequestException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -38,6 +39,8 @@ public class AlbumServiceTest {
     private PostRepositoryAdapter postRepositoryAdapter;
     @Mock
     private FavoriteAlbumRepositoryAdapter favoriteAlbumRepositoryAdapter;
+    @Mock
+    private UserContext userContext;
 
     @InjectMocks
     private AlbumService albumService;
@@ -126,8 +129,9 @@ public class AlbumServiceTest {
 
         when(postRepositoryAdapter.getById(postId)).thenReturn(post);
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
+        when(userContext.getUserId()).thenReturn(userId);
 
-        albumService.addPostToAlbum(albumId, postId, userId);
+        albumService.addPostToAlbum(albumId, postId);
     }
 
     @Test
@@ -138,9 +142,10 @@ public class AlbumServiceTest {
 
         when(postRepositoryAdapter.getById(postId)).thenReturn(post);
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
+        when(userContext.getUserId()).thenReturn(userId);
 
         BadRequestException ex = Assertions.assertThrows(BadRequestException.class,
-                () -> albumService.addPostToAlbum(albumId, postId, userId));
+                () -> albumService.addPostToAlbum(albumId, postId));
         Assertions.assertEquals("Unable to add post to album", ex.getMessage());
     }
 
@@ -150,8 +155,8 @@ public class AlbumServiceTest {
         album.setAuthorId(userId);
 
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
-
-        albumService.deletePostToAlbum(albumId, postId, userId);
+        when(userContext.getUserId()).thenReturn(userId);
+        albumService.deletePostToAlbum(albumId, postId);
 
         Mockito.verify(album, Mockito.times(1)).removePost(postId);
     }
@@ -162,9 +167,9 @@ public class AlbumServiceTest {
         album.setAuthorId(999L);
 
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
-
+        when(userContext.getUserId()).thenReturn(userId);
         BadRequestException ex = Assertions.assertThrows(BadRequestException.class,
-                () -> albumService.deletePostToAlbum(albumId, postId, userId));
+                () -> albumService.deletePostToAlbum(albumId, postId));
         Assertions.assertEquals("Unable to delete post from album", ex.getMessage());
     }
 
@@ -175,9 +180,10 @@ public class AlbumServiceTest {
 
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
         when(favoriteAlbumRepositoryAdapter.existsByAlbumAndAuthorId(album, userId)).thenReturn(false);
-        Mockito.when(userServiceClient.getUser(userId)).thenReturn(null);
+        when(userServiceClient.getUser(userId)).thenReturn(null);
+        when(userContext.getUserId()).thenReturn(userId);
 
-        albumService.addAlbumToFavourite(albumId, userId);
+        albumService.addAlbumToFavourite(albumId);
         Mockito.verify(favoriteAlbumRepositoryAdapter, Mockito.times(1))
                 .save(Mockito.any(FavoriteAlbum.class));
     }
@@ -189,9 +195,10 @@ public class AlbumServiceTest {
 
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
         when(favoriteAlbumRepositoryAdapter.existsByAlbumAndAuthorId(album, userId)).thenReturn(true);
+        when(userContext.getUserId()).thenReturn(userId);
 
         BadRequestException ex = Assertions.assertThrows(BadRequestException.class,
-                () -> albumService.addAlbumToFavourite(albumId, userId));
+                () -> albumService.addAlbumToFavourite(albumId));
         Assertions.assertEquals("Album already added to favourites", ex.getMessage());
     }
 
@@ -201,8 +208,9 @@ public class AlbumServiceTest {
         album.setAuthorId(userId);
 
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
+        when(userContext.getUserId()).thenReturn(userId);
 
-        albumService.deleteAlbumToFavourite(albumId, userId);
+        albumService.deleteByAlbumIdAndUserId(albumId);
         Mockito.verify(favoriteAlbumRepositoryAdapter, Mockito.times(1)).deleteByAlbumAndUserId(album, userId);
     }
 
@@ -251,6 +259,7 @@ public class AlbumServiceTest {
         AlbumDTO updatedAlbumDTO = new AlbumDTO();
         updatedAlbumDTO.setTitle("Updated Album");
 
+        when(userContext.getUserId()).thenReturn(userId);
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
         when(albumRepositoryAdapter.existsByTitleAndAuthorId(albumDTO.getTitle(), albumDTO.getAuthorId()))
                 .thenReturn(false);
@@ -260,7 +269,7 @@ public class AlbumServiceTest {
         }).when(albumMapper).update(albumDTO, album);
         when(albumMapper.toDto(album)).thenReturn(updatedAlbumDTO);
 
-        AlbumDTO result = albumService.update(albumDTO, userId, albumId);
+        AlbumDTO result = albumService.update(albumDTO, albumId);
         Assertions.assertNotNull(result);
         Assertions.assertEquals("Updated Album", result.getTitle());
     }
@@ -274,12 +283,13 @@ public class AlbumServiceTest {
         Album album = new Album();
         album.setAuthorId(userId);
 
+        when(userContext.getUserId()).thenReturn(userId);
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
         when(albumRepositoryAdapter.existsByTitleAndAuthorId(albumDTO.getTitle(), albumDTO.getAuthorId()))
                 .thenReturn(true);
 
         BadRequestException ex = Assertions.assertThrows(BadRequestException.class,
-                () -> albumService.update(albumDTO, userId, albumId));
+                () -> albumService.update(albumDTO, albumId));
         Assertions.assertEquals("An album with this title already exists", ex.getMessage());
     }
 
@@ -288,9 +298,10 @@ public class AlbumServiceTest {
         Album album = new Album();
         album.setAuthorId(userId);
 
+        when(userContext.getUserId()).thenReturn(userId);
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
 
-        albumService.delete(userId, albumId);
+        albumService.delete(albumId);
         Mockito.verify(albumRepositoryAdapter, Mockito.times(1)).delete(album);
     }
 
@@ -299,10 +310,11 @@ public class AlbumServiceTest {
         Album album = new Album();
         album.setAuthorId(999L);
 
+        when(userContext.getUserId()).thenReturn(userId);
         when(albumRepositoryAdapter.getById(albumId)).thenReturn(album);
 
         BadRequestException ex = Assertions.assertThrows(BadRequestException.class,
-                () -> albumService.delete(userId, albumId));
+                () -> albumService.delete(albumId));
         Assertions.assertEquals("Unable to delete album", ex.getMessage());
     }
 }

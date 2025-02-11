@@ -93,8 +93,7 @@ public class AlbumControllerTest {
         albumDTO.setDescription("updated desc");
         albumDTO.setAuthorId(1L);
 
-        when(albumService.update(Mockito.any(AlbumDTO.class), Mockito.anyLong(),
-                Mockito.anyLong())).thenReturn(albumDTO);
+        when(albumService.update(Mockito.any(AlbumDTO.class), Mockito.anyLong())).thenReturn(albumDTO);
 
         mockMvc.perform(put("/api/v1/album/1")
                         .header("x-user-id", 1L)
@@ -106,7 +105,7 @@ public class AlbumControllerTest {
 
     @Test
     void delete_ShouldReturnNoContent() throws Exception {
-        doNothing().when(albumService).delete(Mockito.anyLong(), Mockito.anyLong());
+        doNothing().when(albumService).delete(Mockito.anyLong());
 
         mockMvc.perform(delete("/api/v1/album/1").header("x-user-id", 1L))
                 .andExpect(status().isOk());
