@@ -10,12 +10,12 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI postServiceInfo() {
         return new OpenAPI()
-                .info(new Info()
-                        .title("Post Service")
-                        .description("Проект на Spring Boot с использованием PostgreSQL, Redis, Liquibase и Gradle. " +
-                                "Включает тестирование с testcontainers, кэширование, обработку ошибок и обмен сообщениями" +
-                                " через Redis pub/sub. Трёхслойная архитектура: Controller, Service, Repository. ")
-                        .version("v1")
-                );
+            .info(new Info()
+                    .title("Post Service")
+                    .description("Проект на Spring Boot с использованием PostgreSQL, Redis, Liquibase и Gradle. " +
+                            "Включает тестирование с testcontainers, кэширование, обработку ошибок и обмен сообщениями"
+                            + " через Redis pub/sub. Трёхслойная архитектура: Controller, Service, Repository. ")
+                    .version("v1")
+            );
     }
 }
