@@ -22,9 +22,6 @@ public class AlbumFavoriteFilter implements AlbumFilter {
     @Override
     public boolean filterEntity(Album album, AlbumFilterDto filters) {
         long userId = userContext.getUserId();
-        if (userId <= 0) {
-            return false;
-        }
         return filters.getIsFavoritePattern().equals(albumRepository.isFavorite(album.getId(), userId));
     }
 }
