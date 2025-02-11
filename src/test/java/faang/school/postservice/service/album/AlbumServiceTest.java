@@ -56,13 +56,7 @@ class AlbumServiceTest {
     @Test
     void getAlbumById_ReturnsDtoWhenFound() {
         Long albumId = 1L;
-        Album album = new Album();
-        album.setId(albumId);
-        album.setTitle("Test Album");
-        album.setDescription("Test Description");
-        album.setAuthorId(123L);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 123L, LocalDateTime.now());
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(album));
 
@@ -76,13 +70,7 @@ class AlbumServiceTest {
     @Test
     void getAllAlbums_ReturnsListDto() {
         AlbumFilterDto filter = new AlbumFilterDto(null, null, null, null);
-        Album album = new Album();
-        album.setId(1L);
-        album.setTitle("Album");
-        album.setDescription("Description");
-        album.setAuthorId(1L);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 123L, LocalDateTime.now());
 
         when(albumRepository.findAll()).thenReturn(List.of(album));
 
@@ -96,13 +84,7 @@ class AlbumServiceTest {
     void getUserAlbums_ReturnsListDto() {
         Long userId = 1L;
         AlbumFilterDto filter = new AlbumFilterDto(null, null, null, null);
-        Album album = new Album();
-        album.setId(1L);
-        album.setTitle("Album");
-        album.setDescription("Description");
-        album.setAuthorId(userId);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 123L, LocalDateTime.now());
 
         when(albumRepository.findByAuthorId(userId)).thenReturn(List.of(album));
         when(userServiceClient.getUser(userId)).thenReturn(dummyUser);
@@ -116,14 +98,7 @@ class AlbumServiceTest {
     void getUserFavoriteAlbums_ReturnsListDto() {
         Long userId = 1L;
         AlbumFilterDto filter = new AlbumFilterDto(null, null, null, null);
-        Album album = new Album();
-        album.setId(1L);
-        album.setTitle("Album");
-        album.setDescription("Description");
-
-        album.setAuthorId(2L);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 123L, LocalDateTime.now());;
 
         when(albumRepository.findFavoriteAlbumsByUserId(userId)).thenReturn(List.of(album));
         when(userServiceClient.getUser(userId)).thenReturn(dummyUser);
@@ -193,11 +168,7 @@ class AlbumServiceTest {
         Long albumId = 1L;
         Long postId = 1L;
 
-        Album album = new Album();
-        album.setId(albumId);
-        album.setAuthorId(userId);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 1L, LocalDateTime.now());
 
         Post post = new Post();
         post.setId(postId);
@@ -216,11 +187,7 @@ class AlbumServiceTest {
         Long albumId = 1L;
         Long postId = 1L;
 
-        Album album = new Album();
-        album.setId(albumId);
-        album.setAuthorId(userId);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 1L, LocalDateTime.now());
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(album));
         when(userServiceClient.getUser(userId)).thenReturn(dummyUser);
@@ -237,13 +204,7 @@ class AlbumServiceTest {
         Long albumId = 1L;
         UpdateAlbumRequestDto request = new UpdateAlbumRequestDto("Updated Title", "Updated description");
 
-        Album album = new Album();
-        album.setId(albumId);
-        album.setTitle("Old Title");
-        album.setDescription("Old description");
-        album.setAuthorId(userId);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 1L, LocalDateTime.now());
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(album));
         when(userServiceClient.getUser(userId)).thenReturn(dummyUser);
@@ -261,13 +222,7 @@ class AlbumServiceTest {
                 "Duplicate Title",
                 "Duplicate description");
 
-        Album album = new Album();
-        album.setId(albumId);
-        album.setTitle("Old Title");
-        album.setDescription("Old description");
-        album.setAuthorId(userId);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 1L, LocalDateTime.now());
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(album));
         when(userServiceClient.getUser(userId)).thenReturn(dummyUser);
@@ -283,11 +238,7 @@ class AlbumServiceTest {
         Long userId = 1L;
         Long albumId = 1L;
 
-        Album album = new Album();
-        album.setId(albumId);
-        album.setAuthorId(userId);
-        album.setPosts(new ArrayList<>());
-        album.setCreatedAt(LocalDateTime.now());
+        Album album = createAlbum(1L, 1L, LocalDateTime.now());
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(album));
         when(userServiceClient.getUser(userId)).thenReturn(dummyUser);
@@ -367,5 +318,16 @@ class AlbumServiceTest {
                 () -> albumService.getUserAlbums(userId, new AlbumFilterDto(null, null,
                         null, null)));
         assertEquals("Пользователь не найден", ex.getMessage());
+    }
+
+    private Album createAlbum(Long id, Long authorId, LocalDateTime createdAt) {
+        return Album.builder()
+                .id(id)
+                .authorId(authorId)
+                .title("Album " + id)
+                .description("Описание альбома " + id)
+                .createdAt(createdAt)
+                .posts(new ArrayList<>())
+                .build();
     }
 }
