@@ -83,16 +83,19 @@ public class CommentService {
 
         if (unverifiedComments.isEmpty()) {
             log.info("No unverified comments to moderate");
-        } else {
-            for (Comment comment : unverifiedComments) {
-                boolean containsBannedWords = moderationDictionary.containsBannedWords(comment.getContent());
-                comment.setVerified(!containsBannedWords);
-                comment.setVerifiedDate(LocalDateTime.now());
-            }
-
-            commentRepository.saveAll(unverifiedComments);
-            log.info("Moderated {} comments", unverifiedComments.size());
+            return 0;
         }
+
+        unverifiedComments.parallelStream()
+                .peek(comment -> log.info("Moderating comment ID: {}", comment.getId()))
+                .forEach(comment -> {
+                    boolean containsBannedWords = moderationDictionary.containsBannedWords(comment.getContent());
+                    comment.setVerified(!containsBannedWords);
+                    comment.setVerifiedDate(LocalDateTime.now());
+                });
+
+        commentRepository.saveAll(unverifiedComments);
+        log.info("Moderated {} comments", unverifiedComments.size());
 
         return unverifiedComments.size();
     }
