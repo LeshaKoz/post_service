@@ -15,15 +15,12 @@ class ModerationDictionaryTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        // Создаем временный JSON-файл для теста
         Path tempFile = Files.createTempFile("banned-words", ".json");
         tempFile.toFile().deleteOnExit();
 
-        // Записываем JSON-массив запрещенных слов
         String jsonContent = "[\"badword1\", \"badword2\", \"offensiveword\"]";
         Files.writeString(tempFile, jsonContent);
 
-        // Создаем реальный экземпляр ModerationDictionary
         moderationDictionary = new ModerationDictionary(tempFile.toString());
     }
 
