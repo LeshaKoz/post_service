@@ -1,14 +1,7 @@
 package faang.school.postservice.exception;
 
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,9 +11,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,14 +37,37 @@ public class GlobalExceptionHandler {
         return new ApiError(ex.getMessage(), Collections.emptyList());
     }
 
-    @ExceptionHandler(DataValidationException.class)
+    @ExceptionHandler({DataValidationException.class, IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleDataValidationException(DataValidationException ex) {
-        log.warn("Data validation error: {}", ex.getMessage(), ex);
+    public ApiError handleDataValidationAndIllegalArgumentExceptions(Exception ex) {
+
+        log.warn("Validation or argument error: {}", ex.getMessage(), ex);
         return new ApiError(ex.getMessage(), Collections.emptyList());
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleConstraintViolationException(ConstraintViolationException ex) {
 
+        log.warn("Constraint violation exception: {}", ex.getMessage(), ex);
 
+        List<ApiError.FieldErrorDetail> errors = ex.getConstraintViolations().stream()
+                .map(violation -> {
+                    log.warn("Constraint violation: {} - {}", violation.getPropertyPath(), violation.getMessage());
+                    return new ApiError.FieldErrorDetail(
+                            violation.getPropertyPath().toString(),
+                            violation.getMessage()
+                    );
+                })
+                .collect(Collectors.toList());
 
+        return new ApiError("Constraint violation", errors);
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiError handleGenericException(Exception ex) {
+        log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
+        return new ApiError("Internal server error. Please try again later.", Collections.emptyList());
+    }
 }
