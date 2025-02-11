@@ -36,7 +36,7 @@ public class PostService {
     private final RewriterService rewriterService;
     private final ObjectFactory<ModerationDictionary> moderationDictionaryObjectFactory;
 
-    private final int MODERATIONS_PER_PAGE = 100;
+    private static final int MODERATION_PER_PAGE = 100;
 
     @Transactional
     public PostResultResponse createPost(PostCreatingRequest postCreatingDto) {
@@ -178,7 +178,7 @@ public class PostService {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         Page<Post> postPage;
         do {
-            Pageable pageable = PageRequest.of(page, MODERATIONS_PER_PAGE);
+            Pageable pageable = PageRequest.of(page, MODERATION_PER_PAGE);
             postPage = postRepository.findUnverifiedPosts(pageable);
             List<Post> content = postPage.getContent();
 
