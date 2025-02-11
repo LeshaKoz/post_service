@@ -15,7 +15,6 @@ import org.mapstruct.ReportingPolicy;
         unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface CommentMapper {
 
-    @Mapping(target = "post", ignore = true)
     Comment toEntity(CreateCommentRequest commentRequest);
 
     CommentForListDto toListDto(Comment comment);
