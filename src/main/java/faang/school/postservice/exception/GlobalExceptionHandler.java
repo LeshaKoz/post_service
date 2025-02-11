@@ -63,15 +63,4 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorResponse handleException(NoAccessException ex) {
-        return new ErrorResponse(
-                ex.getMessage(),
-                "Доступ запрещен",
-                HttpStatus.FORBIDDEN
-        );
-    }
-
 }

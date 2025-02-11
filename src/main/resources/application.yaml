@@ -28,11 +28,29 @@ spring:
 server:
   port: 8081
   servlet:
-    context-path: /posts/api/
+    context-path: /posts/api
 
 logging:
   level:
     root: info
+
+post:
+  moderation:
+    batch-size: 10
+    page-size: 20
+    cronPeriod: "0 0 0 * * *"
+  schedule:
+    batch-size: 1000
+    scheduled-cron: "0 * * * * *"
+    max-retries: 5
+    timeout: 10
+    initial-delay: 500
+    delay-multiplier: 2
+    batchCount: 3
+
+thread:
+  pool:
+    size: 10
 
 user-service:
   host: localhost
