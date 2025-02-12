@@ -1,21 +1,26 @@
 package faang.school.postservice.handler;
 
 import faang.school.postservice.dto.ErrorDto;
+import faang.school.postservice.exception.ApiError;
 import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.UploadFileException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -50,6 +55,36 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ErrorDto handleCommentValidationException(CommentValidationException ex) {
         log.error("Comment validation failure", ex);
         return new ErrorDto("Comment validation failure", ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+
+        List<ApiError.FieldErrorDetail> validationErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> new ApiError.FieldErrorDetail(fieldError.getField(), fieldError.getDefaultMessage()))
+                .collect(Collectors.toList());
+
+        return new ApiError("Validation failed", validationErrors);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleConstraintViolationException(ConstraintViolationException ex) {
+
+        log.warn("Constraint violation exception: {}", ex.getMessage(), ex);
+
+        List<ApiError.FieldErrorDetail> errors = ex.getConstraintViolations().stream()
+                .map(violation -> {
+                    log.warn("Constraint violation: {} - {}", violation.getPropertyPath(), violation.getMessage());
+                    return new ApiError.FieldErrorDetail(
+                            violation.getPropertyPath().toString(),
+                            violation.getMessage()
+                    );
+                })
+                .collect(Collectors.toList());
+
+        return new ApiError("Constraint violation", errors);
     }
 
     @ExceptionHandler(Throwable.class)
