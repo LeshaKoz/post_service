@@ -1,6 +1,8 @@
 package faang.school.postservice.repository;
 
 import faang.school.postservice.model.Post;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -26,4 +28,7 @@ public interface PostRepository extends CrudRepository<Post, Long> {
             + "WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
 
+    @Query("SELECT p From Post p "
+            + "WHERE p.published = false AND (p.verified IS NULL OR p.verified = false)")
+    Page<Post> findUnverifiedPosts(Pageable pageable);
 }

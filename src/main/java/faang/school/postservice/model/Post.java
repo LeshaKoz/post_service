@@ -73,6 +73,12 @@ public class Post {
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
 
+    @Column(name = "verified")
+    private boolean verified;
+
+    @Column(name = "verified_at")
+    private LocalDateTime verifiedAt;
+
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at")

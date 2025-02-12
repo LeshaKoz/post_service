@@ -40,6 +40,9 @@ logging:
   level:
     root: info
 
+moderation:
+  dictionary: classpath:obscene_words.txt
+
 user-service:
   host: localhost
   port: 8080
