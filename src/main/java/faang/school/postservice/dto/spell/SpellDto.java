@@ -9,20 +9,11 @@ import java.util.List;
 @Data
 public class SpellDto implements Serializable {
 
-    @JsonProperty("code")
-    private int code;
-
     @JsonProperty("pos")
-    int pos;
-
-    @JsonProperty("row")
-    int row;
-
-    @JsonProperty("col")
-    int col;
+    int replacementStartIndex;
 
     @JsonProperty("len")
-    int len;
+    int correctWordLength;
 
     @JsonProperty("s")
     List<String> suggestions;

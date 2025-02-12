@@ -46,5 +46,9 @@ payment-service:
 
 spell-service:
   url: https://speller.yandex.net/services/spellservice.json
-  cron: "*/2 * * * * *"
+  cron: "0 0 * * * *"
   thread-pool-size: 1
+  retry:
+    attempts: 3
+    delay: 1
+    multiplier: 1

@@ -22,20 +22,15 @@ import static java.lang.String.format;
 public class PostService {
     private final PostRepository postRepository;
     private final PostCorrector postCorrector;
-    private final UserContext userContext;
 
-    @Scheduled(cron = "${spell-service.cron}")
-    @Async("spellServicePool")
     public void correctAllUnpublishedPosts() {
-//        userContext.setUserId(1);
         log.info("Начало запланированного события");
+
         List<Post> posts = postRepository.findReadyToPublish();
-//        String text = "я люблю каров";
-//        postCorrector.autocorrect(text);
-        posts.forEach(postCorrector::autocorrect);
+        posts.forEach(postCorrector::correctContentPost);
         postRepository.saveAll(posts);
+
         log.info("Конец запланированного события");
-//        postCorrector.autoCorrect(text);
     }
 
     public Post findById(@NotNull Long id) {
