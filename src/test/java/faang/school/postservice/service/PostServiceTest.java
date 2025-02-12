@@ -10,10 +10,12 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -27,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,18 +36,14 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
+    @Mock
     private PostRepository postRepository;
-    private PostMapper postMapper;
+    @Spy
+    private PostMapper postMapper = Mappers.getMapper(PostMapper.class);
+    @Mock
     private PostValidator postValidator;
+    @InjectMocks
     private PostService postService;
-
-    @BeforeEach
-    public void setUp() {
-        postRepository = mock(PostRepository.class);
-        postMapper = Mappers.getMapper(PostMapper.class);
-        postValidator = mock(PostValidator.class);
-        postService = new PostService(postRepository, postMapper, postValidator);
-    }
 
     @Test
     public void createDraft_ShouldSaveWhenValidationPass() {
