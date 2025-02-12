@@ -1,5 +1,7 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.broker.LikeEventPublisher;
+import faang.school.postservice.broker.MessageBuilder;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentRequest;
 import faang.school.postservice.dto.like.LikePostRequest;
@@ -29,13 +31,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class LikeService {
-
     private final UserServiceClient userServiceClient;
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostService postService;
     private final CommentService commentService;
+    private final LikeEventPublisher likeEventPublisher;
+    private final MessageBuilder messageBuilder;
 
 
     @Transactional
@@ -59,6 +62,9 @@ public class LikeService {
             likeRepository.save(newLike);
             likes.add(newLike);
             post.setLikes(likes);
+
+            likeEventPublisher.publish(
+                    messageBuilder.generateLikeEventMessage(post.getAuthorId(), userDto.id(), post.getId()));
         }
     }
 
