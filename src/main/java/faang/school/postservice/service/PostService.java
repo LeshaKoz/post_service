@@ -5,6 +5,7 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.SpellCheckResponse;
 import faang.school.postservice.repository.PostRepository;
+import jakarta.transaction.Transactional;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.retry.annotation.Backoff;
@@ -23,19 +24,22 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
+    private final InternalServices internalServices;
     private final ExternalService externalService;
     private final RestTemplateConfig restTemplateConfig;
 
+    @Transactional
     public Post createDraft(Post post) {
-        if (post.getAuthorId() != null && !externalService.userExists(post.getAuthorId())) {
+        if (post.getAuthorId() != null && !internalServices.userExists(post.getAuthorId())) {
             throw new InvalidParameterException("Post author does not exist! id:" + post.getAuthorId());
         }
-        if (post.getProjectId() != null && !externalService.projectExists(post.getProjectId())) {
+        if (post.getProjectId() != null && !internalServices.projectExists(post.getProjectId())) {
             throw new InvalidParameterException("Post project does not exist! id:" + post.getProjectId());
         }
         return postRepository.save(post);
     }
 
+    @Transactional
     public Post publish(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new DataValidationException("Specified post not found. Id:" + postId));
@@ -47,6 +51,7 @@ public class PostService {
         return postRepository.save(post);
     }
 
+    @Transactional
     public Post update(Post post) {
         Post originalPost = postRepository.findById(post.getId())
                 .orElseThrow(() -> new DataValidationException("You are trying to update not existing post. Id:"
@@ -58,6 +63,7 @@ public class PostService {
         return postRepository.save(post);
     }
 
+    @Transactional
     public void delete(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new DataValidationException("Specified post not found. Id:" + postId));
@@ -96,6 +102,10 @@ public class PostService {
                 .filter(post -> !post.isDeleted() && post.isPublished())
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
                 .toList();
+    }
+
+    public List<Post> findPostsByResourceKeys(List<String> resourceKeys) {
+        return postRepository.findPostsByResourceKeys(resourceKeys);
     }
 
     public void correctPosts() {

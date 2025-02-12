@@ -14,6 +14,11 @@ repositories {
 
 dependencies {
     /**
+     * AWS S3
+     */
+    implementation(platform("software.amazon.awssdk:bom:2.21.30"))
+    implementation("software.amazon.awssdk:s3")
+    /**
      * Spring Swagger
      */
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
