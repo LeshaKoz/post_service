@@ -11,5 +11,5 @@ import java.util.List;
 public interface SpellServiceClient {
 
     @PostMapping("/checkText")
-    List<SpellDto> checkText(@RequestParam("text") String text); //попробовать через request body
+    List<SpellDto> checkText(@RequestParam("text") String text);
 }
