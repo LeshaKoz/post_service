@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class AlbumCreateDto {
-
     @NotBlank(message = "Название альбома не должно быть пустым!")
     @Size(max = 256, message = "Название альбома не должно превышать 256 символов!")
     private String title;

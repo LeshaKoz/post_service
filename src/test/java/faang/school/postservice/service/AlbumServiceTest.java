@@ -53,7 +53,7 @@ public class AlbumServiceTest {
     private AlbumRepository albumRepository;
     private AlbumMapperImpl albumMapper;
     private PostService postService;
-    private List<AlbumFilter>albumFilters;
+    private List<AlbumFilter> albumFilters;
     private AlbumService albumService;
     @Captor
     private ArgumentCaptor<Album> albumCaptor;
@@ -66,7 +66,7 @@ public class AlbumServiceTest {
     private Post post;
 
     @BeforeEach
-    public void init(){
+    public void init() {
         album = Album.builder()
                 .id(ALBUM_ID)
                 .title("Title")
@@ -86,7 +86,7 @@ public class AlbumServiceTest {
 
         filterDto = new AlbumFilterDto();
         filterDto.setTitlePattern("Title");
-        
+
         userDto = new UserDto(USER_ID, "Den", "email");
 
         userServiceClient = mock(UserServiceClient.class);

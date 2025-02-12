@@ -30,7 +30,7 @@ public class AlbumService {
     private final List<AlbumFilter> albumFilters;
 
 
-    public AlbumReadDto createAlbum(long userId, AlbumCreateDto albumDto){
+    public AlbumReadDto createAlbum(long userId, AlbumCreateDto albumDto) {
         validateUserId(userId);
         validateUniqueTitle(albumDto.getTitle(), userId);
 
@@ -39,25 +39,25 @@ public class AlbumService {
         return albumMapper.toDto(albumRepository.save(album));
     }
 
-    public AlbumReadDto getAlbumById(long albumId){
+    public AlbumReadDto getAlbumById(long albumId) {
         Album album = getAlbum(albumId);
         return albumMapper.toDto(album);
     }
 
-    public List<AlbumReadDto> getAllAlbums(AlbumFilterDto filters){
+    public List<AlbumReadDto> getAllAlbums(AlbumFilterDto filters) {
         Stream<Album> albumStream = albumRepository.findAll().stream();
 
         return getAlbumReadDtoWithFilters(filters, albumStream);
     }
 
-    public List<AlbumReadDto> getUserAlbums(long userId, AlbumFilterDto filters){
+    public List<AlbumReadDto> getUserAlbums(long userId, AlbumFilterDto filters) {
         validateUserId(userId);
         Stream<Album> albumStream = albumRepository.findByAuthorId(userId).stream();
 
         return getAlbumReadDtoWithFilters(filters, albumStream);
     }
 
-    public AlbumReadDto updateAlbum(long userId, long albumId, AlbumUpdateDto albumUpdateDto){
+    public AlbumReadDto updateAlbum(long userId, long albumId, AlbumUpdateDto albumUpdateDto) {
         validateUserId(userId);
         Album album = getAlbumIfOwner(albumId, userId);
 
@@ -65,13 +65,13 @@ public class AlbumService {
         return albumMapper.toDto(albumRepository.save(album));
     }
 
-    public void deleteAlbum(long userId, long albumId){
+    public void deleteAlbum(long userId, long albumId) {
         validateUserId(userId);
         Album album = getAlbumIfOwner(albumId, userId);
         albumRepository.delete(album);
     }
 
-    public AlbumReadDto addPostToAlbum(long userId, long albumId, long postId){
+    public AlbumReadDto addPostToAlbum(long userId, long albumId, long postId) {
         validateUserId(userId);
         Album album = getAlbumIfOwner(albumId, userId);
         Post post = postService.getPostById(postId);
@@ -80,7 +80,7 @@ public class AlbumService {
         return albumMapper.toDto(albumRepository.save(album));
     }
 
-    public AlbumReadDto removePostFromAlbum(long userId, long albumId, long postId){
+    public AlbumReadDto removePostFromAlbum(long userId, long albumId, long postId) {
         validateUserId(userId);
         Album album = getAlbumIfOwner(albumId, userId);
         Post post = postService.getPostById(postId);
@@ -89,18 +89,18 @@ public class AlbumService {
         return albumMapper.toDto(albumRepository.save(album));
     }
 
-    public void addAlbumToFavorites(long userId, long albumId){
+    public void addAlbumToFavorites(long userId, long albumId) {
         validateUserId(userId);
         getAlbum(albumId);
 
         albumRepository.addAlbumToFavorites(albumId, userId);
     }
 
-    public void removeAlbumFromFavorites(long userId, long albumId){
+    public void removeAlbumFromFavorites(long userId, long albumId) {
         albumRepository.deleteAlbumFromFavorites(albumId, userId);
     }
 
-    public List<AlbumReadDto> getFavoriteAlbums(long userId, AlbumFilterDto filters){
+    public List<AlbumReadDto> getFavoriteAlbums(long userId, AlbumFilterDto filters) {
         validateUserId(userId);
         Stream<Album> albumStream = albumRepository.findFavoriteAlbumsByUserId(userId).stream();
         return getAlbumReadDtoWithFilters(filters, albumStream);
@@ -112,7 +112,7 @@ public class AlbumService {
     }
 
     private List<AlbumReadDto> getAlbumReadDtoWithFilters(AlbumFilterDto filters, Stream<Album> albumStream) {
-        for (AlbumFilter filter : albumFilters){
+        for (AlbumFilter filter : albumFilters) {
             albumStream = filter.apply(albumStream, filters);
         }
 
