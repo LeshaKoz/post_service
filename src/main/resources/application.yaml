@@ -9,7 +9,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -29,6 +29,9 @@ spring:
     bootstrap:
       server:
         address: localhost:9092
+    topics:
+      analytic-topics:
+        add-like-topic-name: "user-like-post"
 
 server:
   port: 8081
