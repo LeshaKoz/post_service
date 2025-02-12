@@ -23,7 +23,7 @@ public interface PostMapper {
     List<ReadPostDto> toDtoList(List<Post> posts);
 
     @Named("likesToCount")
-    default Long likesToCount(List<Like> likes) { // Принимает List<Like>
+    default Long likesToCount(List<Like> likes) {
         return (likes != null) ? (long) likes.size() : 0L;
     }
 }

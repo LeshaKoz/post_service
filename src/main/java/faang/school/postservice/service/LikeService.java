@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.BusinessException;
@@ -21,9 +20,7 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final PostService postService;
     private final CommentService commentService;
-    private final UserContext userContext;
     private final UserService userService;
-
 
     public Like findById(@NotNull Long likeId) {
         return likeRepository.findById(likeId)
@@ -51,8 +48,7 @@ public class LikeService {
 
     @Transactional
     public LikeDto userLikeTheComment(LikeDto dto) {
-
-        UserDto userDto = userService.getUser(userContext.getUserId());
+        UserDto userDto = userService.getUserByContext();
 
         if (likeRepository
                 .findByCommentIdAndUserId(dto.elementId(), userDto.id())
@@ -69,7 +65,6 @@ public class LikeService {
 
     @Transactional
     public void removeLikePost(Long likeId, LikeDto dto) {
-
         UserDto userDto = userService.getUserByContext();
 
         if (canUserDeleteLike(likeId, userDto.id())) {
