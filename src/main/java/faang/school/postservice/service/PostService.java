@@ -8,20 +8,31 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-@AllArgsConstructor
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
+    private final KafkaTemplate<String, Long> kafkaTemplate;
     private final PostMapper postMapper;
     private final PostValidator postValidator;
+
+    @Value("${author.banner.rejected_posts_to_ban}")
+    private int rejectedPostsToBan;
+    @Value("${author.banner.kafka_topic}")
+    private String banTopic;
 
     public PostResponseDto createDraft(CreatePostDraftDto postDraftDto) {
         Post post = postMapper.fromCreateDto(postDraftDto);
@@ -79,6 +90,24 @@ public class PostService {
 
     public List<PostResponseDto> getProjectPosts(long projectId) {
         return getExistingPostsSortedByDate(postRepository::findByProjectId, Post::getPublishedAt, projectId, true);
+    }
+
+    @Transactional(readOnly = true)
+    public void postAuthorsToBan() {
+        List<Long> authorIdsToBan = findAuthorIdsToBan();
+        log.info("Start publishing authors to ban");
+        for (Long authorIdToBan : authorIdsToBan) {
+            log.debug("Publishing author {} to ban", authorIdToBan);
+            kafkaTemplate.send(banTopic, authorIdToBan);
+        }
+        log.info("Finish publishing authors to ban");
+    }
+
+    private List<Long> findAuthorIdsToBan() {
+        log.info("Start search authors to ban.");
+        List<Long> authorIdsForBan = postRepository.findAuthorsForBan(rejectedPostsToBan);
+        log.info("End search authors to ban. Found {} authors", authorIdsForBan);
+        return authorIdsForBan;
     }
 
     private List<PostResponseDto> getExistingPostsSortedByDate(
