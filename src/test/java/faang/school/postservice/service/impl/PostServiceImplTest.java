@@ -11,6 +11,7 @@ import faang.school.postservice.filter.post.PublishedSpecification;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.schedule.ThreadPoolConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceImplTest {
@@ -35,6 +37,10 @@ class PostServiceImplTest {
     private PostRepository postRepositoryMock;
     @Spy
     private PostMapperImpl postMapper;
+    @Mock
+    ThreadPoolConfig threadPoolConfig;
+    @Mock
+    ExecutorService executorService;
     @InjectMocks
     private PostServiceImpl postService;
     private PostCreateRequestDto postCreateRequestDto;
@@ -53,7 +59,14 @@ class PostServiceImplTest {
         postSpecificationFilters.add(projectSpec);
         postSpecificationFilters.add(publishedSpec);
 
-        postService = new PostServiceImpl(postRepositoryMock, postServiceValidatorMock, postMapper, postSpecificationFilters);
+        postService = new PostServiceImpl(
+                postRepositoryMock,
+                postServiceValidatorMock,
+                postMapper,
+                postSpecificationFilters,
+                threadPoolConfig,
+                executorService
+        );
 
         postCreateRequestDto = PostCreateRequestDto.builder()
                 .content("Test content")
