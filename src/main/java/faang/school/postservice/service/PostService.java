@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -34,8 +35,9 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostUtil postUtil;
     private final RewriterService rewriterService;
+    private final ExecutorService scheduledPublishPostThreadPool;
+    private static final int MAX_POST_COUNT_PUBLISH_ON_THREAD = 1000;
     private final ObjectFactory<ModerationDictionary> moderationDictionaryObjectFactory;
-
     private static final int MODERATION_PER_PAGE = 100;
 
     @Transactional
@@ -78,6 +80,22 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         log.info("Successfully published post with id : {}", postId);
         return postMapper.toDto(post);
+    }
+
+    @Transactional(readOnly = true)
+    public void publishScheduledPost() {
+        log.info("publishing scheduled posts");
+
+        List<Post> posts = postRepository.findReadyToPublish();
+        List<List<Post>> groups = divideListIntoGroups(posts, MAX_POST_COUNT_PUBLISH_ON_THREAD);
+
+        groups.forEach(group -> {
+            scheduledPublishPostThreadPool.submit(() -> {
+                group.forEach(item -> {
+                    publishPost(item.getId());
+                });
+            });
+        });
     }
 
     @Transactional
@@ -142,10 +160,25 @@ public class PostService {
                 .orElseThrow(() -> new PostWasNotFoundException("No posts was found!"));
     }
 
+    private List<List<Post>> divideListIntoGroups(List<Post> items, int groupSize) {
+        List<List<Post>> groups = new ArrayList<>();
+        List<Post> currentGroup = new ArrayList<>();
+        for (Post item : items) {
+            currentGroup.add(item);
+            if (currentGroup.size() >= groupSize) {
+                groups.add(currentGroup);
+                currentGroup = new ArrayList<>();
+            }
+        }
+        if (!currentGroup.isEmpty()) {
+            groups.add(currentGroup);
+        }
+        return groups;
+    }
+
     public boolean existsById(long id) {
         return postRepository.existsById(id);
     }
-
 
     public void postCorrections() {
         List<Post> posts = postRepository.findReadyToPublish();

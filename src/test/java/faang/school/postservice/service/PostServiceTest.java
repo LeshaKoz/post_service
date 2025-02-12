@@ -18,31 +18,25 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
-
     @InjectMocks
     private PostService postService;
-
     @Mock
     private PostRepository postRepository;
-
     @Mock
     private PostUtil postUtil;
-
     @Mock
     private RewriterService rewriterService;
-
+    @Mock
+    private ExecutorService scheduledPublishPostThreadPool;
     @Spy
     private PostMapper postMapper = Mappers.getMapper(PostMapper.class);
 
@@ -187,6 +181,63 @@ public class PostServiceTest {
         Assertions.assertThrows(IllegalArgumentException.class, () -> postService.softDelete(postId));
     }
 
+    private void updatePostWithError(Post setPost) {
+        PostUpdatingDto postUpdatingDto = PostUpdatingDto.builder()
+                .postId(1L)
+                .updatingContent("New content")
+                .build();
+
+        Long postId = setPost.getId();
+        String postContent = setPost.getContent() + "New content";
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(setPost));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> postService.updatePost(postUpdatingDto));
+    }
+
+    @Test
+    public void publishScheduledPost_success6ThreadsRun() {
+        List<Post> posts = new ArrayList<>();
+
+        for (int i = 1; i < 5050; i++) {
+            posts.add(Post.builder()
+                    .id((long) i)
+                    .published(false)
+                    .build());
+        }
+
+        when(postRepository.findReadyToPublish()).thenReturn(posts);
+
+        postService.publishScheduledPost();
+
+        verify(scheduledPublishPostThreadPool, times(6)).submit(any(Runnable.class));
+    }
+    @Test
+    public void publishScheduledPost_success1ThreadsRun() {
+        List<Post> posts = new ArrayList<>();
+
+        for (int i = 1; i < 500; i++) {
+            posts.add(Post.builder()
+                    .id((long) i)
+                    .published(false)
+                    .build());
+        }
+
+        when(postRepository.findReadyToPublish()).thenReturn(posts);
+
+        postService.publishScheduledPost();
+
+        verify(scheduledPublishPostThreadPool, times(1)).submit(any(Runnable.class));
+    }
+    @Test
+    public void publishScheduledPost_zeroPostsToPublish() {
+        when(postRepository.findReadyToPublish()).thenReturn(Collections.emptyList());
+
+        postService.publishScheduledPost();
+
+        verify(scheduledPublishPostThreadPool, times(0)).submit(any(Runnable.class));
+    }
+
     @Test
     public void processRewritePost_Success() {
         String postContent = "This is a test content";
@@ -232,19 +283,5 @@ public class PostServiceTest {
 
         assertEquals("rewritten content 1", post1.getContent());
         assertEquals("rewritten content 2", post2.getContent());
-    }
-
-    private void updatePostWithError(Post setPost) {
-        PostUpdatingDto postUpdatingDto = PostUpdatingDto.builder()
-                .postId(1L)
-                .updatingContent("New content")
-                .build();
-
-        Long postId = setPost.getId();
-        String postContent = setPost.getContent() + "New content";
-
-        when(postRepository.findById(postId)).thenReturn(Optional.of(setPost));
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> postService.updatePost(postUpdatingDto));
     }
 }
