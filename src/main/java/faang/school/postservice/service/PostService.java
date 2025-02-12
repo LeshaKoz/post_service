@@ -104,10 +104,13 @@ public class PostService {
         return postRepository.findPostsByResourceKeys(resourceKeys);
     }
 
+    @Transactional
     public void correctPosts() {
         List<Post> unpublishedPosts = postRepository.findByPublishedFalse();
+
         for (Post post : unpublishedPosts) {
             String correctedText = correctTextWithYandexSpeller(post.getContent());
+
             if (!correctedText.equals(post.getContent())) {
                 post.setContent(correctedText);
                 postRepository.save(post);
