@@ -1,6 +1,6 @@
-package faang.school.postservice.config.messagebroker;
+package faang.school.postservice.config.kafka;
 
-import faang.school.postservice.event.LikeEvent;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,14 +14,17 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Configuration
 public class KafkaProducerConfig {
 
     @Value("${spring.kafka.bootstrap.server.address}")
     private String bootstrapAddress;
+    @Value("${spring.kafka.topics.analytic-topics.add-like-topic-name}")
+    private String addLikeEventTopicName;
 
     @Bean
-    public ProducerFactory<String, LikeEvent> producerFactory() {
+    public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -37,7 +40,13 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, LikeEvent> kafkaTemplate() {
+    public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
+
+    @Bean
+    public String addLikeEventTopicName() {
+        return addLikeEventTopicName;
+    }
+
 }
