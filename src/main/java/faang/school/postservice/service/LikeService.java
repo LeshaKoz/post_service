@@ -2,8 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.event.LikeEvent;
-import faang.school.postservice.event.LikeEventPublisher;
+import faang.school.postservice.event.PublishLikeEvent;
 import faang.school.postservice.exception.CommentNotFoundException;
 import faang.school.postservice.exception.PostNotFoundException;
 import faang.school.postservice.exception.UserNotFoundException;
@@ -35,7 +34,6 @@ public class LikeService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final UserServiceClient userServiceClient;
-    private final LikeEventPublisher likeEventPublisher;
 
     @Transactional(readOnly = true)
     public List<UserDto> getUsersWhoLikedPost(Long postId) {
@@ -55,6 +53,7 @@ public class LikeService {
         return fetchUsersInBatches(userIds);
     }
 
+    @PublishLikeEvent
     @Transactional
     public void addLikeToPost(Long postId, Long commentId, Long currentUserId) {
         try {
@@ -76,9 +75,6 @@ public class LikeService {
         post.getLikes().add(like);
         likeRepository.save(like);
         postRepository.save(post);
-
-        LikeEvent event = new LikeEvent(postId, currentUserId, post.getAuthorId());
-        likeEventPublisher.publishLikeEvent(event);
     }
 
     @Transactional
