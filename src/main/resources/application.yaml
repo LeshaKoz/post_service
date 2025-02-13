@@ -27,6 +27,9 @@ spring:
         likes-channel: like_event_channel
         user-bans-channel: user_ban_channel
         comments-channel: comment_channel
+        comments-author-channel: comments_author_channel
+      ttl:
+        authors: 86400
 
   retry:
     maxAttempts: 3

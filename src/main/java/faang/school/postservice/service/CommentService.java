@@ -30,7 +30,7 @@ import java.util.List;
 @Slf4j
 public class CommentService {
     private final CommentRepository commentRepository;
-    private final CommentEventPublisher commentEventPublisher;
+    private final CommentAuthorCacheService commentAuthorCacheService;
     private final PostService postService;
     private final CommentMapper commentMapper;
     private final PostValidator postValidator;
@@ -60,6 +60,8 @@ public class CommentService {
                 .build();
 
         outboxEventRepository.save(outboxEvent);
+
+        commentAuthorCacheService.cacheCommentAuthor(comment.getId(), comment.getAuthorId());
 
         return commentMapper.toDto(comment);
     }

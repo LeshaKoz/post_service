@@ -60,6 +60,9 @@ class CommentServiceTest {
     @Mock
     private OutboxEventRepository outboxEventRepository;
 
+    @Mock
+    private CommentAuthorCacheService commentAuthorCacheService;
+
     @InjectMocks
     CommentService commentService;
 
