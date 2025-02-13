@@ -18,6 +18,9 @@ public class PostProperties {
     @Valid
     private final Grammar grammar = new Grammar();
 
+    @Valid
+    private final Schedule schedule = new Schedule();
+
     @Data
     public static class Moderation {
         @Positive
@@ -28,6 +31,14 @@ public class PostProperties {
 
     @Data
     public static class Grammar {
+        @Positive
+        private Integer batchSize;
+        @Positive
+        private Integer pageSize;
+    }
+
+    @Data
+    public static class Schedule {
         @Positive
         private Integer batchSize;
         @Positive
