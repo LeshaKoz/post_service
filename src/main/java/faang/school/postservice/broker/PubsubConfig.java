@@ -18,6 +18,9 @@ public class PubsubConfig {
     @Value("${spring.data.redis.host}")
     private String host;
 
+    @Value("${spring.messages.like_event_topic_name}")
+    String likeEventTopicName;
+
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(host, port);
@@ -33,7 +36,7 @@ public class PubsubConfig {
 
     @Bean
     public ChannelTopic likeEventTopic() {
-        return new ChannelTopic("likeEvent");
+        return new ChannelTopic(likeEventTopicName);
     }
 
     @Bean
