@@ -44,7 +44,6 @@ spring:
 
 scheduling:
   publishing-cron: "0 * * * * *"
-  #  moderation-cron: "0 0 1 * * *"
   moderation-cron: "0 * * * * *"
 
 moderation:
