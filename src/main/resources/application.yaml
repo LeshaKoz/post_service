@@ -47,12 +47,15 @@ payment-service:
   host: localhost
   port: 9080
 
-
 moderation:
   cron: "0 0 0 * * ?"
   threadSize: 100
   api-url: "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=AIzaSyCvYJUwADYD2pGzdhoY5QunJEgrvgPbbpg"
   bad-words-path: "classpath:moderation/bad-words.json"
+  schedule: "0 0 * * * ?" # каждый день в полночь
+  chunk-size: 500
+  banned-words-path: "src/main/resources/moderation/banned-words.json"
+
 
 api:
     title: "Post service API"
