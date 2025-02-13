@@ -67,13 +67,6 @@ class PostSchedulerServiceTest {
         executorService.shutdown();
         executorService.awaitTermination(5, TimeUnit.SECONDS);
 
-        try {
-            while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
-                System.out.println(" Ожидание завершения задач...");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         verify(postRepository, times(1)).saveAll(argThat(savedPosts ->
                 StreamSupport.stream(savedPosts.spliterator(), false)
