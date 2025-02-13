@@ -35,7 +35,7 @@ public class PostCorrector {
         }
     }
 
-    private static String getCorrectText(String originalText, List<SpellDto> spells) {
+    private String getCorrectText(String originalText, List<SpellDto> spells) {
         List<String> suggestions;
         String replacement;
         int startIndex;
