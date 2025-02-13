@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
@@ -8,6 +9,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.producer.KafkaCommentProducer;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.rediscacherepository.CommentCacheRepository;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
 import faang.school.postservice.validator.UserValidator;
@@ -30,6 +32,8 @@ public class CommentService {
     private final KafkaCommentProducer kafkaCommentProducer;
     private final CommentMapper commentMapper;
     private final UserContext userContext;
+    private final CommentCacheRepository commentCacheRepository;
+    private final UserServiceClient userServiceClient;
 
     @Transactional
     public CommentDto createComment(CommentDto commentDto) {
@@ -44,6 +48,8 @@ public class CommentService {
         Comment commentSaved = commentRepository.save(comment);
 
         kafkaCommentProducer.send(commentMapper.toCommentEvent(comment));
+
+        commentCacheRepository.saveAuthor(commentSaved.getId(), userServiceClient.getUser(commentSaved.getAuthorId()));
         return commentMapper.toDto(commentSaved);
     }
 
