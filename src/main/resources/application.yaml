@@ -29,12 +29,63 @@ spring:
       port: 6379
       host: localhost
       channel:
-        calculations_channel: calculations_channel
         album: album_channel
         user_ban: user_ban
         comment: comment_channel
-        calculations: calculations_channel
         files-uploaded: files_uploaded_channel
+    cache:
+      type: redis
+      global-minutes-ttl: 10
+      feeds-hours-ttl: 24
+      feeds-cache-name: feeds
+      posts-hours-ttl: 24
+      posts-cache-name: posts
+      users-hours-ttl: 24
+      users-cache-name: users
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    listener:
+      ack-mode: record
+    consumer:
+      group-id: news-feed-group-1
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    template:
+      default-topic: default-topic
+application:
+  kafka:
+    topics:
+      post-topic-name: post
+      post-replications-count: 1
+      post-partitions-count: 3
+
+      cache-user-topic-name: cache-user
+      cache-user-replications-count: 1
+      cache-user-partitions-count: 3
+
+      like-topic-name: like
+      like-replications-count: 1
+      like-partitions-count: 3
+
+      comment-topic-name: comment
+      comment-replications-count: 1
+      comment-partitions-count: 3
+
+      post-views-topic-name: post-views
+      post-views-replications-count: 1
+      post-views-partitions-count: 3
+
+      heat-cache-topic-name: heat-posts-cache
+      heat-cache-replications-count: 1
+      heat-cache-partitions-count: 3
+
+      heat-feed-cache-topic-name: heat-feed-cache
+      heat-feed-cache-replications-count: 1
+      heat-feed-cache-partitions-count: 3
+    event-batch-size: 1000
 
 server:
   port: 8081
@@ -42,10 +93,25 @@ server:
     basedir: /path/to/tomcat/directory
     max-http-header-size: 2097152
 
+feed:
+  post:
+    quantity-posts-in-feed: 500
+  comment:
+    quantity-comments-in-post: 3
+  page:
+    size: 20
+  heater:
+    post-published-days-ago: 14
+    event-batch-size: 1000
+  clean-cache:
+    clean-cache-batch: 5000
+    post-published-days-ago: 14
+
 cron:
   update-cache: "0/15 * * * * ?"
   check-comments: "0 0 0 * * ?"
   unverified-posts: 0 47 16 * * ?
+  clean-feed-cache: 0 0 0 * * ?
 
 logging:
   level:
@@ -118,3 +184,11 @@ task-executor:
     core-pool-size: 10
     max-pool-size: 20
     queue-capacity: 50
+  post-task:
+    core-pool-size: 10
+    max-pool-size: 20
+    queue-capacity: 50
+  news-feed-task:
+    core-pool-size: 50
+    max-pool-size: 100
+    queue-capacity: 200

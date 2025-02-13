@@ -7,6 +7,7 @@ import faang.school.postservice.mapper.like.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.kafka.KafkaAddLikeProducer;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.service.post.PostService;
@@ -14,6 +15,7 @@ import faang.school.postservice.validator.like.LikeValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,7 +32,9 @@ public class LikeService {
     private final CommentService commentService;
     private final LikeValidator likeValidator;
     private final LikeMapper likeMapper;
+    private final KafkaAddLikeProducer kafkaAddLikeProducer;
 
+    @Transactional
     public void addLikeToPost(LikeDto likeDto) {
         validateUserExistence(likeDto.getUserId());
         likeValidator.validateLikeHasTarget(likeDto.getPostId(), likeDto.getCommentId());
@@ -45,11 +49,14 @@ public class LikeService {
         Like likeToSave = likeMapper.toEntity(likeDto);
         likeToSave.setPost(postOfLike);
 
+        Like savedLike = likeRepository.save(likeToSave);
+        postService.addLikeToPost(likeDto.getPostId(), savedLike);
+
+        kafkaAddLikeProducer.send(String.valueOf(savedLike.getPost().getId()));
         log.info("Save new Like for Post with ID: {}", likeDto.getPostId());
-        likeRepository.save(likeToSave);
-        postService.addLikeToPost(likeDto.getPostId(), likeToSave);
     }
 
+    @Transactional
     public void addLikeToComment(LikeDto likeDto) {
         validateUserExistence(likeDto.getUserId());
         likeValidator.validateLikeHasTarget(likeDto.getCommentId(), likeDto.getPostId());
@@ -60,33 +67,32 @@ public class LikeService {
         Like likeToCheckPost = getLikeOrEmptyLike(likeDto.getId());
         likeValidator.validateLikeWasNotPutToPost(likeDto, likeToCheckPost);
 
-        Comment commentOfLike = commentService.getExistingComment(likeDto.getCommentId());
+        Comment commentOfLike = commentService.getComment(likeDto.getCommentId());
         Like likeToSave = likeMapper.toEntity(likeDto);
         likeToSave.setComment(commentOfLike);
 
+        Like saveLike = likeRepository.save(likeToSave);
+        commentService.addLikeToComment(likeDto.getCommentId(), saveLike);
         log.info("Save new Like for Comment with ID: {}", likeDto.getCommentId());
-        likeRepository.save(likeToSave);
-        commentService.addLikeToComment(likeDto.getCommentId(), likeToSave);
     }
 
     public void removeLikeFromPost(Long likeId, LikeDto likeDto) {
-        validateUserExistence(likeDto.getUserId());
-        Like likeToRemove = getLike(likeId);
-        likeValidator.validateThisUserAddThisLike(likeDto.getUserId(), likeToRemove);
-
-        log.info("Remove like with ID: {} ", likeId);
-        likeRepository.delete(likeToRemove);
+        Like likeToRemove = removeLike(likeId, likeDto);
         postService.removeLikeFromPost(likeDto.getPostId(), likeToRemove);
     }
 
     public void removeLikeFromComment(Long likeId, LikeDto likeDto) {
+        Like likeToRemove = removeLike(likeId, likeDto);
+        commentService.removeLikeFromComment(likeDto.getCommentId(), likeToRemove);
+    }
+
+    private Like removeLike(Long likeId, LikeDto likeDto) {
         validateUserExistence(likeDto.getUserId());
         Like likeToRemove = getLike(likeId);
         likeValidator.validateThisUserAddThisLike(likeDto.getUserId(), likeToRemove);
-
-        log.info("Remove like with ID: {}", likeId);
         likeRepository.delete(likeToRemove);
-        commentService.removeLikeFromComment(likeDto.getCommentId(), likeToRemove);
+        log.info("Remove like with ID: {}", likeId);
+        return likeToRemove;
     }
 
     private void validateUserExistence(long id) {

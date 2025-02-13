@@ -1,6 +1,7 @@
 package faang.school.postservice.client;
 
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.model.cache.UserCacheDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,24 @@ public interface UserServiceClient {
     @PostMapping("/users/by-ids")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
 
+    @PostMapping("users/caches")
+    List<UserCacheDto> getUsersCachesByIds(@RequestBody List<Long> usersIds);
+
+    @GetMapping("users/active/{userId}")
+    boolean isUserActive(@PathVariable Long userId);
+
+    @GetMapping("users/exists/{userId}")
+    boolean isUserExists(@PathVariable Long userId);
+
+    @PostMapping("users/feeds/caches/heat")
+    String heatCache();
+
     @GetMapping("/subscriptions/{followeeId}/followers/{followerId}")
     Boolean checkFollowerOfFollowee(@PathVariable Long followeeId, @PathVariable Long followerId);
+
+    @GetMapping("/subscriptions/{followeeId}")
+    List<Long> getFollowersIds(@PathVariable Long followeeId);
+
+    @GetMapping("/subscriptions/ids/{followerId}")
+    List<Long> getFolloweesIds(@PathVariable Long followerId);
 }
