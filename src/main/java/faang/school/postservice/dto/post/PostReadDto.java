@@ -77,4 +77,5 @@ public class PostReadDto {
             accessMode = Schema.AccessMode.READ_ONLY
     )
     private LocalDateTime publishedAt;
+    private LocalDateTime scheduledAt;
 }

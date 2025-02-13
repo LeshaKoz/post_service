@@ -178,7 +178,7 @@ public class PostServiceTest {
         List<Long> hashtagIds = null;
         mockGetPostById(postId);
 
-        postService.updatePost(postId, new PostUpdateDto(newContent, hashtagIds));
+        postService.updatePost(postId, new PostUpdateDto(newContent, hashtagIds, null));
         verify(postRepository, atLeastOnce()).save(postArgumentCaptor.capture());
         Post capturedPost = postArgumentCaptor.getValue();
         assertEquals(newContent, capturedPost.getContent());
@@ -194,7 +194,7 @@ public class PostServiceTest {
 
         when(hashtagService.isHashtagExist(1L)).thenReturn(false);
         assertThrows(EntityNotFoundException.class,
-                () -> postService.updatePost(postId, new PostUpdateDto(newContent, hashtagIds)));
+                () -> postService.updatePost(postId, new PostUpdateDto(newContent, hashtagIds, null)));
 
     }
 

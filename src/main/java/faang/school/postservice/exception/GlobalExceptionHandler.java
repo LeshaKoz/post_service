@@ -42,6 +42,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleException(NoAccessException ex) {
+        return new ErrorResponse(
+                ex.getMessage(),
+                "Access Denied",
+                HttpStatus.FORBIDDEN
+        );
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleException(
             MissingServletRequestParameterException ex

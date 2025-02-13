@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import java.time.LocalDateTime;
+
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostMapper {
     @Mapping(target = "hashtags", ignore = true)
@@ -31,6 +33,7 @@ public interface PostMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "content", conditionQualifiedByName = "isNotBlank")
+    @Mapping(target = "scheduledAt", conditionQualifiedByName = "isNotNull")
     void updateEntityFromDto(PostUpdateDto dto, @MappingTarget Post entity);
 
     @Condition
@@ -46,5 +49,11 @@ public interface PostMapper {
                 .stream()
                 .map(Hashtag::getId)
                 .toList();
+    }
+
+    @Condition
+    @Named("isNotNull")
+    default boolean isNotNull(LocalDateTime value) {
+        return value != null;
     }
 }

@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.0.6"
     id("io.spring.dependency-management") version "1.1.0"
+    jacoco
 }
 val springCloudVersion by extra("2022.0.4")
 
@@ -31,6 +32,11 @@ dependencies {
     implementation("org.liquibase:liquibase-core")
     implementation("redis.clients:jedis:4.3.2")
     runtimeOnly("org.postgresql:postgresql")
+
+    /**
+     * Amazon S3
+     */
+    implementation("com.amazonaws:aws-java-sdk-s3:1.12.481")
 
     /**
      * Utils & Logging
@@ -64,6 +70,37 @@ dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
     }
+}
+
+// JACOCO
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+val includedDirectories = fileTree("build/classes/java/main") {
+    include("faang/school/postservice/controller/**")
+    include("faang/school/postservice/service/**")
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    classDirectories.setFrom(includedDirectories)
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.5".toBigDecimal()
+            }
+        }
+    }
+    classDirectories.setFrom(includedDirectories)
+}
+
+tasks.named("check") {
+    dependsOn(tasks.named("jacocoTestCoverageVerification"))
 }
 
 tasks.test {

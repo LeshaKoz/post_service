@@ -1,4 +1,7 @@
 spring:
+  profiles:
+    active: local
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/post-service
@@ -67,13 +70,19 @@ logging:
   level:
     root: info
 
-
-
 post:
   moderation:
     batch-size: 10
     page-size: 20
     cronPeriod: "0 0 0 * * *"
+  schedule:
+    batch-size: 1000
+    scheduled-cron: "0 * * * * *"
+    max-retries: 5
+    timeout: 10
+    initial-delay: 500
+    delay-multiplier: 2
+    batchCount: 3
   grammar:
     cronPeriod: "0 0 0 * * *"
     batch-size: 20
@@ -82,6 +91,14 @@ post:
 thread:
   pool:
     size: 10
+
+services:
+  s3:
+    endpoint: http://localhost:9000
+    accessKey: user
+    secretKey: password
+    bucketName: postbucket
+    max_image_size: 5
 
 user-service:
   host: localhost
@@ -92,3 +109,25 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+
+logging:
+  level:
+    root: debug
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  level:
+    root: info

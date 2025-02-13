@@ -1,9 +1,9 @@
 package faang.school.postservice.controller;
 
-import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentCreateDto;
+import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
-import faang.school.postservice.service.CommentService;
+import faang.school.postservice.service.comment.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -58,5 +60,24 @@ public class CommentController {
             long commentId
     ) {
         commentService.remove(commentId);
+    }
+
+
+    @PostMapping("/{commentId}")
+    @Operation(summary = "Добавление изображения")
+    public CommentReadDto addImage(@PathVariable long commentId, @RequestBody MultipartFile file) {
+        return commentService.uploadImage(commentId, file);
+    }
+
+    @DeleteMapping("/attachments/{imageId}")
+    @Operation(summary = "Удаление изображения")
+    public void removeImage(@PathVariable long imageId) {
+        commentService.removeImage(imageId);
+    }
+
+    @GetMapping("/attachments/{imageId}")
+    @Operation(summary = "Получение изображения")
+    public InputStream downloadImage(@PathVariable long imageId) {
+        return commentService.downloadImage(imageId);
     }
 }
