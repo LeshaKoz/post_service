@@ -11,7 +11,6 @@ import faang.school.postservice.filter.post.PublishedSpecification;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.schedule.ThreadPoolConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,14 +37,11 @@ class PostServiceImplTest {
     @Spy
     private PostMapperImpl postMapper;
     @Mock
-    ThreadPoolConfig threadPoolConfig;
-    @Mock
     ExecutorService executorService;
     @InjectMocks
     private PostServiceImpl postService;
     private PostCreateRequestDto postCreateRequestDto;
     private PostUpdateRequestDto postUpdateRequestDto;
-    private final List<Post> somePosts = TestData.getSomePosts();
     private final List<PostSpecificationFilter> postSpecificationFilters = new ArrayList<>();
 
     @BeforeEach
@@ -64,7 +60,6 @@ class PostServiceImplTest {
                 postServiceValidatorMock,
                 postMapper,
                 postSpecificationFilters,
-                threadPoolConfig,
                 executorService
         );
 
