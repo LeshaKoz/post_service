@@ -26,6 +26,8 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
+    private static final int POST_BATCH_SIZE = 1000;
+
     private final PostRepository postRepository;
     private final PostServiceValidator postServiceValidator;
     private final PostMapper postMapper;
@@ -54,14 +56,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void publishScheduledPosts() {
-        int batchSize = 2;
+
         PostFilterDto postFilterDto = PostFilterDto.builder()
                 .isPublished(false)
                 .isDeleted(false)
                 .build();
 
         List<Post> scheduledPosts = findAllPostsByFilter(postFilterDto);
-        List<List<Post>> postBatches = splitToBatch (scheduledPosts, batchSize);
+        List<List<Post>> postBatches = splitToBatch (scheduledPosts);
         List<CompletableFuture<Void>> futurePostBatches = postBatches.stream()
                 .map(this::preparePostList)
                 .map(postsBatch -> CompletableFuture.runAsync(() -> {
@@ -103,10 +105,10 @@ public class PostServiceImpl implements PostService {
         return postMapper.toPostResponseDtos(findAllPostsByFilter(filter));
     }
 
-    private List<List<Post>> splitToBatch(List<Post> entities, int batchSize) {
+    private List<List<Post>> splitToBatch(List<Post> entities) {
         List<List<Post>> batches = new ArrayList<>();
-        for (int i = 0; i < entities.size(); i += batchSize) {
-            List<Post> batch = new ArrayList<>(entities.subList(i, Math.min(entities.size(), i + batchSize)));
+        for (int i = 0; i < entities.size(); i += POST_BATCH_SIZE) {
+            List<Post> batch = new ArrayList<>(entities.subList(i, Math.min(entities.size(), i + POST_BATCH_SIZE)));
             batches.add(batch);
         }
         return batches;
