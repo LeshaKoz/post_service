@@ -4,7 +4,6 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
-import faang.school.postservice.mapper.ImageMapper;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -38,19 +37,17 @@ import static org.mockito.Mockito.when;
 public class PostServiceTest {
     private PostRepository postRepository;
     private PostMapper postMapper;
-    private ImageMapper imageMapper;
     private PostValidator postValidator;
     private PostService postService;
-    private S3Service s3Service;
+    private ResourseService resourseService;
 
     @BeforeEach
     public void setUp() {
         postRepository = mock(PostRepository.class);
         postMapper = Mappers.getMapper(PostMapper.class);
-        imageMapper = Mappers.getMapper(ImageMapper.class);
         postValidator = mock(PostValidator.class);
-        s3Service = mock(S3Service.class);
-        postService = new PostService(postRepository, postMapper,imageMapper, postValidator, s3Service);
+        resourseService = mock(ResourseService.class);
+        postService = new PostService(postRepository, postMapper, postValidator, resourseService);
     }
 
     @Test

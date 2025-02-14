@@ -3,7 +3,6 @@ package faang.school.postservice.controller;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
-import faang.school.postservice.dto.Post.UploadedImageResponseDto;
 import faang.school.postservice.service.PostService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -70,8 +69,8 @@ public class PostController {
         return postService.getProjectPosts(projectId);
     }
 
-    @PostMapping("/{postId}/images")
-    public List<UploadedImageResponseDto> uploadImages(@PathVariable Long postId, @RequestBody MultipartFile[] images) {
-        return postService.uploadImages(postId, images);
+    @PostMapping("/{postId}/upload")
+    public void uploadImages(@PathVariable Long postId, @RequestParam("files") List<MultipartFile> files) {
+        postService.uploadImages(postId, files);
     }
 }

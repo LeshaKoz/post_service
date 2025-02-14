@@ -4,6 +4,11 @@ spring:
       path:
         '/api/v1'
 
+      multipart:
+        enabled: true
+        max-file-size: 5MB
+        max-request-size: 5MB
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -52,7 +57,7 @@ payment-service:
 
 services:
   s3:
-    endpoint: http://localhost:9000
+    endpoint: http://127.0.0.1:9000
     accessKey: user
     secretKey: password
     bucketName: corpbucket
