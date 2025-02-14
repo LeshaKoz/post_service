@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class ScheduledPostPublisher {
-    private final PostService postService;
 
+    private final PostService postService;
     @Scheduled(fixedDelay = 60000)
     public void publishScheduledPosts() {
         postService.publishScheduledPosts();
