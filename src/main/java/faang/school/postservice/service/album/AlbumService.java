@@ -13,12 +13,11 @@ import faang.school.postservice.repository.AlbumRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.album.filter.AlbumFilter;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -155,7 +154,8 @@ public class AlbumService {
             }
         }
 
-        return albumStream.map(albumMapper::toDto).collect(Collectors.toList());
+        return albumStream.map(albumMapper::toDto)
+                .toList();
     }
 
     private void validatedAlbumVisibility(Album album, Long userId) {

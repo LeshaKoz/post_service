@@ -74,10 +74,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleAccessDeniedException(AccessDeniedException e, WebRequest request) {
-        log.error("AccessDeniedException: ", e);
-        return ErrorResponse.builder()
-                .path(request.getContextPath())
-                .message(e.getMessage())
-                .build();
+        return buildErrorMessage(e, request);
     }
 }

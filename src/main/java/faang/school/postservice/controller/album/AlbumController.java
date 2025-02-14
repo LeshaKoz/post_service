@@ -23,7 +23,7 @@ public class AlbumController {
     private final UserContext userContext;
 
     @GetMapping
-    public ResponseEntity<List<AlbumDto>> getAllAlbums(@Valid AlbumFilterDto filter) {
+    public ResponseEntity<List<AlbumDto>> getAllAlbums(@Valid @RequestBody AlbumFilterDto filter) {
         Long userId = userContext.getUserId();
         return ResponseEntity.ok(albumService.getAllAlbums(filter, userId));
     }
