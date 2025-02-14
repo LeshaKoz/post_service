@@ -1,17 +1,16 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.CommentLikeDto;
 import faang.school.postservice.dto.like.PostLikeDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.like.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ad.LikeRepository;
 import faang.school.postservice.validator.LikeValidator;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,13 +23,15 @@ public class LikeService {
     private final PostService postService;
     private final CommentService commentService;
     private final LikeMapper likeMapper;
+    private final UserServiceClient userServiceClient;
     private final LikeValidator likeValidator;
 
     public void likePost(PostLikeDto postLikeDto) {
-        likeValidator.validateUserExists(postLikeDto.getUserId());
-        likeValidator.validatePostExists(postLikeDto.getPostId());
+        UserDto user = userServiceClient.getUser(postLikeDto.getUserId());
+        likeValidator.validateUserExists(user);
 
         Post post = postService.getPostById(postLikeDto.getPostId());
+        likeValidator.validatePostExists(post);
 
         if (likeRepository.findByPostIdAndUserId(postLikeDto.getPostId(), postLikeDto.getUserId()).isPresent()) {
             throw new DataValidationException("User already liked this post.");
@@ -41,17 +42,22 @@ public class LikeService {
 
     @Transactional
     public void unlikePost(PostLikeDto postLikeDto) {
-        likeValidator.validateUserExists(postLikeDto.getUserId());
-        likeValidator.validatePostExists(postLikeDto.getPostId());
+        UserDto user = userServiceClient.getUser(postLikeDto.getUserId());
+        likeValidator.validateUserExists(user);
+
+        Post post = postService.getPostById(postLikeDto.getPostId());
+        likeValidator.validatePostExists(post);
 
         likeRepository.deleteByPostIdAndUserId(postLikeDto.getPostId(), postLikeDto.getUserId());
     }
 
     public void likeComment(CommentLikeDto commentLikeDto) {
-        likeValidator.validateUserExists(commentLikeDto.getUserId());
-        likeValidator.validateCommentExists(commentLikeDto.getCommentId());
+        UserDto user = userServiceClient.getUser(commentLikeDto.getUserId());
+        likeValidator.validateUserExists(user);
 
         Comment comment = commentService.getCommentById(commentLikeDto.getCommentId());
+        likeValidator.validateCommentExists(comment);
+
 
         if (likeRepository.findByCommentIdAndUserId(commentLikeDto.getCommentId(), commentLikeDto.getUserId()).isPresent()) {
             throw new DataValidationException("User already liked this comment.");
@@ -62,8 +68,11 @@ public class LikeService {
 
     @Transactional
     public void unlikeComment(CommentLikeDto commentLikeDto) {
-        likeValidator.validateUserExists(commentLikeDto.getUserId());
-        likeValidator.validateCommentExists(commentLikeDto.getCommentId());
+        UserDto user = userServiceClient.getUser(commentLikeDto.getUserId());
+        likeValidator.validateUserExists(user);
+
+        Comment comment = commentService.getCommentById(commentLikeDto.getCommentId());
+        likeValidator.validateCommentExists(comment);
 
         likeRepository.deleteByCommentIdAndUserId(commentLikeDto.getCommentId(), commentLikeDto.getUserId());
     }

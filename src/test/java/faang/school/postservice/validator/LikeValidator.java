@@ -1,107 +1,59 @@
 package faang.school.postservice.validator;
 
-import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
-import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.Post;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class LikeValidatorTest {
 
-    @Mock
-    private UserServiceClient userServiceClient;
-
-    @Mock
-    private PostRepository postRepository;
-
-    @Mock
-    private CommentRepository commentRepository;
-
-    @InjectMocks
-    private LikeValidator likeValidator;
+    private final LikeValidator likeValidator = new LikeValidator();
 
     @Test
     void validateUserExists_ShouldNotThrowException_WhenUserExists() {
-        long userId = 1L;
+        UserDto user = new UserDto(1L, "Test User", "test@example.com");
 
-        when(userServiceClient.getUser(userId)).thenReturn(null);
+        assertDoesNotThrow(() -> likeValidator.validateUserExists(user));
+    }
 
-        assertDoesNotThrow(() -> likeValidator.validateUserExists(userId));
+    @Test
+    void validateUserExists_ShouldThrowException_WhenUserIsNull() {
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> likeValidator.validateUserExists(null));
 
-        verify(userServiceClient, times(1)).getUser(userId);
+        assertEquals("User not found.", exception.getMessage());
     }
 
     @Test
     void validatePostExists_ShouldNotThrowException_WhenPostExists() {
-        Long postId = 1L;
+        Post post = new Post();
 
-        when(postRepository.existsById(postId)).thenReturn(true);
-
-        assertDoesNotThrow(() -> likeValidator.validatePostExists(postId));
-
-        verify(postRepository, times(1)).existsById(postId);
+        assertDoesNotThrow(() -> likeValidator.validatePostExists(post));
     }
 
     @Test
-    void validatePostExists_ShouldThrowException_WhenPostDoesNotExist() {
-        Long postId = 1L;
-
-        when(postRepository.existsById(postId)).thenReturn(false);
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> likeValidator.validatePostExists(postId));
-
-        assertEquals("Post with id " + postId + " not found.", exception.getMessage());
-
-        verify(postRepository, times(1)).existsById(postId);
-    }
-
-    @Test
-    void validatePostExists_ShouldThrowException_WhenPostIdIsNull() {
+    void validatePostExists_ShouldThrowException_WhenPostIsNull() {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeValidator.validatePostExists(null));
 
-        assertEquals("Post with id null not found.", exception.getMessage());
+        assertEquals("Post not found.", exception.getMessage());
     }
 
     @Test
     void validateCommentExists_ShouldNotThrowException_WhenCommentExists() {
-        Long commentId = 1L;
+        Comment comment = new Comment();
 
-        when(commentRepository.existsById(commentId)).thenReturn(true);
-
-        assertDoesNotThrow(() -> likeValidator.validateCommentExists(commentId));
-
-        verify(commentRepository, times(1)).existsById(commentId);
+        assertDoesNotThrow(() -> likeValidator.validateCommentExists(comment));
     }
 
     @Test
-    void validateCommentExists_ShouldThrowException_WhenCommentDoesNotExist() {
-        Long commentId = 1L;
-
-        when(commentRepository.existsById(commentId)).thenReturn(false);
-
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> likeValidator.validateCommentExists(commentId));
-
-        assertEquals("Comment with id " + commentId + " not found.", exception.getMessage());
-
-        verify(commentRepository, times(1)).existsById(commentId);
-    }
-
-    @Test
-    void validateCommentExists_ShouldThrowException_WhenCommentIdIsNull() {
+    void validateCommentExists_ShouldThrowException_WhenCommentIsNull() {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeValidator.validateCommentExists(null));
 
-        assertEquals("Comment with id null not found.", exception.getMessage());
+        assertEquals("Comment not found.", exception.getMessage());
     }
 }

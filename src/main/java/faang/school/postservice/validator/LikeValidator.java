@@ -1,33 +1,30 @@
 package faang.school.postservice.validator;
 
-import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
-import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class LikeValidator {
-
-    private final UserServiceClient userServiceClient;
-    private final PostRepository postRepository;
-    private final CommentRepository commentRepository;
-
-    public void validateUserExists(Long userId) {
-        userServiceClient.getUser(userId);
-    }
-
-    public void validatePostExists(Long postId) {
-        if (postId == null || !postRepository.existsById(postId)) {
-            throw new DataValidationException("Post with id " + postId + " not found.");
+    public void validateUserExists(UserDto user) {
+        if (user == null) {
+            throw new DataValidationException("User not found.");
         }
     }
 
-    public void validateCommentExists(Long commentId) {
-        if (commentId == null || !commentRepository.existsById(commentId)) {
-            throw new DataValidationException("Comment with id " + commentId + " not found.");
+    public void validatePostExists(Post post) {
+        if (post == null) {
+            throw new DataValidationException("Post not found.");
+        }
+    }
+
+    public void validateCommentExists(Comment comment) {
+        if (comment == null) {
+            throw new DataValidationException("Comment not found.");
         }
     }
 }

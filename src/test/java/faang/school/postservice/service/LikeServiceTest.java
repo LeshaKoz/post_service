@@ -1,17 +1,16 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.CommentLikeDto;
 import faang.school.postservice.dto.like.PostLikeDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.like.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ad.LikeRepository;
 import faang.school.postservice.validator.LikeValidator;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,71 +36,86 @@ class LikeServiceTest {
     private LikeValidator likeValidator;
     @Mock
     private LikeMapper likeMapper;
+    @Mock
+    private UserServiceClient userServiceClient;
 
     @InjectMocks
     private LikeService likeService;
 
-    private Long userId;
+    private UserDto testUser;
     private Long postId;
     private Long commentId;
-    private Post post;
-    private Comment comment;
-    private Like like;
+    private Post testPost;
+    private Comment testComment;
+    private Like testLike;
     private PostLikeDto postLikeDto;
     private CommentLikeDto commentLikeDto;
 
     @BeforeEach
     void setup() {
-        userId = 1L;
+        testUser = new UserDto(1L, "Test User", "test@example.com");
         postId = 10L;
         commentId = 20L;
 
-        post = new Post();
-        post.setId(postId);
+        testPost = new Post();
+        testPost.setId(postId);
 
-        comment = new Comment();
-        comment.setId(commentId);
+        testComment = new Comment();
+        testComment.setId(commentId);
 
-        like = new Like();
-        like.setUserId(userId);
-        like.setPost(post);
+        testLike = new Like();
+        testLike.setUserId(testUser.id());
+        testLike.setPost(testPost);
 
         postLikeDto = new PostLikeDto();
-        postLikeDto.setUserId(userId);
+        postLikeDto.setUserId(testUser.id());
         postLikeDto.setPostId(postId);
 
         commentLikeDto = new CommentLikeDto();
-        commentLikeDto.setUserId(userId);
+        commentLikeDto.setUserId(testUser.id());
         commentLikeDto.setCommentId(commentId);
     }
 
     @Test
     void likePost_ShouldValidateAndSave() {
-        when(postService.getPostById(postId)).thenReturn(post);
-        when(likeRepository.findByPostIdAndUserId(postId, userId)).thenReturn(Optional.empty());
-        when(likeMapper.toLike(postLikeDto)).thenReturn(like);
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(testUser);
+        when(postService.getPostById(postId)).thenReturn(testPost);
+        when(likeRepository.findByPostIdAndUserId(postId, testUser.id())).thenReturn(Optional.empty());
+        when(likeMapper.toLike(postLikeDto)).thenReturn(testLike);
 
-        likeService.likePost(postLikeDto);
+        assertDoesNotThrow(() -> likeService.likePost(postLikeDto));
 
-        verify(likeValidator).validateUserExists(userId);
-        verify(likeValidator).validatePostExists(postId);
+        verify(likeValidator).validateUserExists(testUser);
+        verify(likeValidator).validatePostExists(testPost);
         verify(likeRepository).save(any(Like.class));
     }
 
     @Test
-    void likePost_ShouldThrowException_WhenPostNotFound() {
-        when(postService.getPostById(postId)).thenThrow(new EntityNotFoundException("Post not found with id: " + postId));
+    void likePost_ShouldThrowException_WhenUserNotFound() {
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(null);
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+        DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeService.likePost(postLikeDto));
 
-        assertEquals("Post not found with id: " + postId, exception.getMessage());
+        assertEquals("User not found.", exception.getMessage());
+    }
+
+    @Test
+    void likePost_ShouldThrowException_WhenPostNotFound() {
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(testUser);
+        when(userServiceClient.getUser(anyLong())).thenReturn(null);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> likeService.likePost(postLikeDto));
+
+        assertEquals("Post not found.", exception.getMessage());
     }
 
     @Test
     void likePost_ShouldThrowException_WhenAlreadyLiked() {
-        when(postService.getPostById(postId)).thenReturn(post);
-        when(likeRepository.findByPostIdAndUserId(postId, userId)).thenReturn(Optional.of(like));
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(testUser);
+        when(postService.getPostById(postId)).thenReturn(testPost);
+        when(likeRepository.findByPostIdAndUserId(postId, testUser.id())).thenReturn(Optional.of(testLike));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeService.likePost(postLikeDto));
@@ -111,38 +125,54 @@ class LikeServiceTest {
 
     @Test
     void unlikePost_ShouldDeleteLike() {
-        likeService.unlikePost(postLikeDto);
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(testUser);
+        when(postService.getPostById(postId)).thenReturn(testPost);
 
-        verify(likeRepository).deleteByPostIdAndUserId(postId, userId);
+        assertDoesNotThrow(() -> likeService.unlikePost(postLikeDto));
+
+        verify(likeRepository).deleteByPostIdAndUserId(postId, testUser.id());
     }
 
     @Test
     void likeComment_ShouldValidateAndSave() {
-        when(commentService.getCommentById(commentId)).thenReturn(comment);
-        when(likeRepository.findByCommentIdAndUserId(commentId, userId)).thenReturn(Optional.empty());
-        when(likeMapper.toLike(commentLikeDto)).thenReturn(like);
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(testUser);
+        when(commentService.getCommentById(commentId)).thenReturn(testComment);
+        when(likeRepository.findByCommentIdAndUserId(commentId, testUser.id())).thenReturn(Optional.empty());
+        when(likeMapper.toLike(commentLikeDto)).thenReturn(testLike);
 
-        likeService.likeComment(commentLikeDto);
+        assertDoesNotThrow(() -> likeService.likeComment(commentLikeDto));
 
-        verify(likeValidator).validateUserExists(userId);
-        verify(likeValidator).validateCommentExists(commentId);
+        verify(likeValidator).validateUserExists(testUser);
+        verify(likeValidator).validateCommentExists(testComment);
         verify(likeRepository).save(any(Like.class));
     }
 
     @Test
-    void likeComment_ShouldThrowException_WhenCommentNotFound() {
-        when(commentService.getCommentById(commentId)).thenThrow(new EntityNotFoundException("Comment not found with id: " + commentId));
+    void likeComment_ShouldThrowException_WhenUserNotFound() {
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(null);
 
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+        DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeService.likeComment(commentLikeDto));
 
-        assertEquals("Comment not found with id: " + commentId, exception.getMessage());
+        assertEquals("User not found.", exception.getMessage());
+    }
+
+    @Test
+    void likeComment_ShouldThrowException_WhenCommentNotFound() {
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(testUser);
+        when(commentService.getCommentById(commentId)).thenReturn(null);
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+                () -> likeService.likeComment(commentLikeDto));
+
+        assertEquals("Comment not found.", exception.getMessage());
     }
 
     @Test
     void likeComment_ShouldThrowException_WhenAlreadyLiked() {
-        when(commentService.getCommentById(commentId)).thenReturn(comment);
-        when(likeRepository.findByCommentIdAndUserId(commentId, userId)).thenReturn(Optional.of(like));
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(testUser);
+        when(commentService.getCommentById(commentId)).thenReturn(testComment);
+        when(likeRepository.findByCommentIdAndUserId(commentId, testUser.id())).thenReturn(Optional.of(testLike));
 
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeService.likeComment(commentLikeDto));
@@ -152,8 +182,11 @@ class LikeServiceTest {
 
     @Test
     void unlikeComment_ShouldDeleteLike() {
-        likeService.unlikeComment(commentLikeDto);
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(testUser);
+        when(commentService.getCommentById(commentId)).thenReturn(testComment);
 
-        verify(likeRepository).deleteByCommentIdAndUserId(commentId, userId);
+        assertDoesNotThrow(() -> likeService.unlikeComment(commentLikeDto));
+
+        verify(likeRepository).deleteByCommentIdAndUserId(commentId, testUser.id());
     }
 }
