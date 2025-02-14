@@ -29,6 +29,12 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+expired:
+  ad:
+    remover:
+      cron: "0 0 0 * * *"
+      batch_size: 100
+
 server:
   port: 8081
 
