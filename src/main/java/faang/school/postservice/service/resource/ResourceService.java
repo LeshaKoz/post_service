@@ -79,7 +79,7 @@ public class ResourceService {
             minioService.completeRemoval(resourceDto.key());
         } catch (Exception e) {
             log.error("Ошибка при удалении файла: {}", e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Ошибка", e);
         }
     }
 
