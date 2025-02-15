@@ -168,9 +168,8 @@ public class AlbumService {
         return switch (album.getVisibility()) {
             case ALL -> true;
             case AUTHOR -> album.getAuthorId() == userId;
-            case SUBSCRIBERS -> userServiceClient.getFollowers(album.getAuthorId())
-                    .stream()
-                    .anyMatch(user -> user.id().equals(userId));
+            case SUBSCRIBERS -> userServiceClient.isFollow(userId, album.getAuthorId())
+                    || album.getAuthorId() == userId;
             case SELECT_USERS -> album.getAllowedUsers().contains(userId);
         };
     }

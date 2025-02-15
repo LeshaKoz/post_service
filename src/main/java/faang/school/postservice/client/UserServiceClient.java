@@ -18,6 +18,6 @@ public interface UserServiceClient {
     @PostMapping("api/v1/user")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
 
-    @GetMapping("api/v1/subscription/{followerId}")
-    List<UserDto> getFollowers(@PathVariable long followerId);
+    @GetMapping("/api/v1/subscription/{followerId}/follow/{authorId}")
+    boolean isFollow(@PathVariable long followerId, @PathVariable long authorId);
 }
