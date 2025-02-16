@@ -30,12 +30,12 @@ public class CommentService {
     @Transactional
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
         Post post = postService.getPost(createCommentRequest.getPostId());
-        Comment entity = commentMapper.toEntity(createCommentRequest);
-        commentValidator.verificationCreatingData(entity);
+        Comment comment = commentMapper.toEntity(createCommentRequest);
+        commentValidator.verificationCreatingData(comment);
 
-        entity.setPost(post);
-        Comment saved = commentRepository.save(entity);
-        return commentMapper.toCreateResponse(saved);
+        comment.setPost(post);
+        Comment savedComment = commentRepository.save(comment);
+        return commentMapper.toCreateResponse(savedComment);
     }
 
 
