@@ -9,13 +9,15 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Slf4j
 @Aspect
 @Component
 public class LikeEventAspect {
 
-    private final LikeEventPublisher likeEventPublisher;
+    private final EventPublisher eventPublisher;
     private final PostRepository postRepository;
 
     @Around("@annotation(PublishLikeEvent)")
@@ -31,16 +33,13 @@ public class LikeEventAspect {
         Long postId = (Long) args[0];
         Long userId = (Long) args[2];
 
-        Long authorId = getAuthorIdFromPost(postId);
-        if (authorId == null) {
-            log.warn("Post author not found for postId {}", postId);
-            return result;
-        }
+        Optional.ofNullable(getAuthorIdFromPost(postId))
+                .ifPresent(authorId -> {
+                    Event event = new LikeEvent(postId, userId, authorId);
+                    eventPublisher.publishEvent("like-events", event);
+                    log.info("Published LikeEvent: {}", event);
+                });
 
-        LikeEvent event = new LikeEvent(postId, userId, authorId);
-        likeEventPublisher.publishLikeEvent(event);
-
-        log.info("Published LikeEvent: {}", event);
         return result;
     }
 

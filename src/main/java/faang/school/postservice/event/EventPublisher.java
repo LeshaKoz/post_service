@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 @Component
-public class LikeEventPublisher {
+public class EventPublisher {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, Event> kafkaTemplate;
 
-    public void publishLikeEvent(LikeEvent event) {
-        kafkaTemplate.send("like-events", event);
-        log.info("Published LikeEvent: {}", event);
+    public void publishEvent(String topic, Event event) {
+        kafkaTemplate.send(topic, event);
+        log.info("Published event to {}: {}", topic, event);
     }
 }
