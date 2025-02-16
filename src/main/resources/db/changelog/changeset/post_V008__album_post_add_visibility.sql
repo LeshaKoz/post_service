@@ -1,0 +1,2 @@
+ALTER TABLE album
+ADD COLUMN IF NOT EXISTS visibility varchar(30) DEFAULT 'ALL_USERS';
