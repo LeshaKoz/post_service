@@ -11,6 +11,10 @@ import faang.school.postservice.repository.PostRepository;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +22,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
+@EnableAsync
 @Service
 public class PostService {
+
+    @Value("${post-service.publish.batch-size}")
+    private int batchSize;
+
     private final PostRepository postRepository;
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
+    private final AsyncPostPublishPerformer publishPerformer;
 
     @Transactional
     public void createPostByUserId(Long userId, Post post) {
@@ -132,6 +143,19 @@ public class PostService {
         } catch (FeignException.NotFound e) {
             throw new UserNotFoundException("User with id " + userId + " not found");
         }
+    }
+
+    @Transactional
+    public void publishScheduledPosts() {
+        List<Post> readyToPublishPosts = postRepository.findReadyToPublish();
+
+        if (readyToPublishPosts.isEmpty()) {
+            return;
+        }
+
+        List<List<Post>> batches = ListUtils.partition(readyToPublishPosts, batchSize);
+
+        batches.forEach(publishPerformer::publishBatch);
     }
 
     private void doesProjectExist(Long projectId) {
