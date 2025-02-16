@@ -132,21 +132,25 @@ public class PostService {
     }
 
     public void moderatePosts() {
+        log.info("Начало модерации постов");
         concurrencyProcessPosts(
                 postRepository::findAllNotVerified,
                 this::moderatePostsBatch,
                 postProperties.getPageSize(),
                 postProperties.getBatchSize()
         );
+        log.info("Конец модерации постов");
     }
 
     public void checkGrammar() {
+        log.info("Начало проверки орфографии постов");
         concurrencyProcessPosts(
                 postRepository::findAllNotPublishedAndVerifiedTrue,
                 this::checkGrammarBatch,
                 postProperties.getGrammar().getPageSize(),
                 postProperties.getGrammar().getBatchSize()
         );
+        log.info("Конец проверки орфографии постов");
     }
 
     private Stream<Post> checkGrammarBatch(List<Post> posts) {
