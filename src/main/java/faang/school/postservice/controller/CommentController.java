@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,13 +31,13 @@ public class CommentController {
 
     @PostMapping
     @Operation(summary = "Создание комментария")
-    public CommentReadDto create(@Valid @RequestBody CommentCreateDto createDto) {
+    public CommentReadDto create(@Validated @RequestBody CommentCreateDto createDto) {
         return commentService.create(createDto);
     }
 
     @PutMapping
     @Operation(summary = "Обновление комментария")
-    public CommentReadDto update(@Valid @RequestBody CommentUpdateDto updateDto) {
+    public CommentReadDto update(@Validated @RequestBody CommentUpdateDto updateDto) {
         return commentService.update(updateDto);
     }
 

@@ -6,6 +6,7 @@ import faang.school.postservice.dto.hashtag.HashtagUpdateDto;
 import faang.school.postservice.service.HashtagService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,12 +26,12 @@ public class HashtagController {
     private final HashtagService hashtagService;
 
     @PostMapping
-    public HashtagReadDto create(@RequestBody @Valid HashtagCreateDto createDto) {
+    public HashtagReadDto create(@RequestBody @Validated HashtagCreateDto createDto) {
         return hashtagService.create(createDto);
     }
 
     @PutMapping
-    public HashtagReadDto update(@RequestBody @Valid HashtagUpdateDto updateDto) {
+    public HashtagReadDto update(@RequestBody @Validated HashtagUpdateDto updateDto) {
         return hashtagService.update(updateDto);
     }
 

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public record PaymentRequest(
+public record PaymentRequestDto(
         long paymentNumber,
 
         @Min(1)
