@@ -52,5 +52,18 @@ redis:
 hashtags:
   limit: 5
 
+author:
+  ban:
+    cron: "0 0 0 * * *" # every day at midnight
+
+user:
+  ban:
+    redis:
+      channel: user_ban
+
+post:
+  unverified:
+    max: 5
+
 service:
   name: post-service

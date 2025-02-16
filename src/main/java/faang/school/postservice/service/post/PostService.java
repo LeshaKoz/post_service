@@ -7,4 +7,6 @@ import java.util.List;
 public interface PostService {
 
     List<PostResponseDto> getPostsByHashtag(String hashtag);
+
+    void banUsersWithManyUnverifiedPosts();
 }

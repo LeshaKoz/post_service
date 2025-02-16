@@ -25,4 +25,6 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     @Query("SELECT p FROM Post p JOIN p.hashtags h WHERE h.name = :hashtag ORDER BY p.createdAt DESC")
     List<Post> findByHashtag(@Param("hashtag") String hashtag);
 
+
+    List<Post> findByVerified(boolean isVerified);
 }

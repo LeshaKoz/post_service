@@ -10,6 +10,10 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/post_V005__hashtag.sql
   - include:
-      file: db/changelog/changeset/post_V006__album_post_add_visibility.sql
+      file: db/changelog/changeset/post_V006_alter_post_add_verified.sql
   - include:
-      file: db/changelog/changeset/post_V007__album_allowed_users.sql
+      file: db/changelog/changeset/post_V007_shedlock.sql
+  - include:
+      file: db/changelog/changeset/post_V008__album_post_add_visibility.sql
+  - include:
+      file: db/changelog/changeset/post_V009__album_allowed_users.sql

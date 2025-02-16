@@ -89,4 +89,6 @@ public class Post {
 
     @ManyToMany(mappedBy = "posts")
     private List<Hashtag> hashtags;
+
+    private boolean verified;
 }

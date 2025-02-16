@@ -1,5 +1,6 @@
 package faang.school.postservice;
 
+import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -9,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableSchedulerLock(defaultLockAtMostFor = "30s")
 @EnableCaching
 @EnableFeignClients(basePackages = "faang.school.postservice.client")
 public class PostServiceApp {
