@@ -25,7 +25,7 @@ public class KafkaConfig {
     @Value("${kafka.replicas}")
     private int replicas;
 
-    @Value("${kafka.bootstrap-servers}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
     @Bean
