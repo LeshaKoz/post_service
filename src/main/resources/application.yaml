@@ -12,10 +12,18 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all # Ensures producer waits for all brokers to acknowledge before proceeding
+      retries: 3 # Retries failed message delivery 3 times
     listener:
       missing-topics-fatal: false
       ack-mode: batch
+
+  custom:
+    kafka:
+      topics:
+        authorization-topic: post-topic
+        post-view-topic: post-views
 
   datasource:
     driver-class-name: org.postgresql.Driver

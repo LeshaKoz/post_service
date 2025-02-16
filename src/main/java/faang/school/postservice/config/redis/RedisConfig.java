@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class RedisConfig {
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory("localhost", 6379);
+    public RedisConnectionFactory redisConnectionFactory(org.springframework.boot.autoconfigure.data.redis.RedisProperties redisProperties) {
+        return new LettuceConnectionFactory(redisProperties.getHost(), redisProperties.getPort());
     }
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {

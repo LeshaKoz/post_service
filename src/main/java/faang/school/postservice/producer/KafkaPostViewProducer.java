@@ -1,6 +1,7 @@
 package faang.school.postservice.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import faang.school.postservice.exception.KafkaProducerException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,7 +20,7 @@ public class KafkaPostViewProducer {
     private static final String TOPIC = "post-views";
 
     @Retryable(
-            value = {RuntimeException.class, Exception.class},
+            value = {KafkaProducerException.class, RuntimeException.class},
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
@@ -30,18 +31,20 @@ public class KafkaPostViewProducer {
             log.info("Published post view event for post with ID: {}", postId);
         } catch (RuntimeException e) {
             log.error("Runtime exception while publishing post view event: {}", postId, e);
-            throw e;
+            throw new KafkaProducerException("Runtime exception occurred while publishing post view event", e);
         } catch (Exception e) {
             log.error("Exception while publishing post view event: {}", postId, e);
-            throw new RuntimeException("Wrapped checked exception", e);
+            throw new KafkaProducerException("An exception occurred while publishing post view event", e);
         }
     }
+
     public static class PostViewEvent {
         private Long postId;
 
         public PostViewEvent(Long postId) {
             this.postId = postId;
         }
+
         public Long getPostId() {
             return postId;
         }

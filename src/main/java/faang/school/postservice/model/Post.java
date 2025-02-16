@@ -51,24 +51,24 @@ public class Post {
     @Column(name = "published", nullable = false)
     private boolean published;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
 
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
 }
