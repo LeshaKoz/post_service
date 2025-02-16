@@ -9,6 +9,7 @@ import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.File;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.FileRepository;
 import faang.school.postservice.service.UserService;
@@ -36,7 +37,7 @@ public class CommentService {
     private final FileRepository fileRepository;
 
     public CommentReadDto create(CommentCreateDto createDto) {
-        verifyCommentCreation(createDto);
+        validateCommentCreation(createDto);
 
         Comment newComment = commentMapper.toEntity(createDto);
         newComment = commentRepository.save(newComment);
@@ -102,9 +103,15 @@ public class CommentService {
         }
     }
 
-    private void verifyCommentCreation(CommentCreateDto createDto) {
+    private void validateCommentCreation(CommentCreateDto createDto) {
         userService.getUserDtoById(createDto.authorId());
-        postService.getPostById(createDto.postId());
+        Post post = postService.getPostById(createDto.postId());
+        if (!post.isPublished()) {
+            throw new BusinessException("Комментарии можно оставлять только на опубликованные посты");
+        }
+        if (post.isDeleted()) {
+            throw new BusinessException("Нельзя оставлять комментарий на удаленный пост");
+        }
     }
 
     public void validateImageUpload(MultipartFile file) {
