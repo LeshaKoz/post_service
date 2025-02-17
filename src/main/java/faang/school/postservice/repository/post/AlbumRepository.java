@@ -31,7 +31,7 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     void addAlbumToFavorites(long albumId, long userId);
 
     @Query(nativeQuery = true, value = """
-            DELETE FROM favorite_albums (album_id, user_id)
+            DELETE FROM favorite_albums
             WHERE album_id = :albumId AND user_id = :userId
             """)
     @Modifying

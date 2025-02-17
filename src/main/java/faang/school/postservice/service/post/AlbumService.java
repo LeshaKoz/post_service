@@ -16,7 +16,7 @@ public interface AlbumService {
 
     void deletePostFromAlbum(long postId, long albumId);
 
-    void addAlbumToFavourites(long albumId);
+    void addAlbumToFavorites(long albumId);
 
     void deleteAlbumFromFavorites(long albumId);
 

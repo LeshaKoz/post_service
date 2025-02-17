@@ -28,24 +28,24 @@ public class AlbumController {
         return albumService.createAlbum(dto);
     }
 
-    @PostMapping("/{albumId}/posts/{postId}")
+    @PostMapping("/{albumId}/post/{postId}")
     public AlbumResponseDto addPostToAlbum(@PathVariable @Min(1) long postId,
                                            @PathVariable @Min(1) long albumId) {
         return albumService.addPostToAlbum(postId, albumId);
     }
 
-    @DeleteMapping("/{albumId}/posts/{postId}")
+    @DeleteMapping("/{albumId}/post/{postId}")
     public void deletePostFromAlbum(@PathVariable @Min(1) long postId,
                                     @PathVariable @Min(1) long albumId) {
         albumService.deletePostFromAlbum(postId, albumId);
     }
 
-    @PostMapping("/favourites/{albumId}")
-    public void addAlbumToFavourites(@PathVariable long albumId) {
-        albumService.addAlbumToFavourites(albumId);
+    @PostMapping("/favorites/{albumId}")
+    public void addAlbumToFavorites(@PathVariable long albumId) {
+        albumService.addAlbumToFavorites(albumId);
     }
 
-    @DeleteMapping("/favourites/{albumId}")
+    @DeleteMapping("/favorites/{albumId}")
     public void deleteAlbumFromFavourites(@PathVariable @NotNull @Min(1) long albumId) {
         albumService.deleteAlbumFromFavorites(albumId);
     }

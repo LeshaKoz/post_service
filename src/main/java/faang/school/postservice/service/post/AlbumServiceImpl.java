@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static faang.school.postservice.enums.Visibility.ALL_USERS;
 import static faang.school.postservice.enums.Visibility.SELECTED_USERS;
 import static java.util.stream.Collectors.toMap;
 
@@ -56,15 +57,18 @@ public class AlbumServiceImpl implements AlbumService {
         this.albumFilters = filters;
     }
 
+    @Transactional
     @Override
     public AlbumResponseDto createAlbum(AlbumRequestDto dto) {
         long userId = userContext.getUserId();
         checkExistsUser(userId);
         Album album = albumMapper.toEntity(dto);
         album.setAuthorId(userId);
+        album.setVisibility(ALL_USERS);
         return albumMapper.toDto(albumRepository.save(album));
     }
 
+    @Transactional
     @Override
     public AlbumResponseDto addPostToAlbum(long postId, long albumId) {
         long userId = userContext.getUserId();
@@ -79,6 +83,7 @@ public class AlbumServiceImpl implements AlbumService {
         return albumMapper.toDto(albumRepository.save(album));
     }
 
+    @Transactional
     @Override
     public void deletePostFromAlbum(long postId, long albumId) {
         long userId = userContext.getUserId();
@@ -93,14 +98,16 @@ public class AlbumServiceImpl implements AlbumService {
         albumRepository.save(album);
     }
 
+    @Transactional
     @Override
-    public void addAlbumToFavourites(long albumId) {
+    public void addAlbumToFavorites(long albumId) {
         long userId = userContext.getUserId();
         checkExistsUser(userId);
         checkExistsAlbum(albumId);
         albumRepository.addAlbumToFavorites(albumId, userId);
     }
 
+    @Transactional
     @Override
     public void deleteAlbumFromFavorites(long albumId) {
         long userId = userContext.getUserId();
@@ -161,7 +168,7 @@ public class AlbumServiceImpl implements AlbumService {
                 String.format("Album with id = %d not found", albumId)
         ));
         albumMapper.update(dto, album);
-        return albumMapper.toDto(album);
+        return albumMapper.toDto(albumRepository.save(album));
     }
 
     @Override
