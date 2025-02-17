@@ -14,6 +14,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.GrammarService;
 import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.PaginationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,8 @@ public class PostServiceTest {
     private PostMapper postMapper = new PostMapperImpl();
     @Spy
     private PostProperties postProperties;
+    @Mock
+    private GrammarService grammarService;
     @InjectMocks
     private PostService postService;
 
@@ -250,8 +253,8 @@ public class PostServiceTest {
     @RepeatedTest(5)
     void testModeratePostsSuccessCase() {
         int pageSize = 2;
-        postProperties.setPageSize(pageSize);
-        postProperties.setBatchSize(1);
+        postProperties.getModeration().setPageSize(pageSize);
+        postProperties.getModeration().setBatchSize(1);
         var firstPagePosts = List.of(
                 createPostWithContent("Content"),
                 createPostWithContent("Content")
@@ -282,6 +285,44 @@ public class PostServiceTest {
         assertEquals(1, capturedPosts2.size());
         assertTrue(isVerified(capturedPosts2.get(0)));
         assertTrue(capturedPosts1.stream().allMatch(this::isVerified));
+    }
+
+    @RepeatedTest(5)
+    void testCheckGrammarSuccessCase() {
+        int pageSize = 2;
+        String rightText = "the quick brown fox";
+        String wrongText = "teh quick brown fox";
+        postProperties.getGrammar().setPageSize(pageSize);
+        postProperties.getGrammar().setBatchSize(1);
+        var firstPagePosts = List.of(
+                createPostWithContent(wrongText),
+                createPostWithContent(rightText)
+        );
+        var secondPagePosts = List.of(
+                createPostWithContent(rightText),
+                createPostWithContent(wrongText)
+
+        );
+        Pageable firstPageable = PageRequest.of(0, pageSize);
+        Pageable secondPageable = PageRequest.of(1, pageSize);
+        Page<Post> firstPage = new PageImpl<>(firstPagePosts, firstPageable, 4);
+        Page<Post> secondPage = new PageImpl<>(secondPagePosts, secondPageable, 4);
+
+        when(postRepository.findAllNotPublishedAndVerifiedTrue(firstPageable))
+                .thenReturn(firstPage);
+        when(postRepository.findAllNotPublishedAndVerifiedTrue(secondPageable))
+                .thenReturn(secondPage);
+        when(grammarService.correctText(rightText)).thenReturn(rightText);
+        when(grammarService.correctText(wrongText)).thenReturn(rightText);
+        ArgumentCaptor<List<Post>> argumentCaptor = ArgumentCaptor.forClass(List.class);
+
+        postService.checkGrammar();
+
+        verify(postRepository, times(2))
+                .saveAll(argumentCaptor.capture());
+        assertTrue(argumentCaptor.getAllValues().stream()
+                .flatMap(List::stream)
+                .allMatch(post -> post.getContent().equals(rightText)));
     }
 
     private boolean isVerified(Post post) {

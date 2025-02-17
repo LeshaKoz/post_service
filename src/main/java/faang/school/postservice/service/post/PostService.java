@@ -19,7 +19,6 @@ import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.PaginationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -136,8 +135,8 @@ public class PostService {
         concurrencyProcessPosts(
                 postRepository::findAllNotVerified,
                 this::moderatePostsBatch,
-                postProperties.getPageSize(),
-                postProperties.getBatchSize()
+                postProperties.getModeration().getPageSize(),
+                postProperties.getModeration().getBatchSize()
         );
         log.info("Конец модерации постов");
     }
