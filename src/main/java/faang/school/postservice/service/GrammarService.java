@@ -23,10 +23,18 @@ public class GrammarService {
     @CircuitBreaker(name = "default", fallbackMethod = "fallback")
     @Retry(name = "default", fallbackMethod = "fallback")
     public String correctText(String text) {
+        GrammarReadDto[] dto = requestSpelling(text);
+        for (var error : requireNonNull(dto)) {
+            text = text.replaceFirst(error.getWord(), error.getHints().get(0));
+        }
+        return text;
+    }
+
+    private GrammarReadDto[] requestSpelling(String text) {
         String uri = UriComponentsBuilder.fromHttpUrl(
                         "https://speller.yandex.net/services/spellservice.json/checkText"
                 )
-                .queryParam("text", text.replaceAll(" ", "+"))
+                .queryParam("text", text)
                 .toUriString();
 
         ResponseEntity<GrammarReadDto[]> response = restTemplate
@@ -37,13 +45,7 @@ public class GrammarService {
                     response.getStatusCode(), response.getBody());
             throw new ExternalServiceException("Ошибка при вызове сервиса орфографии");
         }
-
-        GrammarReadDto[] dto = response.getBody();
-
-        for (var error : requireNonNull(dto)) {
-            text = text.replaceFirst(error.getWord(), error.getHints().get(0));
-        }
-        return text;
+        return response.getBody();
     }
 
     public String fallback(Throwable throwable) {

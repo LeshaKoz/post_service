@@ -192,10 +192,6 @@ public class PostService {
         } while (!page.isLast());
     }
 
-    public void checkGrammar() {
-
-    }
-
     private List<PostReadDto> getAllPostByCondition(
             PostOwnerType ownerType,
             Supplier<List<Post>> authorSupplier,
