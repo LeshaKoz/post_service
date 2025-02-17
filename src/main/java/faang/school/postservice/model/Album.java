@@ -1,17 +1,8 @@
 package faang.school.postservice.model;
 
+import faang.school.postservice.enums.Visibility;
 import faang.school.postservice.model.post.Post;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,7 +35,8 @@ public class Album {
     private long authorId;
 
     @ManyToMany
-    @JoinTable(name = "post_album", joinColumns = @JoinColumn(name = "album_id"), inverseJoinColumns = @JoinColumn(name = "post_id"))
+    @JoinTable(name = "post_album", joinColumns = @JoinColumn(name = "album_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id"))
     private List<Post> posts;
 
     @CreationTimestamp
@@ -56,6 +48,9 @@ public class Album {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    private Visibility visibility;
 
     public void addPost(Post post) {
         posts.add(post);
