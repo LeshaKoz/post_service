@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.model.Post;
 
 import java.util.List;
 
@@ -22,4 +23,6 @@ public interface PostService {
     List<PostDto> getNotDeletedPublishedPostsByUserId(Long userId);
 
     List<PostDto> getNotDeletedPublishedPostsByProjectId(Long projectId);
+
+    void grammarCorrectionPost(Post post);
 }

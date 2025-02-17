@@ -8,8 +8,11 @@ import faang.school.postservice.gateway.UserServiceGateway;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.AIService;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,6 +23,7 @@ import static faang.school.postservice.controller.ControllerExceptionHandler.DEF
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsLast;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -32,6 +36,7 @@ public class PostServiceImpl implements PostService {
     private final ProjectServiceGateway projectServiceGateway;
     private final UserServiceGateway userServiceGateway;
     private final PostMapper postMapper;
+    private final AIService aiService;
 
     @Override
     public PostDto createDraft(PostDto postDto) {
@@ -145,6 +150,21 @@ public class PostServiceImpl implements PostService {
                 .sorted(Comparator.comparing(Post::getCreatedAt, nullsLast(naturalOrder())))
                 .map(postMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    @Async("aICheckExecutor")
+    public void grammarCorrectionPost(Post post) {
+        log.info("Processing grammar correction post {}", post.getId());
+        try {
+            post.setContent(aiService.checkGrammarPost(post));
+        } catch (Exception e) {
+            log.error("Error during grammar correction: {}", e.getMessage());
+            return;
+        }
+        post.setAiChecked(true);
+        postRepository.save(post);
+        log.info("Finished grammar correction post {}", post.getId());
     }
 
     private void validateDraft(PostDto postDto) {
