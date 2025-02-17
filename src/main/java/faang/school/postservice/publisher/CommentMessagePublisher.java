@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class CommentMessagePublisher extends MessagePublisher<CommentEvent> {
     public CommentMessagePublisher(
             RedisTemplate<String, Object> redisTemplate,
-            @Value("${topics.comment}") String channel
+            @Value("${spring.data.redis.topics.comment}") String channel
     ) {
         super(redisTemplate, channel);
     }

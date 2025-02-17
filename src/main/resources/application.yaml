@@ -24,12 +24,9 @@ spring:
     redis:
       port: 6379
       host: localhost
-      channels:
-        calculations_channel:
-          name: calculations_channel
-
-topics:
-  comment: "comment"
+      topics:
+        calculations: calculations_channel
+        comment: comment_topic
 
 server:
   port: 8081
