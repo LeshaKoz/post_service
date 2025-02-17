@@ -62,7 +62,7 @@ class AlbumControllerTest {
     @Test
     public void testFindAlbumById() throws Exception {
         when(albumService.getAlbumById(eq(1L))).thenReturn(
-                new AlbumResponseDto(1L, "title", "descr", 1L)
+                new AlbumResponseDto(1L, "title", "descr", 1L, List.of())
         );
 
         mockMvc.perform(get(BASE_URL + "/{id}", 1L))
@@ -74,7 +74,7 @@ class AlbumControllerTest {
     @Test
     public void testFindAlbumsByAuthorId() throws Exception {
         when(albumService.getAlbumsByAuthorId(eq(1L))).thenReturn(
-                List.of(new AlbumResponseDto(1L, "title", "descr", 1L))
+                List.of(new AlbumResponseDto(1L, "title", "descr", 1L, List.of()))
         );
 
         mockMvc.perform(get(BASE_URL + "/author/{authorId}", 1L))

@@ -1,16 +1,26 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.post.AlbumRequestDto;
 import faang.school.postservice.dto.post.AlbumResponseDto;
 import faang.school.postservice.dto.post.AlbumUsersDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.enums.Visibility;
 import faang.school.postservice.exception.album.AlbumAccessDeniedException;
+import faang.school.postservice.filter.Filter;
+import faang.school.postservice.filter.album.AlbumFilterDto;
+import faang.school.postservice.mapper.post.AlbumMapper;
 import faang.school.postservice.model.Album;
+import faang.school.postservice.model.post.Post;
 import faang.school.postservice.repository.post.AlbumRepository;
+import faang.school.postservice.repository.post.PostRepository;
 import faang.school.postservice.strategy.album.VisibilityConverter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,16 +35,145 @@ import static java.util.stream.Collectors.toMap;
 public class AlbumServiceImpl implements AlbumService {
 
     private final AlbumRepository albumRepository;
+    private final PostRepository postRepository;
+    private final AlbumMapper albumMapper;
     private final UserContext userContext;
     private final Map<Visibility, VisibilityConverter> visibilities;
+    private final UserServiceClient userServiceClient;
+    private final List<Filter<Album, AlbumFilterDto>> albumFilters;
 
-    public AlbumServiceImpl(AlbumRepository albumRepository, UserContext userContext, List<VisibilityConverter> converters) {
+    public AlbumServiceImpl(AlbumRepository albumRepository, PostRepository postRepository,
+                            AlbumMapper albumMapper, UserContext userContext,
+                            List<VisibilityConverter> converters, UserServiceClient userServiceClient,
+                            List<Filter<Album, AlbumFilterDto>> filters) {
         this.albumRepository = albumRepository;
+        this.postRepository = postRepository;
+        this.albumMapper = albumMapper;
         this.userContext = userContext;
         this.visibilities = converters.stream()
                 .collect(toMap(VisibilityConverter::getVisibility, Function.identity()));
+        this.userServiceClient = userServiceClient;
+        this.albumFilters = filters;
     }
 
+    @Override
+    public AlbumResponseDto createAlbum(AlbumRequestDto dto) {
+        long userId = userContext.getUserId();
+        checkExistsUser(userId);
+        Album album = albumMapper.toEntity(dto);
+        album.setAuthorId(userId);
+        return albumMapper.toDto(albumRepository.save(album));
+    }
+
+    @Override
+    public AlbumResponseDto addPostToAlbum(long postId, long albumId) {
+        long userId = userContext.getUserId();
+        checkExistsUser(userId);
+        Album album = albumRepository.findById(albumId).orElseThrow(() -> new EntityNotFoundException(
+                String.format("Album with id = %d not found", albumId)
+        ));
+        checkAuthor(userId, albumId);
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException(
+                String.format("Post with id = %d not found", postId)));
+        album.getPosts().add(post);
+        return albumMapper.toDto(albumRepository.save(album));
+    }
+
+    @Override
+    public void deletePostFromAlbum(long postId, long albumId) {
+        long userId = userContext.getUserId();
+        checkExistsUser(userId);
+        Album album = albumRepository.findById(albumId).orElseThrow(() -> new EntityNotFoundException(
+                String.format("Album with id = %d not found", albumId)
+        ));
+        checkAuthor(userId, albumId);
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException(
+                String.format("Post with id = %d not found", postId)));
+        album.getPosts().remove(post);
+        albumRepository.save(album);
+    }
+
+    @Override
+    public void addAlbumToFavourites(long albumId) {
+        long userId = userContext.getUserId();
+        checkExistsUser(userId);
+        checkExistsAlbum(albumId);
+        albumRepository.addAlbumToFavorites(albumId, userId);
+    }
+
+    @Override
+    public void deleteAlbumFromFavorites(long albumId) {
+        long userId = userContext.getUserId();
+        checkExistsUser(userId);
+        checkAuthor(userId, albumId);
+        checkExistsAlbum(albumId);
+        albumRepository.deleteAlbumFromFavorites(albumId, userId);
+    }
+
+    @Override
+    public List<AlbumResponseDto> getAllOwnAlbums(AlbumFilterDto filters) {
+        long userId = userContext.getUserId();
+        List<Album> albums = albumRepository.findByAuthorId(userId);
+        for (Filter<Album, AlbumFilterDto> filter : albumFilters) {
+            if (filter.isApplicable(filters)) {
+                albums = filter.apply(albums, filters);
+            }
+        }
+        return albums.stream()
+                .map(albumMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<AlbumResponseDto> getAllAlbumsByFilters(int pageNumber, int pageSize, AlbumFilterDto filters) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        List<Album> albums = albumRepository.findAll(pageable).toList();
+        for (Filter<Album, AlbumFilterDto> filter : albumFilters) {
+            if (filter.isApplicable(filters)) {
+                albums = filter.apply(albums, filters);
+            }
+        }
+        return albums.stream()
+                .map(albumMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<AlbumResponseDto> getAllFavoritesOwnAlbums(AlbumFilterDto filters) {
+        long userId = userContext.getUserId();
+        List<Album> albums = albumRepository.findFavoritesByAuthorId(userId);
+        for (Filter<Album, AlbumFilterDto> filter : albumFilters) {
+            if (filter.isApplicable(filters)) {
+                albums = filter.apply(albums, filters);
+            }
+        }
+        return albums.stream()
+                .map(albumMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public AlbumResponseDto updateAlbum(long albumId, AlbumRequestDto dto) {
+        long userId = userContext.getUserId();
+        checkExistsUser(userId);
+        checkAuthor(userId, albumId);
+        Album album = albumRepository.findById(albumId).orElseThrow(() -> new EntityNotFoundException(
+                String.format("Album with id = %d not found", albumId)
+        ));
+        albumMapper.update(dto, album);
+        return albumMapper.toDto(album);
+    }
+
+    @Override
+    public void deleteAlbumById(long albumId) {
+        long userId = userContext.getUserId();
+        checkExistsUser(userId);
+        checkExistsAlbum(albumId);
+        checkAuthor(userId, albumId);
+        albumRepository.deleteById(albumId);
+    }
+
+    @Transactional
     @Override
     public AlbumResponseDto getAlbumById(long id) {
         Album album = albumRepository.findById(id).orElseThrow(() ->
@@ -43,6 +182,7 @@ public class AlbumServiceImpl implements AlbumService {
         return visibilities.get(album.getVisibility()).apply(album);
     }
 
+    @Transactional
     @Override
     public List<AlbumResponseDto> getAlbumsByAuthorId(long authorId) {
         List<AlbumResponseDto> albums = albumRepository.findByAuthorId(authorId).stream()
@@ -53,11 +193,11 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     @Override
-    public void changeVisibilityAlbum(long id, Visibility visibility) {
-        Album album = albumRepository.findById(id).orElseThrow(() ->
-                new EntityNotFoundException(String.format("Album with id = %d not found", id)));
+    public void changeVisibilityAlbum(long albumId, Visibility visibility) {
+        Album album = albumRepository.findById(albumId).orElseThrow(() ->
+                new EntityNotFoundException(String.format("Album with id = %d not found", albumId)));
         long userId = userContext.getUserId();
-        checkAuthor(userId, album);
+        checkAuthor(userId, albumId);
         log.info("User with id = {} is author for album with id = {}", userId, album.getId());
         album.setVisibility(visibility);
         albumRepository.save(album);
@@ -70,12 +210,32 @@ public class AlbumServiceImpl implements AlbumService {
         Album album = albumRepository.findById(albumId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Album with id = %d not found", albumId)));
         long userId = userContext.getUserId();
-        checkAuthor(userId, album);
+        checkAuthor(userId, albumId);
         checkVisibilityForAlbum(album, SELECTED_USERS);
         albumUsersDto.usersIds().forEach(id -> albumRepository.addUserForVisibilityAtAlbum(album.getId(), id));
     }
 
-    private void checkAuthor(long userId, Album album) {
+    private void checkExistsUser(long userId) {
+        UserDto user = userServiceClient.getUser(userId);
+        if (user == null) {
+            throw new EntityNotFoundException(
+                    String.format("User with id = %d not found", userId)
+            );
+        }
+    }
+
+    private void checkExistsAlbum(long albumId) {
+        if (!albumRepository.existsById(albumId)) {
+            throw new EntityNotFoundException(
+                    String.format("Album with id = %d not found", albumId)
+            );
+        }
+    }
+
+    private void checkAuthor(long userId, long albumId) {
+        Album album = albumRepository.findById(albumId).orElseThrow(() -> new EntityNotFoundException(
+                String.format("Album with id = %d not found", albumId)
+        ));
         if (userId != album.getAuthorId()) {
             log.error("User with id = {} isn't author for album with id = {}", userId, album.getId());
             throw new AlbumAccessDeniedException(
