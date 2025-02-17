@@ -57,13 +57,13 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void publishScheduledPosts() {
-        PostFilterDto postFilterDto = PostFilterDto.builder()
+        PostFilterDto shouldBePublishedBefore = PostFilterDto.builder()
                 .isPublished(false)
                 .isDeleted(false)
                 .scheduledAt(LocalDateTime.now())
                 .build();
 
-        List<Post> scheduledPosts = findAllPostsByFilter(postFilterDto);
+        List<Post> scheduledPosts = findAllPostsByFilter(shouldBePublishedBefore);
         List<List<Post>> postBatches = ListUtils.partition(scheduledPosts, postBatchSize);
         postBatches.stream()
                 .map(this::preparePostList)
@@ -72,8 +72,7 @@ public class PostServiceImpl implements PostService {
                 }, executorService).exceptionally(error -> {
                     log.error("Error processing scheduled posts", error);
                     throw new RuntimeException("Failed to process scheduled posts", error);
-                })).map(CompletableFuture::join)
-                .forEach(batch -> {});
+                })).forEach(CompletableFuture::join);
     }
 
     @Override
