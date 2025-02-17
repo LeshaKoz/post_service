@@ -18,13 +18,18 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.IntStream;
 
 @Service
 @Slf4j
@@ -36,6 +41,11 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
     private final UserContext userContext;
     private final ImageService imageService;
+    private final ExecutorService moderationExecutor;
+    private final ModerationDictionary moderationDictionary;
+
+    @Value("${comment.batchSize}")
+    private int batchSize;
 
     @Override
     public CommentResponseDto createComment(CommentRequestDto commentDto) {
@@ -91,6 +101,41 @@ public class CommentServiceImpl implements CommentService {
         imageService.resizeAndUploadImage(smallImageFileId, true, file);
         imageService.resizeAndUploadImage(largeImageFileId, false, file);
     }
+
+    @Override
+    @Transactional
+    public void verifyComments() {
+        List<Comment> commentsToVerify = commentRepository.findAllByVerifiedDateIsNull();
+        List<List<Comment>> partitions = partitionList(commentsToVerify, batchSize);
+
+        List<CompletableFuture<Void>> futures = partitions.stream()
+                .map(this::moderatePartition)
+                .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }
+
+    private CompletableFuture<Void> moderatePartition(List<Comment> partition) {
+        return CompletableFuture.runAsync(() -> {
+            partition.forEach(comment -> {
+                comment.setVerified(!moderationDictionary.containsForbiddenWords(comment.getContent()));
+                comment.setVerifiedDate(LocalDateTime.now());
+            });
+
+            commentRepository.saveAll(partition);
+        }, moderationExecutor);
+    }
+
+    private List<List<Comment>> partitionList(List<Comment> list, @Value("${comment.batchSize}") int partitionSize) {
+        if (partitionSize <= 0) {
+            throw new IllegalArgumentException("Partition size must be greater than zero");
+        }
+
+        return IntStream.range(0, (list.size() + partitionSize - 1) / partitionSize)
+                .mapToObj(i -> list.subList(i * partitionSize, Math.min(list.size(), (i + 1) * partitionSize)))
+                .toList();
+    }
+
 
     private Comment getById(Long id) {
         return commentRepository.findById(id)

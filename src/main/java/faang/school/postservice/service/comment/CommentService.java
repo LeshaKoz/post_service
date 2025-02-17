@@ -4,8 +4,6 @@ import faang.school.postservice.dto.comment.CommentFiltersDto;
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -20,4 +18,6 @@ public interface CommentService {
     void deleteComment(long commentId);
 
     void uploadImage(Long commentId, MultipartFile file);
+
+    void verifyComments();
 }

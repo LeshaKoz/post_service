@@ -63,3 +63,10 @@ aws:
 image:
   smallImageSize: 170
   largeImageSize: 1080
+
+comment:
+  verify:
+    cron: "* */10 * * * *" # every 10 minutes
+  batchSize: 100
+  thread-pool-size: 4
+  word-split-regex: "(?<=\\p{L})(?=\\p{P})|(?<=\\p{P})(?=\\p{L})|\\s+"
