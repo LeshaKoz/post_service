@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.broker.KafkaProducerLikeService;
+import faang.school.postservice.broker.MessageBuilder;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentRequest;
 import faang.school.postservice.dto.like.LikePostRequest;
@@ -17,6 +17,8 @@ import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +36,10 @@ public class LikeService {
     private final CommentRepository commentRepository;
     private final PostService postService;
     private final CommentService commentService;
-    private final KafkaProducerLikeService kafkaProducer;
+    private final MessageBuilder messageBuilder;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final NewTopic likePostEventTopic;
+
 
     @Transactional
     public void toggleLikePost(LikePostRequest request) {
@@ -43,7 +48,7 @@ public class LikeService {
         UserDto userDto = getUserDto(request.userId());
 
         Set<Like> likes = new HashSet<>(post.getLikes() == null ? Collections.emptyList() : post.getLikes());
-        Optional<Like> like = likes.stream().filter(likeItem -> likeItem.getUserId().equals(userDto.id())).findFirst();
+        Optional<Like> like = likes.stream().filter(likeItem -> likeItem.getUserId() == userDto.id()).findFirst();
 
         if (like.isPresent()) {
             assert post.getLikes() != null;
@@ -57,7 +62,9 @@ public class LikeService {
                     .build();
             post.getLikes().add(newLike);
             likeRepository.save(newLike);
-            kafkaProducer.sendLikePostEvent(post, userDto);
+
+            kafkaTemplate.send(likePostEventTopic.name(),
+                    messageBuilder.generateLikeEventMessage(post.getAuthorId(), userDto.id(), post.getId()));
         }
     }
 
@@ -68,13 +75,12 @@ public class LikeService {
                         "Комментарий с id " + request.commentId() + " не был найден"));
         UserDto userDto = getUserDto(request.userId());
 
-        Set<Like> likes = new HashSet<>(comment.getLikes() == null ? Collections.emptyList() : comment.getLikes());
-        Optional<Like> like = likes.stream().filter(likeItem -> likeItem.getUserId().equals(userDto.id())).findFirst();
+        List<Like> likes = new ArrayList<>(comment.getLikes() == null ? Collections.emptyList() : comment.getLikes());
+        boolean likeAlreadyExists = likes.stream().anyMatch(like -> like.getUserId() == userDto.id());
 
-        if (like.isPresent()) {
-            assert comment.getLikes() != null;
-            comment.getLikes().remove(like.get());
-            likeRepository.delete(like.get());
+        if (likeAlreadyExists) {
+            comment.setLikes(likes.stream().filter(like -> like.getUserId() != userDto.id()).toList());
+            likeRepository.deleteByCommentIdAndUserId(comment.getId(), userDto.id());
         } else {
             Like newLike = Like.builder()
                     .userId(userDto.id())
