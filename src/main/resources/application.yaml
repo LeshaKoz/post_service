@@ -66,3 +66,7 @@ post:
 
 service:
   name: post-service
+
+ad:
+  expired:
+    cron: "0 0 0 * * *" # every day at midnight
