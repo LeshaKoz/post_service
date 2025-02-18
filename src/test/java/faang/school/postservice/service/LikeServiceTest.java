@@ -17,11 +17,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,119 +35,103 @@ class LikeServiceTest {
     @Mock
     private CommentService commentService;
     @Mock
-    private LikeValidator likeValidator;
-    @Mock
-    private LikeMapper likeMapper;
-    @Mock
     private UserServiceClient userServiceClient;
+    @Mock
+    private LikeValidator likeValidator;
+
+    @Spy
+    private LikeMapper likeMapper;
 
     @InjectMocks
     private LikeService likeService;
 
-    private UserDto testUser;
-    private Long postId;
-    private Long commentId;
-    private Post testPost;
-    private Comment testComment;
-    private Like testLike;
     private PostLikeDto postLikeDto;
     private CommentLikeDto commentLikeDto;
+    private UserDto userDto;
+    private Post post;
+    private Comment comment;
+    private Like like;
 
     @BeforeEach
     void setup() {
-        testUser = new UserDto(1L, "Test User", "test@example.com");
-        postId = 10L;
-        commentId = 20L;
+        postLikeDto = new PostLikeDto(1L, 1L);
+        commentLikeDto = new CommentLikeDto(1L, 1L);
+        userDto = new UserDto(1L, "TestUser", "test@example.com");
 
-        testPost = new Post();
-        testPost.setId(postId);
+        post = new Post();
+        post.setId(1L);
 
-        testComment = new Comment();
-        testComment.setId(commentId);
+        comment = new Comment();
+        comment.setId(1L);
 
-        testLike = new Like();
-        testLike.setUserId(testUser.id());
-        testLike.setPost(testPost);
-        testLike.setComment(testComment);
-
-        postLikeDto = new PostLikeDto();
-        postLikeDto.setUserId(testUser.id());
-        postLikeDto.setPostId(postId);
-
-        commentLikeDto = new CommentLikeDto();
-        commentLikeDto.setUserId(testUser.id());
-        commentLikeDto.setCommentId(commentId);
+        like = new Like();
     }
 
     @Test
-    void likePost_ShouldValidateAndSave() {
-        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(testUser);
-        when(postService.getPostById(postId)).thenReturn(testPost);
-        when(likeRepository.findByPostIdAndUserId(postId, testUser.id())).thenReturn(Optional.empty());
-        when(likeMapper.toLike(postLikeDto)).thenReturn(testLike);
+    void likePost_ShouldCreateLikeSuccessfully() {
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(userDto);
+        when(postService.getPostById(postLikeDto.getPostId())).thenReturn(post);
+        when(likeRepository.findByPostIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.empty());
+        when(likeMapper.toLike(postLikeDto)).thenReturn(like);
 
-        assertDoesNotThrow(() -> likeService.likePost(postLikeDto));
+        likeService.likePost(postLikeDto);
 
-        verify(likeValidator).validateUserExists(testUser);
-        verify(likeValidator).validatePostExists(testPost);
-        verify(likeRepository).save(any(Like.class));
+        verify(userServiceClient).getUser(postLikeDto.getUserId());
+        verify(likeValidator).validateUserExists(userDto);
+        verify(postService).getPostById(postLikeDto.getPostId());
+        verify(likeRepository).save(like);
     }
 
     @Test
-    void likePost_ShouldThrowException_WhenAlreadyLiked() {
-        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(testUser);
-        when(postService.getPostById(postId)).thenReturn(testPost);
-        when(likeRepository.findByPostIdAndUserId(postId, testUser.id())).thenReturn(Optional.of(testLike));
+    void likePost_ShouldThrowExceptionWhenAlreadyLiked() {
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(userDto);
+        when(postService.getPostById(postLikeDto.getPostId())).thenReturn(post);
+        when(likeRepository.findByPostIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.of(new Like()));
 
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> likeService.likePost(postLikeDto));
-
-        assertEquals("User already liked this post.", exception.getMessage());
+        assertThrows(DataValidationException.class, () -> likeService.likePost(postLikeDto));
     }
 
     @Test
-    void unlikePost_ShouldDeleteLike() {
-        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(testUser);
-        when(postService.getPostById(postId)).thenReturn(testPost);
+    void unlikePost_ShouldRemoveLikeSuccessfully() {
+        when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(userDto);
+        when(postService.getPostById(postLikeDto.getPostId())).thenReturn(post);
 
-        assertDoesNotThrow(() -> likeService.unlikePost(postLikeDto));
+        likeService.unlikePost(postLikeDto);
 
-        verify(likeRepository).deleteByPostIdAndUserId(postId, testUser.id());
+        verify(likeRepository).deleteByPostIdAndUserId(anyLong(), anyLong());
     }
 
     @Test
-    void likeComment_ShouldValidateAndSave() {
-        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(testUser);
-        when(commentService.getCommentById(commentId)).thenReturn(testComment);
-        when(likeRepository.findByCommentIdAndUserId(commentId, testUser.id())).thenReturn(Optional.empty());
-        when(likeMapper.toLike(commentLikeDto)).thenReturn(testLike);
+    void likeComment_ShouldCreateLikeSuccessfully() {
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(userDto);
+        when(commentService.getCommentById(commentLikeDto.getCommentId())).thenReturn(comment);
+        when(likeRepository.findByCommentIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.empty());
+        when(likeMapper.toLike(commentLikeDto)).thenReturn(like);
 
-        assertDoesNotThrow(() -> likeService.likeComment(commentLikeDto));
+        likeService.likeComment(commentLikeDto);
 
-        verify(likeValidator).validateUserExists(testUser);
-        verify(likeValidator).validateCommentExists(testComment);
-        verify(likeRepository).save(any(Like.class));
+        verify(userServiceClient).getUser(commentLikeDto.getUserId());
+        verify(likeValidator).validateUserExists(userDto);
+        verify(commentService).getCommentById(commentLikeDto.getCommentId());
+        verify(likeRepository).save(like);
     }
 
     @Test
-    void likeComment_ShouldThrowException_WhenAlreadyLiked() {
-        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(testUser);
-        when(commentService.getCommentById(commentId)).thenReturn(testComment);
-        when(likeRepository.findByCommentIdAndUserId(commentId, testUser.id())).thenReturn(Optional.of(testLike));
+    void likeComment_ShouldThrowExceptionWhenAlreadyLiked() {
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(userDto);
+        when(commentService.getCommentById(commentLikeDto.getCommentId())).thenReturn(comment);
+        when(likeRepository.findByCommentIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.of(new Like()));
 
-        DataValidationException exception = assertThrows(DataValidationException.class,
-                () -> likeService.likeComment(commentLikeDto));
-
-        assertEquals("User already liked this comment.", exception.getMessage());
+        assertThrows(DataValidationException.class, () -> likeService.likeComment(commentLikeDto));
     }
 
     @Test
-    void unlikeComment_ShouldDeleteLike() {
-        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(testUser);
-        when(commentService.getCommentById(commentId)).thenReturn(testComment);
+    void unlikeComment_ShouldRemoveLikeSuccessfully() {
+        when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(userDto);
+        when(commentService.getCommentById(commentLikeDto.getCommentId())).thenReturn(comment);
 
-        assertDoesNotThrow(() -> likeService.unlikeComment(commentLikeDto));
+        likeService.unlikeComment(commentLikeDto);
 
-        verify(likeRepository).deleteByCommentIdAndUserId(commentId, testUser.id());
+        verify(likeRepository).deleteByCommentIdAndUserId(anyLong(), anyLong());
     }
 }

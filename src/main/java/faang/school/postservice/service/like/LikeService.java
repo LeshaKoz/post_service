@@ -60,7 +60,6 @@ public class LikeService {
         Comment comment = commentService.getCommentById(commentLikeDto.getCommentId());
         likeValidator.validateCommentExists(comment);
 
-
         if (likeRepository.findByCommentIdAndUserId(commentLikeDto.getCommentId(), commentLikeDto.getUserId()).isPresent()) {
             throw new DataValidationException("User already liked this comment.");
         }
