@@ -6,7 +6,6 @@ import faang.school.postservice.dto.gpt.Message;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.properties.AIProperties;
 import faang.school.postservice.service.AIService;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -33,7 +32,6 @@ public class AIServiceImpl implements AIService {
     }
 
     @Override
-    @Valid
     @Retryable(backoff = @Backoff(delay = 21000))
     public String checkGrammarPost(Post post) {
         log.debug("Start check grammar post id = {}, text = {}", post.getId(), post.getContent());

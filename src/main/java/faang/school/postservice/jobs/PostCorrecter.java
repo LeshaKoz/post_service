@@ -24,7 +24,7 @@ public class PostCorrecter {
     @Scheduled(cron = "${jobs.post-corrector.cron}")
     public void postCorrecterJob() {
         log.info("Start post correcter job");
-        List<Post> notPublishedPosts = postRepository.findNotPublished(PageRequest.of(0, limit));
+        List<Post> notPublishedPosts = postRepository.findPostsByPublishedIsFalseAndAiCheckedIsFalse(PageRequest.of(0, limit));
         log.info("Found {} posts", notPublishedPosts.size());
         notPublishedPosts.forEach(postService::grammarCorrectionPost);
 
