@@ -33,17 +33,6 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException(format("Пост с id=%d не найден", id)));
     }
 
-    private List<ReadPostDto> getPosts(Long id, boolean published, boolean byAuthor) {
-        List<Post> posts = byAuthor ? postRepository.findByAuthorId(id) : postRepository.findByProjectId(id);
-
-        posts = posts.stream()
-                .filter(post -> post.isPublished() == published && !post.isDeleted())
-                .sorted(Comparator.comparing(published ? Post::getPublishedAt : Post::getCreatedAt).reversed())
-                .toList();
-
-        return postMapper.toDtoList(posts);
-    }
-
     public List<ReadPostDto> getFilteredPosts(PostFilterDto postFilterDto) {
 
         postValidator.validateFilterDto(postFilterDto);
@@ -53,6 +42,17 @@ public class PostService {
         } else {
             return getPosts(postFilterDto.projectId(), postFilterDto.isPublished(), false);
         }
+    }
+
+    private List<ReadPostDto> getPosts(Long id, boolean published, boolean byAuthor) {
+        List<Post> posts = byAuthor ? postRepository.findByAuthorId(id) : postRepository.findByProjectId(id);
+
+        posts = posts.stream()
+                .filter(post -> post.isPublished() == published && !post.isDeleted())
+                .sorted(Comparator.comparing(published ? Post::getPublishedAt : Post::getCreatedAt).reversed())
+                .toList();
+
+        return postMapper.toDtoList(posts);
     }
 
     @Transactional
