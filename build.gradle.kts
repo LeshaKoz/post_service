@@ -25,6 +25,9 @@ dependencies {
     implementation("org.springframework:spring-aspects:3.2.4.RELEASE")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2")
+    implementation("net.javacrumbs.shedlock:shedlock-spring:6.3.0")
+    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.3.0")
+
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     /**
