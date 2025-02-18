@@ -1,15 +1,19 @@
 package faang.school.postservice.dto.post;
 
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-public record HashtagResponseDto(
-        @JsonProperty("name")
-        String name,
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public final class HashtagResponseDto {
 
-        @JsonProperty("postsIds")
-        List<Long> postsIds) {
+    private String name;
+
+    private List<Long> postsIds;
 
 }
