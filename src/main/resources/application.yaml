@@ -69,3 +69,7 @@ author:
     rejected_posts_to_ban: 5
     scheduler:
       cron: "0 0 3 * * *" #every day at 03.00
+
+user:
+  comment:
+    kafka_topic: "comment-event"

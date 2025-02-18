@@ -8,10 +8,13 @@ import faang.school.postservice.dto.comment.UpdatedCommentResponse;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.event.CommentEvent;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.validator.CommentValidator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,16 +29,23 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
     private final CommentValidator commentValidator;
+    private final KafkaTemplate<String, CommentEvent> kafkaTemplate;
+
+    @Value("${user.comment.kafka_topic}")
+    private String commentTopic;
 
     @Transactional
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
         Post post = postService.getPost(createCommentRequest.getPostId());
         Comment comment = commentMapper.toEntity(createCommentRequest);
-        commentValidator.verificationCreatingData(comment);
+        //commentValidator.verificationCreatingData(comment);
 
         comment.setPost(post);
         Comment savedComment = commentRepository.save(comment);
+        CommentEvent event = commentMapper.toEvent(savedComment);
+        kafkaTemplate.send(commentTopic, event);
         return commentMapper.toCreateResponse(savedComment);
+
     }
 
 
