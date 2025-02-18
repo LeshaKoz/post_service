@@ -5,6 +5,7 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.like.LikeMapperImpl;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.ElementType;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
@@ -99,7 +100,7 @@ class LikeServiceTest {
         Mockito.when(userService.getUserByContext()).thenReturn(userDto);
         Mockito.when(likeRepository.findByPostIdAndUserId(POST_ID, USER_ID)).thenReturn(Optional.of(like));
 
-        Assertions.assertThrows(BusinessException.class, () -> likeService.userLikeThePost(dto));
+        Assertions.assertThrows(BusinessException.class, () -> likeService.userLike(dto, ElementType.POST));
 
         Mockito.verify(userService).getUserByContext();
         Mockito.verify(likeRepository).findByPostIdAndUserId(POST_ID, USER_ID);
@@ -113,7 +114,7 @@ class LikeServiceTest {
         Mockito.when(userService.getUserByContext()).thenReturn(userDto);
         Mockito.when(likeRepository.findByCommentIdAndUserId(POST_ID, USER_ID)).thenReturn(Optional.of(like));
 
-        Assertions.assertThrows(BusinessException.class, () -> likeService.userLikeTheComment(dto));
+        Assertions.assertThrows(BusinessException.class, () -> likeService.userLike(dto, ElementType.COMMENT));
 
         Mockito.verify(userService).getUserByContext();
         Mockito.verify(likeRepository).findByCommentIdAndUserId(POST_ID, USER_ID);
@@ -134,7 +135,7 @@ class LikeServiceTest {
         savedLike.setPost(post);
         Mockito.when(likeRepository.save(Mockito.any(Like.class))).thenReturn(savedLike);
 
-        LikeDto result = likeService.userLikeThePost(likeDto);
+        LikeDto result = likeService.userLike(likeDto, ElementType.POST);
 
         Assertions.assertNotNull(result);
         Mockito.verify(likeRepository).save(Mockito.any(Like.class));
@@ -157,7 +158,7 @@ class LikeServiceTest {
         savedLike.setComment(comment);
         Mockito.when(likeRepository.save(Mockito.any(Like.class))).thenReturn(savedLike);
 
-        LikeDto result = likeService.userLikeTheComment(likeDto);
+        LikeDto result = likeService.userLike(likeDto, ElementType.COMMENT);
 
         Assertions.assertNotNull(result);
         Mockito.verify(likeRepository).save(Mockito.any(Like.class));
@@ -173,7 +174,8 @@ class LikeServiceTest {
         Mockito.when(userService.getUserByContext()).thenReturn(userDto);
         Mockito.when(likeRepository.findById(LIKE_ID)).thenReturn(Optional.of(like));
 
-        Assertions.assertThrows(BusinessException.class, () -> likeService.removeLikePost(LIKE_ID, likeDto));
+        Assertions.assertThrows(BusinessException.class,
+                () -> likeService.removeLike(LIKE_ID, likeDto, ElementType.POST));
 
         Mockito.verify(userService).getUserByContext();
         Mockito.verify(likeRepository).findById(LIKE_ID);
@@ -187,7 +189,8 @@ class LikeServiceTest {
         Mockito.when(userService.getUserByContext()).thenReturn(userDto);
         Mockito.when(likeRepository.findById(LIKE_ID)).thenReturn(Optional.of(like));
 
-        Assertions.assertThrows(BusinessException.class, () -> likeService.removeLikeComment(LIKE_ID, likeDto));
+        Assertions.assertThrows(BusinessException.class,
+                () -> likeService.removeLike(LIKE_ID, likeDto, ElementType.COMMENT));
 
         Mockito.verify(userService).getUserByContext();
         Mockito.verify(likeRepository).findById(LIKE_ID);
@@ -203,7 +206,7 @@ class LikeServiceTest {
         Mockito.when(likeRepository.findById(LIKE_ID)).thenReturn(Optional.of(like));
         Mockito.doNothing().when(likeRepository).deleteByCommentIdAndUserId(COMMENT_ID, USER_ID);
 
-        likeService.removeLikeComment(LIKE_ID, likeDto);
+        likeService.removeLike(LIKE_ID, likeDto, ElementType.COMMENT);
 
         Mockito.verify(userService).getUserByContext();
         Mockito.verify(likeRepository).findById(LIKE_ID);
@@ -218,13 +221,12 @@ class LikeServiceTest {
 
         Mockito.when(userService.getUserByContext()).thenReturn(userDto);
         Mockito.when(likeRepository.findById(LIKE_ID)).thenReturn(Optional.of(like));
-        Mockito.doNothing().when(likeRepository).deleteByCommentIdAndUserId(POST_ID, USER_ID);
+        Mockito.doNothing().when(likeRepository).deleteByPostIdAndUserId(POST_ID, USER_ID);
 
-        likeService.removeLikeComment(LIKE_ID, likeDto);
+        likeService.removeLike(LIKE_ID, likeDto, ElementType.POST);
 
         Mockito.verify(userService).getUserByContext();
         Mockito.verify(likeRepository).findById(LIKE_ID);
-        Mockito.verify(likeRepository).deleteByCommentIdAndUserId(POST_ID, USER_ID);
+        Mockito.verify(likeRepository).deleteByPostIdAndUserId(POST_ID, USER_ID);
     }
-
 }
