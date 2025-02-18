@@ -1,15 +1,19 @@
 package faang.school.postservice.service.post;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.kafka.AlbumCreatedEvent;
 import faang.school.postservice.dto.post.AlbumRequestDto;
 import faang.school.postservice.dto.post.AlbumResponseDto;
 import faang.school.postservice.dto.post.AlbumUsersDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.enums.Visibility;
+import faang.school.postservice.exception.KafkaProduceException;
 import faang.school.postservice.exception.album.AlbumAccessDeniedException;
 import faang.school.postservice.filter.Filter;
 import faang.school.postservice.filter.album.AlbumFilterDto;
+import faang.school.postservice.kafka.album.AlbumCreatedEventKafkaProducer;
 import faang.school.postservice.mapper.post.AlbumMapper;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.post.Post;
@@ -29,6 +33,7 @@ import java.util.function.Function;
 
 import static faang.school.postservice.enums.Visibility.ALL_USERS;
 import static faang.school.postservice.enums.Visibility.SELECTED_USERS;
+import static faang.school.postservice.enums.kafka.AchievementType.LIBRARIAN;
 import static java.util.stream.Collectors.toMap;
 
 @Slf4j
@@ -42,11 +47,12 @@ public class AlbumServiceImpl implements AlbumService {
     private final Map<Visibility, VisibilityConverter> visibilities;
     private final UserServiceClient userServiceClient;
     private final List<Filter<Album, AlbumFilterDto>> albumFilters;
+    private final AlbumCreatedEventKafkaProducer kafkaProducer;
 
     public AlbumServiceImpl(AlbumRepository albumRepository, PostRepository postRepository,
                             AlbumMapper albumMapper, UserContext userContext,
                             List<VisibilityConverter> converters, UserServiceClient userServiceClient,
-                            List<Filter<Album, AlbumFilterDto>> filters) {
+                            List<Filter<Album, AlbumFilterDto>> filters, AlbumCreatedEventKafkaProducer kafkaProducer) {
         this.albumRepository = albumRepository;
         this.postRepository = postRepository;
         this.albumMapper = albumMapper;
@@ -55,6 +61,7 @@ public class AlbumServiceImpl implements AlbumService {
                 .collect(toMap(VisibilityConverter::getVisibility, Function.identity()));
         this.userServiceClient = userServiceClient;
         this.albumFilters = filters;
+        this.kafkaProducer = kafkaProducer;
     }
 
     @Transactional
@@ -65,7 +72,9 @@ public class AlbumServiceImpl implements AlbumService {
         Album album = albumMapper.toEntity(dto);
         album.setAuthorId(userId);
         album.setVisibility(ALL_USERS);
-        return albumMapper.toDto(albumRepository.save(album));
+        Album savedAlbum = albumRepository.save(album);
+        sendEventToKafka(userId, album);
+        return albumMapper.toDto(savedAlbum);
     }
 
     @Transactional
@@ -255,6 +264,15 @@ public class AlbumServiceImpl implements AlbumService {
             log.error("Visibility isn't {} in album with id = {}", visibility, album.getId());
             throw new IllegalArgumentException(
                     String.format("Needed selected_users visibility for add users for access. Album: %d", album.getId()));
+        }
+    }
+
+    private void sendEventToKafka(long userId, Album album) {
+        try {
+            kafkaProducer.produce(new AlbumCreatedEvent(userId, LIBRARIAN));
+        } catch (JsonProcessingException e) {
+            throw new KafkaProduceException(
+                    String.format("Failed kafka produce created album event. Goal id = %d", album.getId()));
         }
     }
 }

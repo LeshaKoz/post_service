@@ -9,6 +9,7 @@ import faang.school.postservice.exception.album.AlbumAccessDeniedException;
 import faang.school.postservice.filter.Filter;
 import faang.school.postservice.filter.album.AlbumFilterDto;
 import faang.school.postservice.filter.album.AlbumTitleFilter;
+import faang.school.postservice.kafka.album.AlbumCreatedEventKafkaProducer;
 import faang.school.postservice.mapper.post.AlbumMapper;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.repository.post.AlbumRepository;
@@ -55,6 +56,9 @@ class AlbumServiceImplTest {
     @Mock
     private UserServiceClient userServiceClient;
 
+    @Mock
+    private AlbumCreatedEventKafkaProducer producer;
+
     @Spy
     private AlbumMapper albumMapper;
 
@@ -68,7 +72,7 @@ class AlbumServiceImplTest {
         when(allUsersConverter.getVisibility()).thenReturn(Visibility.ALL_USERS);
         when(followersConverter.getVisibility()).thenReturn(Visibility.FOLLOWERS);
         albumService = new AlbumServiceImpl(albumRepository, postRepository, albumMapper, userContext,
-                List.of(allUsersConverter, followersConverter), userServiceClient, filters);
+                List.of(allUsersConverter, followersConverter), userServiceClient, filters, producer);
     }
 
     @Test

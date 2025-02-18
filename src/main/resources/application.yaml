@@ -25,6 +25,9 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
 server:
   port: 8081
 
@@ -66,3 +69,8 @@ post:
 
 service:
   name: post-service
+
+kafka:
+  album:
+    created:
+      topic: created-album
