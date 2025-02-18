@@ -3,6 +3,7 @@ package faang.school.postservice.service.comment;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
+import faang.school.postservice.event.comment.CommentEventType;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -41,7 +42,9 @@ public class CommentService {
         verifyCommentCreation(createDto);
         Comment newComment = commentMapper.toEntity(createDto);
         newComment = commentRepository.save(newComment);
-        commentMessagePublisher.publish(commentMapper.toEvent(newComment));
+        commentMessagePublisher.publish(
+                commentMapper.toEvent(newComment, CommentEventType.CREATE)
+        );
         return commentMapper.toDto(newComment);
     }
 

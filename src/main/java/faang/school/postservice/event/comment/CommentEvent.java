@@ -1,4 +1,4 @@
-package faang.school.postservice.event;
+package faang.school.postservice.event.comment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,5 +14,6 @@ public class CommentEvent {
     private String comment;
     private Long userId;
     private Long postId;
+    private CommentEventType eventType;
     private LocalDateTime createdAt;
 }
