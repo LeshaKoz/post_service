@@ -15,11 +15,9 @@ import faang.school.postservice.validator.LikeValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,12 +37,8 @@ class LikeServiceTest {
     @Mock
     private LikeValidator likeValidator;
 
-    @Spy
     private LikeMapper likeMapper;
-
-    @InjectMocks
     private LikeService likeService;
-
     private PostLikeDto postLikeDto;
     private CommentLikeDto commentLikeDto;
     private UserDto userDto;
@@ -54,6 +48,9 @@ class LikeServiceTest {
 
     @BeforeEach
     void setup() {
+        likeMapper = Mappers.getMapper(LikeMapper.class);
+        likeService = new LikeService(likeRepository, postService, commentService, likeMapper, userServiceClient, likeValidator);
+
         postLikeDto = new PostLikeDto(1L, 1L);
         commentLikeDto = new CommentLikeDto(1L, 1L);
         userDto = new UserDto(1L, "TestUser", "test@example.com");
@@ -72,7 +69,9 @@ class LikeServiceTest {
         when(userServiceClient.getUser(postLikeDto.getUserId())).thenReturn(userDto);
         when(postService.getPostById(postLikeDto.getPostId())).thenReturn(post);
         when(likeRepository.findByPostIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.empty());
-        when(likeMapper.toLike(postLikeDto)).thenReturn(like);
+
+        like = likeMapper.toLike(postLikeDto);
+        like.setPost(post);
 
         likeService.likePost(postLikeDto);
 
@@ -106,7 +105,9 @@ class LikeServiceTest {
         when(userServiceClient.getUser(commentLikeDto.getUserId())).thenReturn(userDto);
         when(commentService.getCommentById(commentLikeDto.getCommentId())).thenReturn(comment);
         when(likeRepository.findByCommentIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.empty());
-        when(likeMapper.toLike(commentLikeDto)).thenReturn(like);
+
+        like = likeMapper.toLike(commentLikeDto);
+        like.setComment(comment);
 
         likeService.likeComment(commentLikeDto);
 
