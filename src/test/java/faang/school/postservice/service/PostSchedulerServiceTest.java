@@ -34,7 +34,7 @@ class PostSchedulerServiceTest {
 
     @BeforeEach
     void setUp() {
-        executorService = Executors.newSingleThreadExecutor();
+        executorService = Executors.newFixedThreadPool(1);
         postSchedulerService = new PostSchedulerService(postRepository, executorService);
         ReflectionTestUtils.setField(postSchedulerService, "maxRetries", 3);
         ReflectionTestUtils.setField(postSchedulerService, "batchCount", 3);
