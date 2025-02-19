@@ -7,9 +7,12 @@ import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.corrector.PostCorrector;
 import faang.school.postservice.validator.post.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,22 +22,21 @@ import java.util.List;
 
 import static java.lang.String.format;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
-
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final PostValidator postValidator;
+    private final PostCorrector postCorrector;
 
-
-    public Post findById(Long id) {
+    public Post findById(@NotNull Long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(format("Пост с id=%d не найден", id)));
     }
 
     public List<ReadPostDto> getFilteredPosts(PostFilterDto postFilterDto) {
-
         postValidator.validateFilterDto(postFilterDto);
 
         if (postFilterDto.authorId() != null) {
@@ -108,5 +110,11 @@ public class PostService {
         Post updatedPost = postRepository.save(post);
 
         return postMapper.toDto(updatedPost);
+    }
+
+    public void correctAllUnpublishedPosts() {
+        List<Post> posts = postRepository.findReadyToPublish();
+        posts.forEach(postCorrector::correctContentPost);
+        postRepository.saveAll(posts);
     }
 }

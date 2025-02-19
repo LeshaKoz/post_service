@@ -1,9 +1,9 @@
 package faang.school.postservice.controller;
 
-import faang.school.postservice.dto.post.ReadPostDto;
-import faang.school.postservice.dto.post.CreatePostDto;
-import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.filter.PostFilterDto;
+import faang.school.postservice.dto.post.CreatePostDto;
+import faang.school.postservice.dto.post.ReadPostDto;
+import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.service.PostService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -57,7 +57,6 @@ public class PostController {
             @RequestParam(required = false) Long authorId,
             @RequestParam(required = false) Long projectId,
             @RequestParam Boolean isPublished) {
-
         PostFilterDto postFilterDto = new PostFilterDto(authorId, projectId, isPublished);
         return postService.getFilteredPosts(postFilterDto);
     }

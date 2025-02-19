@@ -8,17 +8,18 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
     private final UserServiceClient userServiceClient;
     private final UserContext userContext;
 
     public UserDto getUser(long userId) {
         try {
             return userServiceClient.getUser(userId);
-        } catch (FeignException.FeignClientException ex) {
+        } catch (FeignException ex) {
             throw new EntityNotFoundException(String.format("Пользователь с id=%d не найден", userId));
         }
     }
@@ -27,12 +28,16 @@ public class UserService {
         try {
             userServiceClient.getUser(userId);
             return true;
-        } catch (FeignException.FeignClientException ex) {
+        } catch (FeignException ex) {
             return false;
         }
     }
 
-    public UserDto getUserByContext(){
+    public boolean isUserExistsInContext() {
+        return Optional.ofNullable(userContext.getUserId()).isPresent();
+    }
+
+    public UserDto getUserByContext() {
         return getUser(userContext.getUserId());
     }
 }

@@ -8,6 +8,7 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.corrector.PostCorrector;
 import faang.school.postservice.validator.post.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +55,9 @@ public class PostServiceTest {
     @Mock
     private PostValidator postValidator;
 
+    @Mock
+    private PostCorrector postCorrector;
+
     @InjectMocks
     private PostService postService;
 
@@ -97,7 +101,6 @@ public class PostServiceTest {
 
     @Test
     void createPostSuccessfullyTest() {
-
         when(postMapper.toEntity(createPostDto)).thenReturn(post);
         when(postRepository.save(any(Post.class))).thenReturn(post);
         when(postMapper.toDto(post)).thenReturn(readPostDto);
@@ -131,7 +134,6 @@ public class PostServiceTest {
 
     @Test
     void updatePostSuccessfullyTest() {
-
         Post post = new Post();
         post.setContent(TEST_CONTENT);
 
@@ -152,7 +154,6 @@ public class PostServiceTest {
 
     @Test
     void publishSuccessfullyTest() {
-
         when(postRepository.findById(ID)).thenReturn(Optional.of(post));
         when(postRepository.save(any(Post.class))).thenReturn(post);
         when(postMapper.toDto(any(Post.class))).thenReturn(expectedResponse);
@@ -210,7 +211,6 @@ public class PostServiceTest {
 
     @Test
     void exceptionWhenAlreadyPublishedPostTest() {
-
         when(postRepository.findById(ID)).thenReturn(Optional.of(post));
 
         doThrow(new DataValidationException(EXCEPTION_MESSAGE))
@@ -228,7 +228,6 @@ public class PostServiceTest {
 
     @Test
     void getFilteredPosts_ByAuthorId_ReturnsFilteredPosts() {
-
         PostFilterDto postFilterDto = new PostFilterDto(AUTHOR_ID, null, false);
         List<Post> posts = Collections.singletonList(post);
         List<ReadPostDto> expectedDtos = Collections.singletonList(readPostDto);
@@ -247,7 +246,6 @@ public class PostServiceTest {
 
     @Test
     void getFilteredPosts_ByProjectId_ReturnsFilteredPosts() {
-
         PostFilterDto postFilterDto = new PostFilterDto(null, PROJECT_ID, false);
         List<Post> posts = Collections.singletonList(post);
         List<ReadPostDto> expectedDtos = Collections.singletonList(readPostDto);
@@ -266,7 +264,6 @@ public class PostServiceTest {
 
     @Test
     void getFilteredPosts_NoPostsFound_ReturnsEmptyList() {
-
         PostFilterDto postFilterDto = new PostFilterDto(AUTHOR_ID, null, true);
         List<Post> emptyPosts = Collections.emptyList();
         List<ReadPostDto> emptyDtos = Collections.emptyList();
@@ -281,5 +278,18 @@ public class PostServiceTest {
         verify(postValidator).validateFilterDto(postFilterDto);
         verify(postRepository).findByAuthorId(AUTHOR_ID);
         verify(postMapper).toDtoList(emptyPosts);
+    }
+
+    @Test
+    void testCorrectAllUnpublishedPosts() {
+        List<Post> posts = List.of(post);
+        when(postRepository.findReadyToPublish()).thenReturn(posts);
+        when(postRepository.saveAll(posts)).thenReturn(posts);
+
+        postService.correctAllUnpublishedPosts();
+
+        verify(postRepository).findReadyToPublish();
+        verify(postCorrector).correctContentPost(post);
+        verify(postRepository).saveAll(posts);
     }
 }
