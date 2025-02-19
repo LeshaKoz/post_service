@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.broker.MessageBuilder;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentRequest;
 import faang.school.postservice.dto.like.LikePostRequest;
@@ -14,6 +15,7 @@ import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,10 +25,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.Message;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,6 +53,12 @@ public class LikeServiceTest {
     private CommentService commentService;
     @Mock
     private CommentRepository commentRepository;
+    @Mock
+    private NewTopic likePostEventTopic;
+    @Mock
+    private MessageBuilder messageBuilder;
+    @Mock
+    private KafkaTemplate<String, String> kafkaTemplate;
     @InjectMocks
     private LikeService likeService;
 
@@ -61,6 +73,7 @@ public class LikeServiceTest {
         post = Post.builder()
                 .id(1L)
                 .authorId(13L)
+                .likes(new HashSet<>())
                 .createdAt(LocalDateTime.now())
                 .build();
         comment = Comment.builder()
@@ -91,6 +104,8 @@ public class LikeServiceTest {
     public void toggleLikePost_SuccessLike() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         when(userServiceClient.getUser(1L)).thenReturn(userDto);
+        when(likePostEventTopic.name()).thenReturn("LIKE_POST_TEST_TOPIC");
+        when(messageBuilder.generateLikeEventMessage(any(), any(), any())).thenReturn("message");
 
         likeService.toggleLikePost(new LikePostRequest(1L, 1L));
 
@@ -98,27 +113,28 @@ public class LikeServiceTest {
         verify(likeRepository).save(captor.capture());
         Like newLike = captor.getValue();
 
+        verify(kafkaTemplate, atLeastOnce()).send(any(), any());
+
         Assertions.assertTrue(newLike.getUserId() == userDto.id());
         Assertions.assertTrue(newLike.getPost().getId() == post.getId());
     }
 
     @Test
     public void toggleLikePost_SuccessUnLike() {
-        post.setLikes(List.of(
-                Like.builder().userId(userDto.id()).build())
-        );
+        Set<Like> likes = new HashSet<>();
+        Like like = Like.builder().userId(userDto.id()).build();
+        likes.add(like);
+        post.setLikes(likes);
 
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         when(userServiceClient.getUser(1L)).thenReturn(userDto);
 
         likeService.toggleLikePost(new LikePostRequest(1L, 1L));
 
-        ArgumentCaptor<Long> postIdCaptor = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
-        verify(likeRepository).deleteByPostIdAndUserId(postIdCaptor.capture(), userIdCaptor.capture());
+        ArgumentCaptor<Like> likeCaptor = ArgumentCaptor.forClass(Like.class);
+        verify(likeRepository).delete(likeCaptor.capture());
 
-        Assertions.assertEquals(postIdCaptor.getValue(), post.getId());
-        Assertions.assertEquals(userIdCaptor.getValue(), userDto.id());
+        Assertions.assertEquals(likeCaptor.getValue().getId(), like.getId());
     }
 
     @Test
