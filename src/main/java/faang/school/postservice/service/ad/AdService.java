@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -29,31 +31,31 @@ public class AdService implements DisposableBean {
         this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
+    @Transactional
     public void deleteExpiredAds() {
-        List<Ad> allAds = adRepository.findAll();
         LocalDateTime now = LocalDateTime.now();
-
-        List<Long> expiredAds = allAds.stream()
-                        .filter(ad -> ad.getEndDate().isBefore(now) || ad.getAppearancesLeft() == 0)
-                        .map(Ad::getId)
-                        .toList();
+        List<Ad> expiredAds = adRepository.findExpiredAds();
 
         if (expiredAds.isEmpty()) {
+            log.info("Нет просроченных объявлений для удаления");
             return;
         }
 
-        List<List<Long>> partitions = partitionList(expiredAds, batchSize);
+        List<Long> expiredAdIds = expiredAds.stream()
+                .map(Ad::getId)
+                .collect(Collectors.toList());
+
+        List<List<Long>> partitions = partitionList(expiredAdIds, batchSize);
 
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (List<Long> partition : partitions) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                for (Long id : partition) {
-                    adRepository.deleteById(id);
-                }
+                adRepository.deleteAllByIds(partition);
             }, executorService);
             futures.add(future);
         }
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        log.info("Удаление просроченных объявлений завершено");
     }
 
     private List<List<Long>> partitionList(List<Long> expiredAds, int batchSize) {
