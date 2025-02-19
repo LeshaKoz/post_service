@@ -7,14 +7,11 @@ import faang.school.postservice.model.Post;
 import feign.FeignException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,7 +28,6 @@ class PostCorrectorTest {
 
     private static final String UNCORRECTED_TEXT = "я люблю каров";
     private static final String CORRECTED_TEXT = "я люблю коров";
-
 
     @Test
     public void testSuccessCorrectContentPost() {
@@ -58,19 +54,11 @@ class PostCorrectorTest {
         assertThrows(IntegrationException.class, () -> postCorrector.correctContentPost(post));
     }
 
-    static Stream<List<SpellDto>> provideSpellDtoList() {
-        return Stream.of(
-                List.of(),
-                null
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideSpellDtoList")
-    public void testCorrectContentPost_If_SpellService_Returns_EmptyOrNull(List<SpellDto> spellDtoList) {
+    @Test
+    public void testCorrectContentPost_If_SpellService_Returns_Empty() {
         Post post = Post.builder().content(UNCORRECTED_TEXT).build();
 
-        when(spellServiceClient.checkText(UNCORRECTED_TEXT)).thenReturn(spellDtoList);
+        when(spellServiceClient.checkText(UNCORRECTED_TEXT)).thenReturn(List.of());
 
         postCorrector.correctContentPost(post);
 

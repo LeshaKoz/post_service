@@ -7,6 +7,7 @@ import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.service.UserService;
 import faang.school.postservice.validator.post.PostValidator;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,7 @@ class PostValidatorTest {
     private static final Long PROJECT_ID = 2L;
 
     @Mock
-    private UserServiceClient userServiceClient;
+    private UserService userService;
 
     @Mock
     private ProjectServiceClient projectServiceClient;
@@ -77,14 +78,14 @@ class PostValidatorTest {
     @Test
     void validatePostAuthorExist_Throws_WhenAuthorDoesNotExistTest() {
         post.setAuthorId(AUTHOR_ID);
-        when(userServiceClient.getUser(AUTHOR_ID)).thenThrow(FeignException.FeignClientException.class);
+        when(userService.isUserExists(AUTHOR_ID)).thenReturn(false);
         assertThrows(DataValidationException.class, () -> postValidator.validatePostAuthorExist(post));
     }
 
     @Test
     void validatePostAuthorExist_NotThrows_WhenAuthorExistsTest() {
         post.setAuthorId(AUTHOR_ID);
-        when(userServiceClient.getUser(AUTHOR_ID)).thenReturn(userDto);
+        when(userService.isUserExists(AUTHOR_ID)).thenReturn(true);
         assertDoesNotThrow(() -> postValidator.validatePostAuthorExist(post));
     }
 

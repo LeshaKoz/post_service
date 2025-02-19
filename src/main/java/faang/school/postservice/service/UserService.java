@@ -19,7 +19,7 @@ public class UserService {
     public UserDto getUser(long userId) {
         try {
             return userServiceClient.getUser(userId);
-        } catch (FeignException.FeignClientException ex) {
+        } catch (FeignException ex) {
             throw new EntityNotFoundException(String.format("Пользователь с id=%d не найден", userId));
         }
     }
@@ -28,7 +28,7 @@ public class UserService {
         try {
             userServiceClient.getUser(userId);
             return true;
-        } catch (FeignException.FeignClientException ex) {
+        } catch (FeignException ex) {
             return false;
         }
     }
@@ -37,7 +37,7 @@ public class UserService {
         return Optional.ofNullable(userContext.getUserId()).isPresent();
     }
 
-    public UserDto getUserByContext(){
+    public UserDto getUserByContext() {
         return getUser(userContext.getUserId());
     }
 }
