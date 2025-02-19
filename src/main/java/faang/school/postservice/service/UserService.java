@@ -36,4 +36,8 @@ public class UserService {
     public boolean isUserExistsInContext() {
         return Optional.ofNullable(userContext.getUserId()).isPresent();
     }
+
+    public UserDto getUserByContext(){
+        return getUser(userContext.getUserId());
+    }
 }
