@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RequestMapping("/albums")
@@ -30,12 +32,12 @@ public class AlbumController {
         return albumService.createAlbum(albumCreateDto);
     }
 
-    @PostMapping("/favorite/add/{albumId}")
+    @PostMapping("/favorite/{albumId}")
     public AlbumReadDto addAlbumToFavorite(@Valid @Positive @PathVariable long albumId) {
         return albumService.addAlbumToFavorites(albumId);
     }
 
-    @PostMapping("/favorite/delete/{albumId}")
+    @DeleteMapping("/favorite/{albumId}")
     public AlbumReadDto deleteAlbumFromFavorite(@Valid @Positive @PathVariable long albumId) {
         return albumService.deleteAlbumFromFavorites(albumId);
     }
@@ -45,19 +47,29 @@ public class AlbumController {
         return albumService.findAlbumById(albumId);
     }
 
-    @GetMapping("/filters/{authorId}")
-    public List<AlbumReadDto> findAuthorAlbumsByFilters(@Valid @RequestBody AlbumFilterDto filterDto, @Valid @Positive @PathVariable long authorId) {
-        return albumService.findAuthorAlbumsByFilters(filterDto, authorId);
+    @GetMapping("/filtered/{authorId}")
+    public List<AlbumReadDto> findAuthorAlbumsByFilters(@Valid @Positive @PathVariable long authorId,
+                                                        @Valid @RequestParam(required = false) String titlePattern,
+                                                        @Valid @RequestParam(required = false) LocalDate fromDate) {
+        return albumService.findAuthorAlbumsByFilters(AlbumFilterDto.builder()
+                .titlePattern(titlePattern)
+                .fromDate(fromDate).build(), authorId);
     }
 
-    @GetMapping("/filters")
-    public List<AlbumReadDto> findAllAlbumsByFilters(@Valid @RequestBody AlbumFilterDto filterDto) {
-        return albumService.findAllAlbumsByFilters(filterDto);
+    @GetMapping("/filtered")
+    public List<AlbumReadDto> findAllAlbumsByFilters(@Valid @RequestParam(required = false) String titlePattern,
+                                                     @Valid @RequestParam(required = false) LocalDate fromDate) {
+        return albumService.findAllAlbumsByFilters(AlbumFilterDto.builder()
+                .titlePattern(titlePattern)
+                .fromDate(fromDate).build());
     }
 
-    @GetMapping("/favorite/filters")
-    public List<AlbumReadDto> findFavoriteAlbumsByFilters(@Valid @RequestBody AlbumFilterDto filterDto) {
-        return albumService.findFavoriteAlbumsByFilters(filterDto);
+    @GetMapping("/favorite/filtered")
+    public List<AlbumReadDto> findFavoriteAlbumsByFilters(@Valid @RequestParam(required = false) String titlePattern,
+                                                          @Valid @RequestParam(required = false) LocalDate fromDate) {
+        return albumService.findFavoriteAlbumsByFilters(AlbumFilterDto.builder()
+                .titlePattern(titlePattern)
+                .fromDate(fromDate).build());
     }
 
     @PutMapping

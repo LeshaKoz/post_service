@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -102,7 +103,7 @@ public class AlbumService {
     }
 
     private boolean isUserInteractOwnAlbum(long authorId) {
-        return userContext.getUserId() == authorId;
+        return Objects.equals(userContext.getUserId(), authorId);
     }
 
     private void validateAlbumTitleIsDistinct(String title, long authorId) {
@@ -131,7 +132,9 @@ public class AlbumService {
 
     private List<AlbumReadDto> applyFilters(List<Album> albums, List<AlbumFilter> applicableFilters, AlbumFilterDto filterDto) {
         if (applicableFilters.isEmpty()) {
-            return List.of();
+            return albums.stream()
+                    .map(albumMapper::toReadDto)
+                    .toList();
         }
 
         return applicableFilters.stream()

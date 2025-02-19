@@ -5,7 +5,6 @@ import faang.school.postservice.dto.album.AlbumEditDto;
 import faang.school.postservice.dto.album.AlbumReadDto;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Post;
-import jakarta.annotation.Nullable;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -25,10 +24,10 @@ public interface AlbumMapper {
             conditionExpression = "java(entity.getPosts() != null)")
     AlbumReadDto toReadDto(Album entity);
 
-    Album update(@MappingTarget Album entity, AlbumEditDto dto);
+    void update(@MappingTarget Album entity, AlbumEditDto dto);
 
     @Named("mapToLong")
-    default List<Long> mapToLong(@Nullable List<Post> posts) {
+    default List<Long> mapToLong(List<Post> posts) {
         return posts.stream().map(Post::getId).toList();
     }
 }
