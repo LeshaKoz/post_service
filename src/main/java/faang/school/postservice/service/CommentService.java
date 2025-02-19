@@ -9,7 +9,7 @@ import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.CommentRepository;
 
 import faang.school.postservice.service.s3.AwsService;
-import faang.school.postservice.util.ModerationDictionary;
+import faang.school.postservice.util.ModerationDictionaryUtil;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -52,7 +51,7 @@ public class CommentService {
     @Value("${comment.image.smallImageMaxSize}")
     private int SMALL_IMAGE_MAX_SIZE;
 
-    private final ModerationDictionary moderationDictionary;
+    private final ModerationDictionaryUtil moderationDictionaryUtil;
 
     @Transactional(readOnly = true)
     public List<Comment> getCommentsByPostId(Long postId) {
@@ -199,6 +198,7 @@ public class CommentService {
 
         comment.setSmallImageFileKey(null);
         comment.setLargeImageFileKey(null);
+    }
 
     public int moderateComments() {
         List<Comment> unverifiedComments = commentRepository.findUnverifiedComments();
@@ -211,7 +211,7 @@ public class CommentService {
         unverifiedComments.parallelStream()
                 .peek(comment -> log.info("Moderating comment ID: {}", comment.getId()))
                 .forEach(comment -> {
-                    boolean containsBannedWords = moderationDictionary.containsBannedWords(comment.getContent());
+                    boolean containsBannedWords = moderationDictionaryUtil.containsBannedWords(comment.getContent());
                     comment.setVerified(!containsBannedWords);
                     comment.setVerifiedDate(LocalDateTime.now());
                 });
