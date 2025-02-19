@@ -17,12 +17,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class PostSchedulerServiceTest {
-    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private ExecutorService executorService;
 
     @Mock
     private PostRepository postRepository;
@@ -32,6 +34,7 @@ class PostSchedulerServiceTest {
 
     @BeforeEach
     void setUp() {
+        executorService = Executors.newSingleThreadExecutor();
         postSchedulerService = new PostSchedulerService(postRepository, executorService);
         ReflectionTestUtils.setField(postSchedulerService, "maxRetries", 3);
         ReflectionTestUtils.setField(postSchedulerService, "batchCount", 3);
@@ -49,7 +52,7 @@ class PostSchedulerServiceTest {
     }
 
     @Test
-    void shouldPublishScheduledPosts_whenPostsAreAvailable() throws InterruptedException {
+    void shouldPublishScheduledPosts_whenPostsAreAvailable() throws Exception {
         Post post1 = new Post();
         post1.setAuthorId(1L);
         post1.setPublished(false);
@@ -64,9 +67,8 @@ class PostSchedulerServiceTest {
 
         postSchedulerService.publishScheduledPosts(2);
 
-        executorService.shutdown();
-        executorService.awaitTermination(5, TimeUnit.SECONDS);
-
+        Future<?> future = executorService.submit(() -> postSchedulerService.publishScheduledPosts(2));
+        future.get(5, TimeUnit.SECONDS);
 
         verify(postRepository, times(1)).saveAll(argThat(savedPosts ->
                 StreamSupport.stream(savedPosts.spliterator(), false)
