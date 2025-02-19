@@ -4,12 +4,11 @@ import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ReadPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
-import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.validator.PostValidator;
+import faang.school.postservice.validator.post.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +26,34 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final PostValidator postValidator;
+
+
+    public Post findById(Long id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(format("Пост с id=%d не найден", id)));
+    }
+
+    public List<ReadPostDto> getFilteredPosts(PostFilterDto postFilterDto) {
+
+        postValidator.validateFilterDto(postFilterDto);
+
+        if (postFilterDto.authorId() != null) {
+            return getPosts(postFilterDto.authorId(), postFilterDto.isPublished(), true);
+        } else {
+            return getPosts(postFilterDto.projectId(), postFilterDto.isPublished(), false);
+        }
+    }
+
+    private List<ReadPostDto> getPosts(Long id, boolean published, boolean byAuthor) {
+        List<Post> posts = byAuthor ? postRepository.findByAuthorId(id) : postRepository.findByProjectId(id);
+
+        posts = posts.stream()
+                .filter(post -> post.isPublished() == published && !post.isDeleted())
+                .sorted(Comparator.comparing(published ? Post::getPublishedAt : Post::getCreatedAt).reversed())
+                .toList();
+
+        return postMapper.toDtoList(posts);
+    }
 
     @Transactional
     public ReadPostDto create(CreatePostDto createPostDto) {
@@ -81,32 +108,5 @@ public class PostService {
         Post updatedPost = postRepository.save(post);
 
         return postMapper.toDto(updatedPost);
-    }
-
-    public Post findById(@NotNull Long id) {
-        return postRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(format("Пост с id=%d не найден", id)));
-    }
-
-    private List<ReadPostDto> getPosts(Long id, boolean published, boolean byAuthor) {
-        List<Post> posts = byAuthor ? postRepository.findByAuthorId(id) : postRepository.findByProjectId(id);
-
-        posts = posts.stream()
-                .filter(post -> post.isPublished() == published && !post.isDeleted())
-                .sorted(Comparator.comparing(published ? Post::getPublishedAt : Post::getCreatedAt).reversed())
-                .toList();
-
-        return postMapper.toDtoList(posts);
-    }
-
-    public List<ReadPostDto> getFilteredPosts(PostFilterDto postFilterDto) {
-
-        postValidator.validateFilterDto(postFilterDto);
-
-        if (postFilterDto.authorId() != null) {
-            return getPosts(postFilterDto.authorId(), postFilterDto.isPublished(), true);
-        } else {
-            return getPosts(postFilterDto.projectId(), postFilterDto.isPublished(), false);
-        }
     }
 }

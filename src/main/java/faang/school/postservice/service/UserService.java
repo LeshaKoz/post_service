@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.user.UserDto;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserServiceClient userServiceClient;
+    private final UserContext userContext;
 
     public UserDto getUser(long userId) {
         try {
@@ -28,5 +30,9 @@ public class UserService {
         } catch (FeignException.FeignClientException ex) {
             return false;
         }
+    }
+
+    public UserDto getUserByContext(){
+        return getUser(userContext.getUserId());
     }
 }
