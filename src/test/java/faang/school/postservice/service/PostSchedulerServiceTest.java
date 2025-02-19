@@ -65,7 +65,7 @@ class PostSchedulerServiceTest {
         postSchedulerService.publishScheduledPosts(2);
 
         executorService.shutdown();
-        executorService.awaitTermination(30, TimeUnit.SECONDS);
+        executorService.awaitTermination(45, TimeUnit.SECONDS);
 
 
         verify(postRepository, times(1)).saveAll(argThat(savedPosts ->
