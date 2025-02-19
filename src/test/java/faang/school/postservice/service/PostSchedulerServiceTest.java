@@ -14,15 +14,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 import static org.mockito.Mockito.*;
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @ExtendWith(MockitoExtension.class)
 class PostSchedulerServiceTest {
@@ -54,7 +50,7 @@ class PostSchedulerServiceTest {
     }
 
     @Test
-    void shouldPublishScheduledPosts_whenPostsAreAvailable() {
+    void shouldPublishScheduledPosts_whenPostsAreAvailable() throws Exception {
         Post post1 = new Post();
         post1.setAuthorId(1L);
         post1.setPublished(false);
@@ -64,18 +60,16 @@ class PostSchedulerServiceTest {
         post2.setPublished(false);
 
         List<Post> posts = List.of(post1, post2);
-        Page<Post> postPage = new PageImpl<>(posts, PageRequest.of(0, 2), 1);
+        Page<Post> postPage = new PageImpl<>(posts, PageRequest.of(0, 2), posts.size());
         when(postRepository.findReadyToPublish(any(PageRequest.class))).thenReturn(postPage);
 
         postSchedulerService.publishScheduledPosts(2);
 
-        await().atMost(Duration.ofSeconds(100))
-                .pollInterval(Duration.ofMillis(500))
-                .untilAsserted(() -> {
-                    verify(postRepository, times(1)).saveAll(argThat(savedPosts ->
-                            StreamSupport.stream(savedPosts.spliterator(), false)
-                                    .allMatch(post -> post.isPublished() && post.getPublishedAt() != null)
-                    ));
-                });
+        verify(postRepository, times(1)).saveAll(argThat(savedPosts ->
+                StreamSupport.stream(savedPosts.spliterator(), false)
+                        .allMatch(post -> post.isPublished() && post.getPublishedAt() != null)
+        ));
     }
+
+
 }

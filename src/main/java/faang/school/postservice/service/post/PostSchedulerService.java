@@ -47,19 +47,39 @@ public class PostSchedulerService {
 
         int totalPages = page.getTotalPages();
         List<Future<List<Post>>> futures = new ArrayList<>();
+        CountDownLatch latch = new CountDownLatch(totalPages);
 
-        futures.add(executorService.submit(() -> processBatch(page.getContent())));
+        futures.add(executorService.submit((Callable<List<Post>>) () -> {
+            try {
+                return processBatch(page.getContent());
+            } finally {
+                latch.countDown();
+            }
+        }));
 
         for (int i = 1; i < totalPages; i++) {
             Page<Post> postPage = postRepository.findReadyToPublish(PageRequest.of(i, batchSize));
 
             if (postPage.isEmpty()) continue;
 
-            futures.add(executorService.submit(() -> processBatch(postPage.getContent())));
+            futures.add(executorService.submit((Callable<List<Post>>) () -> {
+                try {
+                    return processBatch(postPage.getContent());
+                } finally {
+                    latch.countDown();
+                }
+            }));
 
             if (futures.size() % batchCount == 0) {
                 saveProcessedBatches(futures);
             }
+        }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Ошибка ожидания завершения задач", e);
         }
 
         saveProcessedBatches(futures);
