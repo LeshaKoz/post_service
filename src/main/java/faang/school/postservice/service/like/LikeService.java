@@ -35,7 +35,8 @@ public class LikeService {
         Post post = postService.getPost(postLikeDto.getPostId());
         likeValidator.validatePostExists(post);
 
-        if (likeRepository.findByPostIdAndUserId(postLikeDto.getPostId(), postLikeDto.getUserId()).isPresent()) {
+        if (likeRepository.findByPostIdAndUserId(postLikeDto.getPostId(),
+                postLikeDto.getUserId()).isPresent()) {
             throw new DataValidationException("User already liked this post.");
         }
 
@@ -60,7 +61,8 @@ public class LikeService {
         Comment comment = commentService.getComment(commentLikeDto.getCommentId());
         likeValidator.validateCommentExists(comment);
 
-        if (likeRepository.findByCommentIdAndUserId(commentLikeDto.getCommentId(), commentLikeDto.getUserId()).isPresent()) {
+        if (likeRepository.findByCommentIdAndUserId(commentLikeDto.getCommentId(),
+                commentLikeDto.getUserId()).isPresent()) {
             throw new DataValidationException("User already liked this comment.");
         }
 

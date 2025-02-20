@@ -38,7 +38,6 @@ public class CommentService {
         return commentMapper.toCreateResponse(savedComment);
     }
 
-
     @Transactional
     public UpdatedCommentResponse updateComment(UpdateCommentRequest updateCommentRequest) {
         Comment comment = getComment(updateCommentRequest.getId());

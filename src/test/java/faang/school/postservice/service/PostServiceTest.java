@@ -250,12 +250,10 @@ public class PostServiceTest {
     @Test
     public void getUserPosts_ShouldCorrectlySort() {
         long userId = 1L;
-
         Post olderPost = new Post();
         olderPost.setPublished(true);
         olderPost.setDeleted(false);
         olderPost.setPublishedAt(LocalDateTime.of(2023, 1, 1, 10, 0));
-
         Post newerPost = new Post();
         newerPost.setPublished(true);
         newerPost.setDeleted(false);
@@ -293,12 +291,10 @@ public class PostServiceTest {
     @Test
     public void getProjectPosts_ShouldCorrectlySort() {
         long projectId = 1L;
-
         Post olderPost = new Post();
         olderPost.setPublished(true);
         olderPost.setDeleted(false);
         olderPost.setPublishedAt(LocalDateTime.of(2022, 5, 5, 10, 0));
-
         Post newerPost = new Post();
         newerPost.setPublished(true);
         newerPost.setDeleted(false);

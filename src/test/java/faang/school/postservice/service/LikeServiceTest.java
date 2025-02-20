@@ -49,7 +49,14 @@ class LikeServiceTest {
     @BeforeEach
     void setup() {
         likeMapper = Mappers.getMapper(LikeMapper.class);
-        likeService = new LikeService(likeRepository, postService, commentService, likeMapper, userServiceClient, likeValidator);
+        likeService = new LikeService(
+                likeRepository,
+                postService,
+                commentService,
+                likeMapper,
+                userServiceClient,
+                likeValidator
+        );
 
         postLikeDto = new PostLikeDto(1L, 1L);
         commentLikeDto = new CommentLikeDto(1L, 1L);

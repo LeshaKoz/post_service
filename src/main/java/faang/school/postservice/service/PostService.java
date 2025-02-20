@@ -80,47 +80,27 @@ public class PostService {
     @Transactional(readOnly = true)
     public Post getPost(Long postId) {
         return postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-    }
-
-    public List<PostResponseDto> getUserDrafts(long userId) {
-        return getExistingPostsSortedByDate(postRepository::findByAuthorId, Post::getCreatedAt, userId, false);
-    }
-
-    public List<PostResponseDto> getProjectDrafts(long projectId) {
-        return getExistingPostsSortedByDate(postRepository::findByProjectId, Post::getCreatedAt, projectId, false);
-    }
-
-    public List<PostResponseDto> getUserPosts(long userId) {
-        return getExistingPostsSortedByDate(postRepository::findByAuthorIdWithLikes, Post::getPublishedAt, userId, true);
-    }
-
-    public List<PostResponseDto> getProjectPosts(long projectId) {
-        return getExistingPostsSortedByDate(postRepository::findByProjectIdWithLikes, Post::getPublishedAt, projectId, true);
-    }
-
-    @Transactional(readOnly = true)
-    public Post getPost(Long postId) {
-        return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
     }
 
-    @Transactional(readOnly = true)
-    public void postAuthorsToBan() {
-        List<Long> authorIdsToBan = findAuthorIdsToBan();
-        log.info("Start publishing authors to ban");
-        for (Long authorIdToBan : authorIdsToBan) {
-            log.debug("Publishing author {} to ban", authorIdToBan);
-            kafkaTemplate.send(banTopic, authorIdToBan);
-        }
-        log.info("Finish publishing authors to ban");
+    public List<PostResponseDto> getUserDrafts(long userId) {
+        return getExistingPostsSortedByDate(postRepository::findByAuthorId,
+                Post::getCreatedAt, userId, false);
     }
 
-    private List<Long> findAuthorIdsToBan() {
-        log.info("Start search authors to ban.");
-        List<Long> authorIdsForBan = postRepository.findAuthorsForBan(rejectedPostsToBan);
-        log.info("End search authors to ban. Found {} authors", authorIdsForBan);
-        return authorIdsForBan;
+    public List<PostResponseDto> getProjectDrafts(long projectId) {
+        return getExistingPostsSortedByDate(postRepository::findByProjectId,
+                Post::getCreatedAt, projectId, false);
+    }
+
+    public List<PostResponseDto> getUserPosts(long userId) {
+        return getExistingPostsSortedByDate(postRepository::findByAuthorIdWithLikes,
+                Post::getPublishedAt, userId, true);
+    }
+
+    public List<PostResponseDto> getProjectPosts(long projectId) {
+        return getExistingPostsSortedByDate(postRepository::findByProjectIdWithLikes,
+                Post::getPublishedAt, projectId, true);
     }
 
     @Transactional(readOnly = true)
@@ -150,10 +130,5 @@ public class PostService {
                 .sorted(Comparator.comparing(fieldToSortBy).reversed())
                 .map(postMapper::toResponseDto)
                 .toList();
-    }
-
-    public Post getPostById(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
     }
 }

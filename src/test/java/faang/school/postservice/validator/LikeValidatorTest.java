@@ -13,14 +13,14 @@ class LikeValidatorTest {
     private final LikeValidator likeValidator = new LikeValidator();
 
     @Test
-    void validateUserExists_ShouldNotThrowException_WhenUserExists() {
+    void validateUserExists_ShouldNotThrowExceptionWhenUserExists() {
         UserDto user = new UserDto(1L, "Test User", "test@example.com");
 
         assertDoesNotThrow(() -> likeValidator.validateUserExists(user));
     }
 
     @Test
-    void validateUserExists_ShouldThrowException_WhenUserIsNull() {
+    void validateUserExists_ShouldThrowExceptionWhenUserIsNull() {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeValidator.validateUserExists(null));
 
@@ -28,7 +28,7 @@ class LikeValidatorTest {
     }
 
     @Test
-    void validateUserExists_ShouldThrowException_WhenUserIdIsNull() {
+    void validateUserExists_ShouldThrowExceptionWhenUserIdIsNull() {
         UserDto user = new UserDto(null, "Test User", "test@example.com");
 
         DataValidationException exception = assertThrows(DataValidationException.class,
@@ -38,14 +38,14 @@ class LikeValidatorTest {
     }
 
     @Test
-    void validatePostExists_ShouldNotThrowException_WhenPostExists() {
+    void validatePostExists_ShouldNotThrowExceptionWhenPostExists() {
         Post post = new Post();
 
         assertDoesNotThrow(() -> likeValidator.validatePostExists(post));
     }
 
     @Test
-    void validatePostExists_ShouldThrowException_WhenPostIsNull() {
+    void validatePostExists_ShouldThrowExceptionWhenPostIsNull() {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeValidator.validatePostExists(null));
 
@@ -53,14 +53,14 @@ class LikeValidatorTest {
     }
 
     @Test
-    void validateCommentExists_ShouldNotThrowException_WhenCommentExists() {
+    void validateCommentExists_ShouldNotThrowExceptionWhenCommentExists() {
         Comment comment = new Comment();
 
         assertDoesNotThrow(() -> likeValidator.validateCommentExists(comment));
     }
 
     @Test
-    void validateCommentExists_ShouldThrowException_WhenCommentIsNull() {
+    void validateCommentExists_ShouldThrowExceptionWhenCommentIsNull() {
         DataValidationException exception = assertThrows(DataValidationException.class,
                 () -> likeValidator.validateCommentExists(null));
 
