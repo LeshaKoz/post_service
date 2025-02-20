@@ -1,21 +1,20 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.builder.CommentCreateMessageBuilder;
 import faang.school.postservice.dto.comment.CommentResponse;
 import faang.school.postservice.dto.comment.CommentUpdateRequest;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.exceptions.FileIsEmptyException;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.event.CommentCreateEvent;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.broker.KafkaProducerCommentService;
 import faang.school.postservice.utils.ImageService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,11 +30,7 @@ public class CommentService {
     private final ValidateService validateService;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final CommentCreateMessageBuilder commentCreateMessageBuilder;
-    private final KafkaTemplate<String, String> kafkaTemplate;
-
-    @Value("${spring.kafka.comment_create_event_topic_name}")
-    private String commentCreateEventTopicName;
+    private final KafkaProducerCommentService kafkaProducerCommentService;
 
     private static final int SMALL_IMAGE_SIZE = 170;
     private static final int LARGE_IMAGE_SIZE = 1080;
@@ -48,7 +43,11 @@ public class CommentService {
 
         Comment comment = commentMapper.toEntity(createCommentRequest);
 
-        kafkaTemplate.send(commentCreateEventTopicName, commentCreateMessageBuilder.build(comment));
+        kafkaProducerCommentService.sendCommentCreateEvent(
+                new CommentCreateEvent(comment.getPost().getId(),
+                        comment.getAuthorId(),
+                        comment.getId(),
+                        comment.getCreatedAt()));
 
         return commentMapper.toCommentResponse(commentRepository.save(comment));
     }
