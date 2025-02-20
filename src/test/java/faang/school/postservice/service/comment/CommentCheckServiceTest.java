@@ -1,12 +1,7 @@
 package faang.school.postservice.service.comment;
 
-import faang.school.postservice.config.comment.ModerationDictionary;
 import faang.school.postservice.model.Comment;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,16 +9,8 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class CommentCheckServiceTest {
-    @Mock
-    private ModerationDictionary dictionary;
-    @InjectMocks
-    private CommentCheckService commentCheckService;
 
     @Test
     void checkComments() {
@@ -40,14 +27,13 @@ class CommentCheckServiceTest {
                 .boxed()
                 .map("слово1%d"::formatted)
                 .toList();
-
-        when(dictionary.getDictionary()).thenReturn(dictionaryList);
+        CommentCheckService commentCheckService = new CommentCheckService(dictionaryList);
 
         LocalDateTime now = LocalDateTime.now();
-        List<Comment> actualList = commentCheckService.checkComments(comments).join();
+        List<Comment> actualList = commentCheckService.checkComments(comments);
         long validCount = actualList.stream()
-                        .filter(Comment::getVerified)
-                                .count();
+                .filter(Comment::getVerified)
+                .count();
         long unValidCount = actualList.stream()
                 .filter(comment1 -> !comment1.getVerified())
                 .count();
@@ -58,7 +44,5 @@ class CommentCheckServiceTest {
         assertTrue(unValidCount > 0);
         assertTrue(actualList.stream()
                 .allMatch(comment -> comment.getVerifiedDate().isAfter(now)));
-
-        verify(dictionary, times(commentCount)).getDictionary();
     }
 }

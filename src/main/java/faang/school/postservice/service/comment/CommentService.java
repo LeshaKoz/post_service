@@ -7,21 +7,28 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.IntStream;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,9 +38,11 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final CommentCheckService commentCheckService;
     private final PostService postService;
+    private final ExecutorService commentExecutorService;
 
+    @Setter
     @Value("${comment.check.size}")
-    private Integer pageSize;
+    private int checkCommentSize;
 
     @Transactional
     public Comment createComment(Comment comment, Long postId) {
@@ -80,23 +89,35 @@ public class CommentService {
         }
     }
 
+    @Async("scheduledCommentExecutorService")
+    @Transactional
     public void checkComments() {
-        if (pageSize == null || pageSize <= 0) {
-            pageSize = 100;
-        }
+        List<Long> notCheckedComments = commentRepository.findIdsByVerifiedDateIsNull();
+        AtomicInteger index = new AtomicInteger(0);
 
-        int pageCount = (int) Math.ceil((double) commentRepository.countByVerifiedDateIsNull()
-                / pageSize);
+        Collection<List<Long>> commentsSubListen = notCheckedComments.stream()
+                .collect(Collectors.groupingBy(i -> index.getAndIncrement() / checkCommentSize))
+                .values();
 
-        List<CompletableFuture<List<Comment>>> commentsFuture = IntStream.range(0, pageCount).boxed()
-                .map(i -> {
-                    Pageable pageable = PageRequest.of(i, pageSize);
-                    List<Comment> notCheckedComments = commentRepository.findAllByVerifiedDateIsNull(pageable).toList();
-                    return commentCheckService.checkComments(notCheckedComments)
-                            .thenApply(commentRepository::saveAll);
-                })
+        List<Callable<List<Comment>>> commentsCallableTask = commentsSubListen.stream()
+                .map(commentRepository::findAllByIdIn)
+                .map(this::getCheckCommentsTask)
                 .toList();
-        CompletableFuture.allOf(commentsFuture.toArray(new CompletableFuture[0])).join();
+
+        try {
+            List<Future<List<Comment>>> listFuture = commentExecutorService.invokeAll(commentsCallableTask);
+
+            listFuture.forEach(future -> {
+                try {
+                    future.get(2, TimeUnit.MINUTES);
+                } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                    log.error("Interrupted while check comment");
+                }
+
+            });
+        } catch (InterruptedException e) {
+            log.error("Interrupted while checking comments");
+        }
     }
 
     private void checkUserIsOwnerComment(Long savedId, Long receivedId) {
@@ -116,5 +137,12 @@ public class CommentService {
         } catch (Exception e) {
             throw new NoSuchElementException(String.format("User with ID#%d not found", authorId));
         }
+    }
+
+    private Callable<List<Comment>> getCheckCommentsTask(List<Comment> commentsList) {
+        return () -> {
+            List<Comment> comments = commentCheckService.checkComments(commentsList);
+            return commentRepository.saveAll(comments);
+        };
     }
 }

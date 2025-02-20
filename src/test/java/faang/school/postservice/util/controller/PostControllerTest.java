@@ -27,6 +27,7 @@ public class PostControllerTest {
         requestPostDto.setContent("Content");
 
         mockMvc.perform(post("/post/create-by-user/{user-id}", userId)
+                        .header("x-user-id", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestPostDto)))
                 .andExpect(status().isCreated());
@@ -39,6 +40,7 @@ public class PostControllerTest {
         requestPostDto.setContent(" ");
 
         mockMvc.perform(post("/post/create-by-user/{user-id}", userId)
+                        .header("x-user-id", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestPostDto)))
                 .andExpect(status().isBadRequest());
@@ -51,6 +53,7 @@ public class PostControllerTest {
         requestPostDto.setContent(null);
 
         mockMvc.perform(post("/post/create-by-user/{user-id}", userId)
+                        .header("x-user-id", userId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestPostDto)))
                 .andExpect(status().isBadRequest());

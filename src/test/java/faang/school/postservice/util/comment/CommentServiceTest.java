@@ -14,19 +14,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,7 +37,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@TestPropertySource(locations = {"classpath:application-test.yaml"})
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
 
@@ -62,8 +58,6 @@ public class CommentServiceTest {
     private Comment comment;
     private Post post;
     private UserDto userDto;
-    @Value("${comment.check.size}")
-    private Integer pageSize;
 
     @BeforeEach
     public void setUp() {
@@ -188,22 +182,44 @@ public class CommentServiceTest {
 
     @Test
     public void checkComments() {
-        List<Comment> comments = IntStream.range(0, 100)
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        CommentService service = new CommentService(userServiceClient, commentRepository, commentCheckService,
+                postService, executorService);
+        service.setCheckCommentSize(100);
+
+        List<Long> commentsIds = LongStream.range(0, 999)
+                .boxed()
+                .toList();
+
+
+        List<Comment> comments = IntStream.range(0, 99)
                 .boxed()
                 .map(i -> Comment.builder()
                         .id(Long.valueOf(i))
                         .content("Content %d".formatted(i))
+                        .verified(false)
+                        .verifiedDate(null)
                         .build())
                 .toList();
-        Page<Comment> page = new PageImpl<>(comments);
-        when(commentRepository.countByVerifiedDateIsNull()).thenReturn(1000L);
-        when(commentRepository.findAllByVerifiedDateIsNull(any())).thenReturn(page);
-        when(commentCheckService.checkComments(any())).thenReturn(CompletableFuture.completedFuture(comments));
-        when(commentRepository.saveAll(any())).thenReturn(comments);
 
-        assertDoesNotThrow(() -> commentService.checkComments());
-        verify(commentRepository, times(1)).countByVerifiedDateIsNull();
-        verify(commentRepository, times(10)).findAllByVerifiedDateIsNull(any());
+        List<Comment> resultComments = IntStream.range(0, 99)
+                .boxed()
+                .map(i -> Comment.builder()
+                        .id(Long.valueOf(i))
+                        .content("Content %d".formatted(i))
+                        .verified(false)
+                        .verifiedDate(LocalDateTime.now())
+                        .build())
+                .toList();
+
+        when(commentRepository.findIdsByVerifiedDateIsNull()).thenReturn(commentsIds);
+        when(commentCheckService.checkComments(any())).thenReturn(resultComments);
+        when(commentRepository.saveAll(any())).thenReturn(resultComments);
+
+        assertDoesNotThrow(service::checkComments);
+
+        verify(commentRepository, times(1)).findIdsByVerifiedDateIsNull();
+        verify(commentRepository, times(10)).findAllByIdIn(any());
         verify(commentRepository, times(10)).saveAll(any());
         verify(commentCheckService, times(10)).checkComments(any());
 
