@@ -1,9 +1,19 @@
 package faang.school.postservice.dto.post;
 
 
-import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
-public record HashtagResponseDto(String name, List<Long> postsIds) implements Serializable {
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public final class HashtagResponseDto {
+
+    private String name;
+
+    private List<Long> postsIds;
 
 }

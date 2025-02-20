@@ -4,13 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @RequiredArgsConstructor
-public class PostResponseDto implements Serializable {
+public class PostResponseDto {
 
     private final Long id;
 
