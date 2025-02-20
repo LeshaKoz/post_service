@@ -24,6 +24,7 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class PostService {
+
     private final PostRepository postRepository;
     private final KafkaTemplate<String, Long> kafkaTemplate;
     private final PostMapper postMapper;
@@ -74,6 +75,12 @@ public class PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + id));
         return postMapper.toResponseDto(post);
+    }
+
+    @Transactional(readOnly = true)
+    public Post getPost(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
     }
 
     public List<PostResponseDto> getUserDrafts(long userId) {
