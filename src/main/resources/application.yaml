@@ -4,10 +4,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/postgres
     username: user
     password: password
-  servlet:
-    multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+#  servlet:
+#    multipart:
+#      max-file-size: 5MB
+#      max-request-size: 5MB
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -93,3 +93,9 @@ resources:
     scheduler:
       cron: "0 0 6 * * ?" # every day
     retention-period: 1M # period: M - month, D - day
+post-service:
+  publish:
+    scheduled:
+      cron: "0 * * * * *"
+    batch-size: 1000
+    thread-amount: 10

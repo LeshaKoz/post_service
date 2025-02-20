@@ -27,6 +27,7 @@ public class PostControllerTest {
         requestPostDto.setContent("Content");
 
         mockMvc.perform(post("/post/create-by-user/{user-id}", userId)
+                        .header("x-user-id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestPostDto)))
                 .andExpect(status().isCreated());
