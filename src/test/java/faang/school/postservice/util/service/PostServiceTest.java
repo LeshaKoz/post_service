@@ -8,6 +8,7 @@ import faang.school.postservice.gateway.UserServiceGateway;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.AIService;
 import faang.school.postservice.service.impl.PostServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,7 @@ import static faang.school.postservice.service.impl.PostServiceImpl.POSTS_MUST_H
 import static faang.school.postservice.service.impl.PostServiceImpl.POST_WITH_ID_ALREADY_PUBLISHED;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -40,6 +42,8 @@ public class PostServiceTest {
     private ProjectServiceGateway projectServiceGateway;
     @Mock
     private PostMapper postMapper;
+    @Mock
+    private AIService aiService;
     @InjectMocks
     private PostServiceImpl postService;
 
@@ -261,4 +265,35 @@ public class PostServiceTest {
                 postService.getNotDeletedPublishedPostsByProjectId(TEST_PROJECT_ID));
     }
 
+    @Test
+    void grammarCorrectionPost_shouldCorrectGrammarAndSavePost() {
+        Post post = new Post();
+        post.setId(TEST_POST_ID);
+        post.setContent("Original content");
+
+        when(aiService.checkGrammarPost(post)).thenReturn("Corrected content");
+
+        postService.grammarCorrectionPost(post);
+
+        assertEquals("Corrected content", post.getContent());
+        assertTrue(post.isAiChecked());
+        verify(postRepository).save(post);
+        verify(aiService).checkGrammarPost(post);
+    }
+
+    @Test
+    void grammarCorrectionPost_shouldLogErrorWhenExceptionOccurs() {
+        Post post = new Post();
+        post.setId(TEST_POST_ID);
+        post.setContent("Original content");
+
+        doThrow(new RuntimeException("AI service error")).when(aiService).checkGrammarPost(post);
+
+        postService.grammarCorrectionPost(post);
+
+        assertEquals("Original content", post.getContent());
+        assertFalse(post.isAiChecked());
+        verify(postRepository, never()).save(post);
+        verify(aiService).checkGrammarPost(post);
+    }
 }

@@ -26,6 +26,10 @@ public class PostCorrecter {
     @SchedulerLock(name = "postCorrecterJob")
     public void postCorrecterJob() {
         log.info("Start post correcter job");
+        if (limit == 0) {
+            log.info("Limit is 0, skipping job");
+            return;
+        }
         List<Post> notPublishedPosts = postRepository.findPostsByPublishedIsFalseAndAiCheckedIsFalse(PageRequest.of(0, limit));
         log.info("Found {} posts", notPublishedPosts.size());
         notPublishedPosts.forEach(postService::grammarCorrectionPost);
