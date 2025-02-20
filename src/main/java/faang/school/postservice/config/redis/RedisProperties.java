@@ -12,7 +12,4 @@ public class RedisProperties {
 
     @Value("${spring.data.redis.host}")
     private String host;
-
-//    @Value("${spring.data.redis.channels.users-ban-channel.name}")
-//    private String userBanChannelName;
 }

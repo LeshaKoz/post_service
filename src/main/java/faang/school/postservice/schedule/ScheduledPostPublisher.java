@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 public class ScheduledPostPublisher {
 
     private final PostService postService;
+
     @Scheduled(fixedDelay = 60000)
     public void publishScheduledPosts() {
         postService.publishScheduledPosts();

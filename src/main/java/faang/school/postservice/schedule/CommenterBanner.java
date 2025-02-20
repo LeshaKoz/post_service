@@ -14,8 +14,6 @@ public class CommenterBanner {
 
     @Scheduled(cron = "${comment.schedule.user-ban}")
     public void banCommenters() {
-        /////////////////////////////////////////////////////////////////
-        System.out.println(Thread.currentThread().getName());
         commentService.publishUsersToBanEvent();
     }
 }
