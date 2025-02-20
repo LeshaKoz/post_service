@@ -78,9 +78,7 @@ public class AlbumService {
     }
 
     public AlbumReadDto editAlbum(AlbumEditDto dto) {
-        if (!isUserInteractOwnAlbum(dto.getAuthorId())) {
-            throw new BusinessException("Изменение чужого альбома невозможно");
-        }
+        validateUserInteractOwnAlbum(dto.getAuthorId());
 
         Album album = getAlbumById(dto.getId());
         albumMapper.update(album, dto);
@@ -89,11 +87,21 @@ public class AlbumService {
     }
 
     public void deleteAlbum(long albumId) {
+        validateAlbumExists(albumId);
+
+        albumRepository.deleteById(albumId);
+    }
+
+    private void validateUserInteractOwnAlbum(long userId) {
+        if (!isUserInteractOwnAlbum(userId)) {
+            throw new BusinessException("Изменение чужого альбома невозможно");
+        }
+    }
+
+    private void validateAlbumExists(long albumId) {
         if (!albumRepository.existsById(albumId)) {
             throw new EntityNotFoundException(String.format("Альбом с ID %d не найден", albumId));
         }
-
-        albumRepository.deleteById(albumId);
     }
 
     private void validateUserExists(long authorId) {
