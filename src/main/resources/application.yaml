@@ -35,9 +35,22 @@ logging:
 user-service:
   host: localhost
   port: 8080
+
 project-service:
   host: localhost
   port: 8082
+
 payment-service:
   host: localhost
   port: 9080
+
+post-service:
+  thread-pool-size: 1
+
+spell-service:
+  url: https://speller.yandex.net/services/spellservice.json
+  cron: "0 0 1 * * *"
+  retry:
+    attempts: 3
+    delay: 1
+    multiplier: 1
