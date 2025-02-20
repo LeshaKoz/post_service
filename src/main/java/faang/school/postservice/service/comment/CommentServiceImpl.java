@@ -136,7 +136,6 @@ public class CommentServiceImpl implements CommentService {
                 .toList();
     }
 
-
     private Comment getById(Long id) {
         return commentRepository.findById(id)
                 .orElseThrow(

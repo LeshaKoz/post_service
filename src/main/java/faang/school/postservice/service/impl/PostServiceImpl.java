@@ -11,22 +11,29 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
+    @Value("${post_service.batch_size}")
+    private int postBatchSize;
 
     private final PostRepository postRepository;
     private final PostServiceValidator postServiceValidator;
     private final PostMapper postMapper;
     private final List<PostSpecificationFilter> postSpecificationFilters;
+    private final ExecutorService executorService;
 
     @Override
     public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
@@ -46,6 +53,26 @@ public class PostServiceImpl implements PostService {
         Post publishedPost = postRepository.save(postToPublish);
         log.info("Draft post is published, id = {}", publishedPost.getId());
         return postMapper.toPostResponseDto(publishedPost);
+    }
+
+    @Override
+    public void publishScheduledPosts() {
+        PostFilterDto postFilterDto = PostFilterDto.builder()
+                .isPublished(false)
+                .isDeleted(false)
+                .shouldBePublishedBefore(LocalDateTime.now())
+                .build();
+
+        List<Post> scheduledPosts = findAllPostsByFilter(postFilterDto);
+        List<List<Post>> postBatches = ListUtils.partition(scheduledPosts, postBatchSize);
+        postBatches.stream()
+                .map(this::preparePostList)
+                .map(postsBatch -> CompletableFuture.runAsync(() -> {
+                    postRepository.saveAll(postsBatch);
+                }, executorService).exceptionally(error -> {
+                    log.error("Error processing scheduled posts", error);
+                    throw new RuntimeException("Failed to process scheduled posts", error);
+                })).forEach(CompletableFuture::join);
     }
 
     @Override
@@ -73,8 +100,24 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostResponseDto> findAllByFilter(PostFilterDto filter) {
+        return postMapper.toPostResponseDtos(findAllPostsByFilter(filter));
+    }
+
+    private List<Post> preparePostList(List<Post> posts) {
+        return posts.stream()
+                .map(this::preparePostToPublish)
+                .toList();
+    }
+
+    private Post preparePostToPublish(Post post) {
+        post.setPublished(true);
+        post.setPublishedAt(LocalDateTime.now());
+        return post;
+    }
+
+    private List<Post> findAllPostsByFilter(PostFilterDto filter) {
         Specification<Post> specification = getPostSpecification(filter);
-        return postMapper.toPostResponseDtos(postRepository.findAll(specification));
+        return postRepository.findAll(specification);
     }
 
     private Post getPostById(Long postId) {

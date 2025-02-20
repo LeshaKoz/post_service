@@ -36,9 +36,17 @@ spring:
 
 server:
   port: 8081
+  servlet:
+    context-path: /api/v1
 
   tomcat:
     max-swallow-size: 5MB
+
+thread_pool:
+  max_threads: 10
+
+post_service:
+  batch_size: 1000
 
 logging:
   level:
@@ -65,8 +73,9 @@ image:
   largeImageSize: 1080
 
 comment:
-  verify:
-    cron: "* */10 * * * *" # every 10 minutes
+  schedule:
+    verify: "* */10 * * * * *"
+    user-ban: "* */50 * * * * *"
   batchSize: 100
   thread-pool-size: 4
   word-split-regex: "(?<=\\p{L})(?=\\p{P})|(?<=\\p{P})(?=\\p{L})|\\s+"

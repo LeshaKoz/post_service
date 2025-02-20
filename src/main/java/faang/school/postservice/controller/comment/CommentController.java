@@ -67,7 +67,7 @@ public class CommentController {
     public CommentResponseDto updateComment(
             @Parameter(description = "ID of the comment to update", required = true)
             @NotNull @PathVariable Long commentId,
-            @Valid @RequestBody CommentUpdateDto commentUpdateDto) {
+                              @Valid @RequestBody CommentUpdateDto commentUpdateDto) {
         return commentService.updateComment(commentId, commentUpdateDto);
     }
 
