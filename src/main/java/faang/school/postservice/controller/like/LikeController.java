@@ -14,12 +14,12 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/posts")
+@RequestMapping("/likes")
 public class LikeController {
 
     private final LikeService likeService;
 
-    @GetMapping("/posts/{postId}/users")
+    @GetMapping("/likes/{postId}/users")
     public List<UserDto> getUsersWhoLikedPost(@PathVariable Long postId) {
         log.debug("Received request to get users who liked post with id: {}", postId);
         List<UserDto> users = likeService.getUsersWhoLikedPost(postId);
