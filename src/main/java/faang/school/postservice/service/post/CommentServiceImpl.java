@@ -1,9 +1,13 @@
 package faang.school.postservice.service.post;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.event.CommentEvent;
 import faang.school.postservice.dto.post.CommentDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.KafkaProduceException;
 import faang.school.postservice.exception.comment.AccessDeniedCommentException;
+import faang.school.postservice.kafka.KafkaProducer;
 import faang.school.postservice.mapper.post.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.post.Post;
@@ -27,6 +31,7 @@ public class CommentServiceImpl implements CommentService {
     private final PostRepository postRepository;
     private final CommentMapper commentMapper;
     private final UserServiceClient userServiceClient;
+    private final KafkaProducer<CommentEvent> kafkaProducer;
 
     @Override
     public CommentDto createComment(CommentDto dto) {
@@ -36,7 +41,9 @@ public class CommentServiceImpl implements CommentService {
             throw new EntityNotFoundException(String.format("Author with id = %d not found", dto.authorId()));
         }
         log.info("Get user with id = {} from user_service", author.id());
-        return commentMapper.toDto(commentRepository.save(buildComment(dto)));
+        Comment createdComment = commentRepository.save(buildComment(dto));
+        sendEventToKafka(new CommentEvent(dto.postId(), dto.authorId(), createdComment.getId(), LocalDateTime.now()));
+        return commentMapper.toDto(createdComment);
     }
 
     @Override
@@ -78,5 +85,14 @@ public class CommentServiceImpl implements CommentService {
                 .createdAt(LocalDateTime.now())
                 .content(dto.content())
                 .build();
+    }
+
+    private void sendEventToKafka(CommentEvent commentEvent) {
+        try {
+            kafkaProducer.produce(commentEvent);
+        } catch (JsonProcessingException e) {
+            throw new KafkaProduceException(
+                    String.format("Failed kafka produce comment event. Comment id = %d", commentEvent.commentId()));
+        }
     }
 }

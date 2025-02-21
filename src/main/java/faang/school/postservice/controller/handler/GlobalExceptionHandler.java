@@ -1,6 +1,7 @@
 package faang.school.postservice.controller.handler;
 
 import faang.school.postservice.dto.error.ErrorModel;
+import faang.school.postservice.exception.KafkaProduceException;
 import faang.school.postservice.exception.album.AlbumAccessDeniedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,13 @@ public class GlobalExceptionHandler {
     public ErrorModel handleArgumentException(IllegalArgumentException ex) {
         log.error("Illegal argument exception", ex);
         return createError(ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+    }
+
+    @ExceptionHandler(KafkaProduceException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ErrorModel handleKafkaProduceException(KafkaProduceException ex) {
+        log.error("Kafka produce exception", ex);
+        return createError(ex.getMessage(), HttpStatus.BAD_GATEWAY.value());
     }
 
     @ExceptionHandler(Exception.class)
