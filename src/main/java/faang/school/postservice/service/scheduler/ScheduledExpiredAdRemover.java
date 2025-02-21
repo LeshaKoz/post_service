@@ -15,8 +15,8 @@ public class ScheduledExpiredAdRemover {
 
     @Scheduled(cron = "${expired.ad.remover.cron}")
     public void removeExpiredAds() {
-        log.info("Запуск удаления просроченной рекламы по расписанию");
+        log.info("Starting the removal of expired ads on a schedule");
         adService.deleteExpiredAds();
-        log.info("Завершено удаление просроченной рекламы");
+        log.info("Expired ad removal completed");
     }
 }
