@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ActiveProfiles("test")
@@ -21,7 +23,8 @@ public class ScheduledPostPublisherIntegrationTest extends BaseContextTest {
 
     @Test
     void testPostPublisherSchedule() {
+        doNothing().when(postService).publishScheduledPosts();
         scheduledPostPublisher.postPublisherSchedule();
-        verify(postService).publishScheduledPosts();
+        verify(postService, times(1)).publishScheduledPosts();
     }
 }

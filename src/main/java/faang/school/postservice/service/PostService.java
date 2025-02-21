@@ -16,7 +16,9 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
@@ -131,12 +133,15 @@ public class PostService {
 
         List<List<Post>> postsToPublishPartitioned = ListUtils.partition(postsToPublish, 1000);
         try {
-            List<CompletableFuture<Void>> futures = postsToPublishPartitioned.stream()
-                    .map(chunk -> CompletableFuture.runAsync(()
-                            -> publishChunkOfPosts(chunk), publishingThreadPool))
+            List<Callable<Void>> tasks = postsToPublishPartitioned.stream()
+                    .map(chunk -> (Callable<Void>) () -> {
+                            publishChunkOfPosts(chunk);
+                            return null;
+                    })
                     .toList();
 
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            ExecutorService executorService = publishingThreadPool.getThreadPoolExecutor();
+            executorService.invokeAll(tasks);
         } catch (Exception e) {
             log.error("Publishing posts chunk failed!", e);
         }
