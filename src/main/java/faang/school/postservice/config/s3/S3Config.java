@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.net.URI;
 
-@Configuration
+//@Configuration
 public class S3Config {
     @Value("${spring.services.s3.endpoint}")
     private String endpoint;
