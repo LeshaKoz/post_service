@@ -53,9 +53,9 @@ moderation:
   banned-words-path: "src/main/resources/moderation/banned-words.json"
 
 api:
-    title: "Post service API"
-    version: "0.1.0.1"
-    description: "Post service gives the ability to write text posts to share your thoughts, knowledge and information with other users."
+  title: "Post service API"
+  version: "0.1.0.1"
+  description: "Post service gives the ability to write text posts to share your thoughts, knowledge and information with other users."
 
 aws:
   s3:
@@ -86,3 +86,10 @@ file-controller:
 
 schedule:
   correct-posts: "0 0 12 * * ?"
+
+app:
+  speller:
+    url: "https://speller.yandex.net/services/spellservice.json/checkText"
+    retry:
+      maxAttempts: 5
+      backoffDelay: 1000

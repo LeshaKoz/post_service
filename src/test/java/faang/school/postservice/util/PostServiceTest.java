@@ -5,7 +5,9 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.InternalServices;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.SpellCheckerService;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,6 +44,9 @@ public class PostServiceTest {
     @Mock
     private InternalServices internalServices;
 
+    @Mock
+    private SpellCheckerService spellCheckerService;
+
     @InjectMocks
     private PostService postService;
 
@@ -49,6 +55,9 @@ public class PostServiceTest {
     private static Post originalPost;
     private static Post post1;
     private static Post post2;
+    private static Post post3;
+    private static Post post4;
+    private static Post post5;
 
     @BeforeAll
     public static void SetUp() {
@@ -79,6 +88,24 @@ public class PostServiceTest {
         post2.setDeleted(false);
         post2.setPublished(false);
         post2.setCreatedAt(LocalDateTime.now());
+    }
+
+    @BeforeEach
+    void setUp() {
+        post3 = new Post();
+        post3.setId(1L);
+        post3.setContent("helo world");
+        post3.setPublished(false);
+
+        post4 = new Post();
+        post4.setId(2L);
+        post4.setContent("correct text");
+        post4.setPublished(false);
+
+        post5 = new Post();
+        post5.setId(3L);
+        post5.setContent("another helo");
+        post5.setPublished(false);
     }
 
     @Test
@@ -262,50 +289,46 @@ public class PostServiceTest {
     }
 
     @Test
-    void testCorrectPosts_WithUnpublishedPosts() {
-        Post post3 = Post.builder()
-                .id(1L)
-                .content("Helo world")
-                .published(false)
-                .build();
-
-        Post post4 = Post.builder()
-                .id(2L)
-                .content("This is a tst")
-                .published(false)
-                .build();
-
-        List<Post> unpublishedPosts = List.of(post3, post4);
+    void testCorrectPosts_WithCorrections() {
+        List<Post> unpublishedPosts = List.of(post3, post4, post5);
 
         when(postRepository.findByPublishedFalse()).thenReturn(unpublishedPosts);
+        when(spellCheckerService.correctTextWithYandexSpeller("helo world")).thenReturn("hello world");
+        when(spellCheckerService.correctTextWithYandexSpeller("correct text")).thenReturn("correct text");
+        when(spellCheckerService.correctTextWithYandexSpeller("another helo")).thenReturn("another hello");
 
         postService.correctPosts();
 
-        assertEquals("Hello world", post3.getContent());
-        assertEquals("This is a test", post4.getContent());
+        verify(postRepository, times(1)).findByPublishedFalse();
+        verify(spellCheckerService, times(5)).correctTextWithYandexSpeller(anyString());
 
-        verify(postRepository, times(1)).save(post3);
-        verify(postRepository, times(1)).save(post4);
+        verify(postRepository, times(2)).save(any(Post.class));
+        verify(postRepository, never()).save(post4);
     }
 
     @Test
-    void testCorrectPosts_NoCorrectionNeeded() {
-        Post post5 = Post.builder()
-                .id(1L)
-                .content("Correct text")
-                .published(false)
-                .build();
-
-        List<Post> unpublishedPosts = List.of(post5);
+    void testCorrectPosts_NoCorrections() {
+        List<Post> unpublishedPosts = List.of(post4);
 
         when(postRepository.findByPublishedFalse()).thenReturn(unpublishedPosts);
+        when(spellCheckerService.correctTextWithYandexSpeller("correct text")).thenReturn("correct text");
 
         postService.correctPosts();
 
-        assertEquals("Correct text", post5.getContent());
+        verify(postRepository, times(1)).findByPublishedFalse();
+        verify(spellCheckerService, times(1)).correctTextWithYandexSpeller("correct text");
 
-        verify(postRepository, never()).save(post5);
+        verify(postRepository, never()).save(any(Post.class));
     }
 
+    @Test
+    void testCorrectPosts_EmptyList() {
+        when(postRepository.findByPublishedFalse()).thenReturn(List.of());
 
+        postService.correctPosts();
+
+        verify(postRepository, times(1)).findByPublishedFalse();
+        verify(spellCheckerService, never()).correctTextWithYandexSpeller(anyString());
+        verify(postRepository, never()).save(any(Post.class));
+    }
 }

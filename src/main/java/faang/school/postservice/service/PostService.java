@@ -2,14 +2,10 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.model.SpellCheckResponse;
 import faang.school.postservice.repository.PostRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
@@ -22,7 +18,7 @@ import java.util.Objects;
 public class PostService {
     private final PostRepository postRepository;
     private final InternalServices internalServices;
-    private final RestTemplate restTemplate;
+    private final SpellCheckerService spellCheckerService;
 
     @Transactional
     public Post createDraft(Post post) {
@@ -106,35 +102,14 @@ public class PostService {
 
     @Transactional
     public void correctPosts() {
-        List<Post> unpublishedPosts = postRepository.findByPublishedFalse();
-
-        for (Post post : unpublishedPosts) {
-            String correctedText = correctTextWithYandexSpeller(post.getContent());
-
-            if (!correctedText.equals(post.getContent())) {
-                post.setContent(correctedText);
-                postRepository.save(post);
-            }
-        }
-    }
-
-    @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    private String correctTextWithYandexSpeller(String text) {
-        String url = "https://speller.yandex.net/services/spellservice.json/checkText?text=" + text;
-        SpellCheckResponse[] responses = restTemplate.getForObject(url, SpellCheckResponse[].class);
-        return applyCorrection(text, responses);
-    }
-
-    private String applyCorrection(String text, SpellCheckResponse[] responses) {
-        if (responses.length == 0) {
-            return text;
-        }
-        String replace = "";
-        for (SpellCheckResponse response : responses) {
-            replace = text.replace(text.substring(response.getPos(), response.getPos() + response.getLen()),
-                    response.getS().get(0));
-            text = replace;
-        }
-        return text;
+        postRepository.findByPublishedFalse().stream()
+                .filter(post -> {
+                    String correctedText = spellCheckerService.correctTextWithYandexSpeller(post.getContent());
+                    return !correctedText.equals(post.getContent());
+                })
+                .forEach(post -> {
+                    post.setContent(spellCheckerService.correctTextWithYandexSpeller(post.getContent()));
+                    postRepository.save(post);
+                });
     }
 }
