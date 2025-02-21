@@ -27,6 +27,8 @@ spring:
         name: notification_like_topic
         num-partitions: 1
         replication-factor: 1
+      notification-comment-topic:
+        name: notifications_comment_topic
 
   data:
     redis:
