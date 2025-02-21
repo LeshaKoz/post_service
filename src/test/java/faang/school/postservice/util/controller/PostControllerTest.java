@@ -27,7 +27,6 @@ public class PostControllerTest {
         requestPostDto.setContent("Content");
 
         mockMvc.perform(post("/post/create-by-user/{user-id}", userId)
-                        .header("x-user-id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("x-user-id", userId.toString())
                         .content(objectMapper.writeValueAsString(requestPostDto)))

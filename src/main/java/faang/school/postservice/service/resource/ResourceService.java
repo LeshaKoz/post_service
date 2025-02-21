@@ -97,7 +97,7 @@ public class ResourceService {
 
         expiredDeletedResources
                 .forEach(resource -> {
-                    s3Service.deletedFile(resource.getKey());
+                    s3Service.deleteFile(resource.getKey());
                     resourceRepository.delete(resource);
                 });
     }
