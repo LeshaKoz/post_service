@@ -13,7 +13,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
@@ -33,9 +33,6 @@ spring:
     bootstrap:
       server:
         address: localhost:9092
-    topics:
-      analytic-topics:
-        add-like-topic-name: "user-like-post"
 
   services:
     s3:

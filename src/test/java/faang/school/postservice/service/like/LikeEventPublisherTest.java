@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,18 +40,18 @@ class LikeEventPublisherTest {
                 .likeTime(LocalDateTime.of(2025, 2, 11, 14, 45))
                 .build();
 
-        when(kafkaTemplate.send(anyString(), anyString(), any())).thenReturn(future);
+        when(kafkaTemplate.send("likes", event)).thenReturn(future);
         when(future.join()).thenReturn(sendResult);
         when(sendResult.getProducerRecord()).thenReturn(producerRecord);
         when(producerRecord.topic()).thenReturn("likes");
         when(producerRecord.value()).thenReturn(event);
 
-        SendResult<String, Object> result = likeEventPublisher.publish(event);
+        SendResult<String, LikeEvent> result = likeEventPublisher.publish(event);
 
         assertEquals(event, result.getProducerRecord().value());
         assertEquals("likes", result.getProducerRecord().topic());
 
-        verify(kafkaTemplate, times(1)).send(anyString(), anyString(), any());
+        verify(kafkaTemplate, times(1)).send("likes", event);
         verify(future, times(1)).join();
         verify(sendResult, times(2)).getProducerRecord();
         verify(producerRecord, times(1)).topic();
