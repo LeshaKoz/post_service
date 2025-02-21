@@ -20,8 +20,4 @@ public interface AdRepository extends JpaRepository<Ad, Long> {
 
     @Query("SELECT a FROM Ad a WHERE a.endDate < CURRENT_TIMESTAMP OR a.appearancesLeft = 0")
     List<Ad> findExpiredAds();
-
-    @Modifying
-    @Query("DELETE FROM Ad a WHERE a.id IN :ids")
-    void deleteAllByIds(@Param("ids") List<Long> ids);
 }

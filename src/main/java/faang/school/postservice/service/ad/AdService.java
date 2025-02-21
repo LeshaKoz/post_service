@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -33,29 +32,28 @@ public class AdService implements DisposableBean {
 
     @Transactional
     public void deleteExpiredAds() {
-        LocalDateTime now = LocalDateTime.now();
         List<Ad> expiredAds = adRepository.findExpiredAds();
 
         if (expiredAds.isEmpty()) {
-            log.info("Нет просроченных объявлений для удаления");
+            log.info("There are no expired ads to delete");
             return;
         }
 
         List<Long> expiredAdIds = expiredAds.stream()
                 .map(Ad::getId)
-                .collect(Collectors.toList());
+                .toList();
 
         List<List<Long>> partitions = partitionList(expiredAdIds, batchSize);
 
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (List<Long> partition : partitions) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                adRepository.deleteAllByIds(partition);
+                adRepository.deleteAllById(partition);
             }, executorService);
             futures.add(future);
         }
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-        log.info("Удаление просроченных объявлений завершено");
+        log.info("The removal of expired ads has been completed");
     }
 
     private List<List<Long>> partitionList(List<Long> expiredAds, int batchSize) {
