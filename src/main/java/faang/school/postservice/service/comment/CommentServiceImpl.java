@@ -30,7 +30,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentDto createComment(CommentDto commentDto) {
-        //validator.validateCreateComment(commentDto);
+        validator.validateCreateComment(commentDto);
 
         Post post = postService.findPostById(commentDto.getPostId())
                 .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(commentDto.getPostId())));
