@@ -119,13 +119,14 @@ public class FileService {
 
     private void updatePostWithResources(Long postId, List<String> fileKeys) {
         Post postToUpdate = postService.get(postId);
-        List<Resource> resources = postToUpdate.getResources();
+        List<Resource> resources = new ArrayList<>(postToUpdate.getResources());
         fileKeys.forEach(key -> {
             resources.add(Resource.builder()
                     .key(key)
                     .post(postToUpdate)
                     .build());
         });
+        postToUpdate.setResources(resources);
         postService.update(postToUpdate);
     }
 

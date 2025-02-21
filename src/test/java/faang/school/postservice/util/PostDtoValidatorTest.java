@@ -5,6 +5,7 @@ import faang.school.postservice.validation.PostDtoValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,11 +28,11 @@ public class PostDtoValidatorTest {
     @InjectMocks
     private PostDtoValidator validator;
 
-    private static PostDto postDto;
+    private PostDto postDto;
 
-    @BeforeAll
-    public static void setUp() {
-        postDto = new PostDto(1L, "qwe", null, null);
+    @BeforeEach
+    public void setUp() {
+        postDto = new PostDto(1L, "qwe", null, null, null);
     }
 
     @Test

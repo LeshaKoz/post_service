@@ -4,8 +4,10 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,19 +16,20 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostService {
     private final PostRepository postRepository;
-
+    private final InternalServices internalServices;
+    private final ThreadPoolTaskExecutor publishingThreadPool;
     private final AsyncModerationService asyncModerationService;
     @Value("${moderation.threadSize}")
     private int threadSize;
-
-    private final InternalServices internalServices;
-
 
     @Transactional
     public Post createDraft(Post post) {
@@ -128,5 +131,35 @@ public class PostService {
 
     public List<Post> findPostsByResourceKeys(List<String> resourceKeys) {
         return postRepository.findPostsByResourceKeys(resourceKeys);
+    }
+
+    @Transactional
+    public void publishScheduledPosts() {
+        List<Post> postsToPublish = postRepository.findReadyToPublish();
+
+        List<List<Post>> postsToPublishPartitioned = ListUtils.partition(postsToPublish, 1000);
+        try {
+            List<Callable<Void>> tasks = postsToPublishPartitioned.stream()
+                    .map(chunk -> (Callable<Void>) () -> {
+                        publishChunkOfPosts(chunk);
+                        return null;
+                    })
+                    .toList();
+
+            ExecutorService executorService = publishingThreadPool.getThreadPoolExecutor();
+            executorService.invokeAll(tasks);
+        } catch (Exception e) {
+            log.error("Publishing posts chunk failed!", e);
+        }
+        CompletableFuture.completedFuture(null);
+    }
+
+    private void publishChunkOfPosts(List<Post> postsToPublish) {
+        postsToPublish.forEach(post -> {
+            post.setPublished(true);
+            post.setPublishedAt(LocalDateTime.now());
+        });
+
+        postRepository.saveAll(postsToPublish);
     }
 }
