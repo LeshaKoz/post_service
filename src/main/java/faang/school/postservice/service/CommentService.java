@@ -38,11 +38,12 @@ public class CommentService {
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
         Post post = postService.getPost(createCommentRequest.getPostId());
         Comment comment = commentMapper.toEntity(createCommentRequest);
-        //commentValidator.verificationCreatingData(comment);
-
+        commentValidator.verificationCreatingData(comment);
         comment.setPost(post);
         Comment savedComment = commentRepository.save(comment);
-        CommentEvent event = commentMapper.toEvent(savedComment);
+        CommentEvent event = commentMapper.toEvent(comment);
+        event.setAuthorPostId(post.getAuthorId());
+        event.setPostId(post.getId());
         kafkaTemplate.send(commentTopic, event);
         return commentMapper.toCreateResponse(savedComment);
 
