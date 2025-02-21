@@ -4,9 +4,9 @@ import lombok.Data;
 
 @Data
 public class CommentEvent {
-    private Long authorCommentId;
-    private Long authorPostId;
+    private Long authorCommentId;//
+    private Long authorPostId;//
     private Long postId;
-    private Long content;
+    private String content;
     private Long commentId;
 }

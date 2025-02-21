@@ -26,6 +26,8 @@ public interface CommentMapper {
     @Mapping(source = "post.id", target = "postId")
     UpdatedCommentResponse toUpdateResponse(Comment comment);
 
+    @Mapping(source = "authorId", target = "authorCommentId")
+    @Mapping(source = "id", target = "commentId")
     CommentEvent toEvent(Comment comment);
 
 
