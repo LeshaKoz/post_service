@@ -1,8 +1,9 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.broker.MessageBuilder;
+import faang.school.postservice.broker.KafkaProducerLikeService;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentRequest;
+import faang.school.postservice.dto.like.LikePostEvent;
 import faang.school.postservice.dto.like.LikePostRequest;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exceptions.CommentWasNotFoundException;
@@ -15,7 +16,6 @@ import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,8 +25,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.messaging.Message;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -54,11 +52,7 @@ public class LikeServiceTest {
     @Mock
     private CommentRepository commentRepository;
     @Mock
-    private NewTopic likePostEventTopic;
-    @Mock
-    private MessageBuilder messageBuilder;
-    @Mock
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaProducerLikeService kafkaProducer;
     @InjectMocks
     private LikeService likeService;
 
@@ -104,8 +98,6 @@ public class LikeServiceTest {
     public void toggleLikePost_SuccessLike() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         when(userServiceClient.getUser(1L)).thenReturn(userDto);
-        when(likePostEventTopic.name()).thenReturn("LIKE_POST_TEST_TOPIC");
-        when(messageBuilder.generateLikeEventMessage(any(), any(), any())).thenReturn("message");
 
         likeService.toggleLikePost(new LikePostRequest(1L, 1L));
 
@@ -113,7 +105,7 @@ public class LikeServiceTest {
         verify(likeRepository).save(captor.capture());
         Like newLike = captor.getValue();
 
-        verify(kafkaTemplate, atLeastOnce()).send(any(), any());
+        verify(kafkaProducer).sendLikePostEvent(any(LikePostEvent.class));
 
         Assertions.assertTrue(newLike.getUserId() == userDto.id());
         Assertions.assertTrue(newLike.getPost().getId() == post.getId());

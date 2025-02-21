@@ -1,8 +1,9 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.broker.MessageBuilder;
+import faang.school.postservice.broker.KafkaProducerLikeService;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentRequest;
+import faang.school.postservice.dto.like.LikePostEvent;
 import faang.school.postservice.dto.like.LikePostRequest;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exceptions.CommentWasNotFoundException;
@@ -17,8 +18,6 @@ import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,10 +35,7 @@ public class LikeService {
     private final CommentRepository commentRepository;
     private final PostService postService;
     private final CommentService commentService;
-    private final MessageBuilder messageBuilder;
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final NewTopic likePostEventTopic;
-
+    private final KafkaProducerLikeService kafkaProducer;
 
     @Transactional
     public void toggleLikePost(LikePostRequest request) {
@@ -62,9 +58,8 @@ public class LikeService {
                     .build();
             post.getLikes().add(newLike);
             likeRepository.save(newLike);
-
-            kafkaTemplate.send(likePostEventTopic.name(),
-                    messageBuilder.generateLikeEventMessage(post.getAuthorId(), userDto.id(), post.getId()));
+            kafkaProducer.sendLikePostEvent(
+                    new LikePostEvent(post.getAuthorId(), userDto.id(), post.getId()));
         }
     }
 
