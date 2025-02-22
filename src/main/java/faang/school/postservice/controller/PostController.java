@@ -34,7 +34,7 @@ public class PostController {
 
     @PostMapping
     @Operation(summary = "Создание черновика поста, может создать либо проект, либо пользователь")
-    public PostReadDto createPostDraft(@Validated @RequestBody PostCreateDto dto ){
+    public PostReadDto createPostDraft(@Validated @RequestBody PostCreateDto dto) {
         return postService.createPostDraft(dto);
     }
 
