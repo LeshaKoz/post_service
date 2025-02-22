@@ -5,24 +5,28 @@ import com.json.student.DtoBanShema;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.event.PostEventDto;
+import faang.school.postservice.dto.post.PostDraftCreateDto;
+import faang.school.postservice.dto.post.PostDraftResponseDto;
+import faang.school.postservice.dto.post.PostDraftWithFilesCreateDto;
+import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.user.UserMapper;
+import faang.school.postservice.model.entity.Post;
+import faang.school.postservice.model.entity.Resource;
 import faang.school.postservice.model.redis.PostCache;
 import faang.school.postservice.model.redis.UserCache;
 import faang.school.postservice.producer.PostEventProducer;
 import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
-import faang.school.postservice.dto.post.*;
-import faang.school.postservice.mapper.post.PostMapper;
-import faang.school.postservice.model.entity.Post;
-import faang.school.postservice.model.entity.Resource;
 import faang.school.postservice.repository.entity.PostRepository;
 import faang.school.postservice.repository.redis.PostCacheRepository;
 import faang.school.postservice.repository.redis.UserCacheRepository;
 import faang.school.postservice.service.album.AlbumService;
 import faang.school.postservice.service.amazons3.Amazons3ServiceImpl;
 import faang.school.postservice.service.amazons3.processing.KeyKeeper;
+import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.sheduler.postcorrector.ginger.GingerCorrector;
-import faang.school.postservice.service.resource.ResourceServiceImpl;
 import faang.school.postservice.validator.dto.project.ProjectDtoValidator;
 import faang.school.postservice.validator.dto.user.UserDtoValidator;
 import faang.school.postservice.validator.file.FileValidator;
@@ -31,25 +35,23 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import java.util.LinkedHashSet;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.apache.commons.collections4.ListUtils;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.multipart.MultipartFile;
 
 @Setter
 @Slf4j
@@ -63,7 +65,7 @@ public class PostService {
   private final UserServiceClient userService;
   private final ProjectServiceClient projectService;
   private final AlbumService albumService;
-  private final ResourceServiceImpl resourceServiceImpl;
+  private final ResourceService resourceService;
   private final UserDtoValidator userDtoValidator;
   private final ProjectDtoValidator projectDtoValidator;
   private final PostIdValidator postIdValidator;
@@ -81,9 +83,8 @@ public class PostService {
   @Value("${size.not-verified-posts-for-users}")
   private int sizeNotVerifiedPostsForUsers;
 
-  public LinkedHashSet<Long> getUserFeed(Long userId, int feedSize) {
-    return new LinkedHashSet<>(postRepository.getUserFeedPostsIds(userId, feedSize));
-  }
+  @Value("${size.batch}")
+  private int batchSize;
 
   @Transactional
   public PostDraftResponseDto createDraftPost(@NotNull @Valid PostDraftCreateDto dto) {
@@ -94,7 +95,7 @@ public class PostService {
       postEntity.setAlbums(albumService.getAlbumsByIds(dto.getAlbumsId()));
     }
     if (dto.getResourcesId() != null) {
-      postEntity.setResources(resourceServiceImpl.getResourcesByIds(dto.getResourcesId()));
+      postEntity.setResources(resourceService.getResourcesByIds(dto.getResourcesId()));
     }
     return postMapper.toDraftDtoFromPost(postRepository.save(postEntity));
   }
@@ -151,6 +152,7 @@ public class PostService {
 
     PostEventDto postEvent = PostEventDto.builder()
         .posId(publishedPost.getId())
+        .updatedAt(publishedPost.getUpdatedAt())
         .followers(followers)
         .build();
 
@@ -172,7 +174,7 @@ public class PostService {
     fileValidator.checkingTotalOfFiles(files.length, post.getResources().size());
 
     List<Resource> resourcesFromPostInDateBase = post.getResources();
-    List<Resource> newResourcesToUpdate = resourceServiceImpl.getResourcesByIds(
+    List<Resource> newResourcesToUpdate = resourceService.getResourcesByIds(
         dto.getResourcesIds());
 
     removeIrrelevantResourcesFromMinio(resourcesFromPostInDateBase, newResourcesToUpdate);
@@ -235,7 +237,6 @@ public class PostService {
   public void checkingPostForErrors() throws IOException, InterruptedException {
     List<Post> posts = postRepository.findByNotPublished();
 
-    int batchSize = 5;
     int totalPosts = posts.size();
     for (int i = 0; i < totalPosts; i += batchSize) {
       int end = Math.min(i + batchSize, totalPosts);
@@ -314,7 +315,7 @@ public class PostService {
   }
 
   private Resource createdResource(MultipartFile file, String key) {
-    return resourceServiceImpl.save(
+    return resourceService.save(
         Resource.builder()
             .name(file.getOriginalFilename())
             .key(key)
@@ -341,19 +342,8 @@ public class PostService {
   protected void asyncPublishPosts(List<Post> posts) {
     CompletableFuture.runAsync(() -> {
       posts.forEach(post -> {
-
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-
-        /* задать вопрос с асинх или сущностью Post, вылетает исключение
-        Unable to evaluate the expression Method threw 'org.hibernate.LazyInitializationException' exception.
-        а так вообще мне не нравится этот метод, посмотреть, кто его писал и спросить
-        Long userId = post.getAuthorId();
-        UserDto userDto = userService.getUser(userId);
-        saveAuthorToCache(userDto);
-        savePostToCache(post, userDto);
-        sendPostToMessageBroker(post);
-        */
       });
       postRepository.saveAll(posts);
       log.info("Published {} posts", posts.size());

@@ -7,7 +7,8 @@ public interface FeedService {
 
   void processPostEvent(PostEventDto dto);
 
-  void updateUserFeed(Long userId, Long postId);
+  void updateUserFeed(Long userId, PostEventDto dto);
 
   FeedDto getFeed(Long userId, Long previousPostId, int pageSize);
+
 }

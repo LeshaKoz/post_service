@@ -12,15 +12,14 @@ import faang.school.postservice.repository.redis.FeedCacheRepository;
 import faang.school.postservice.repository.redis.PostCacheRepository;
 import faang.school.postservice.repository.redis.UserCacheRepository;
 import faang.school.postservice.service.post.PostService;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -28,11 +27,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FeedServiceImpl implements FeedService {
 
-  @Value("${newsfeed.posts.limit}")
-  private int postsLimit;
+  @Value("${newsfeed.feed.prefix}")
+  private String feedPrefix;
 
-  @Value("${newsfeed.posts.clean}")
-  private int postsToDrop;
+  @Value("${newsfeed.feed.batch-size:1000}")
+  private int batchSize;
 
   private final FeedCacheRepository feedCacheRepository;
   private final UserCacheRepository userCacheRepository;
@@ -41,34 +40,44 @@ public class FeedServiceImpl implements FeedService {
   private final PostService postService;
   private final UserMapper userMapper;
   private final PostMapper postMapper;
+  private final ExecutorService cachedThreadPool;
 
-  //TODO async processing each follower's feed
   @Override
-  @Retryable(retryFor = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 3000L))
   public void processPostEvent(PostEventDto dto) {
-    List<Long> followers = dto.getFollowers(); // list of users to update theirs feeds
+    List<Long> followers = dto.getFollowers();
 
-    Long postId = dto.getPosId();
+    List<List<Long>> followersBatches = splitIntoBatches(followers);
 
-    followers.forEach(user -> updateUserFeed(user, postId));
+    List<CompletableFuture<Void>> futures = followersBatches.stream()
+        .map(
+            batch -> CompletableFuture.runAsync(
+                () -> batch.forEach(userId -> updateUserFeed(userId, dto)), cachedThreadPool))
+        .toList();
 
-//    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> ...);
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+        .thenRun(() -> log.info("feeds have been updated async"));
   }
 
   @Override
-  public void updateUserFeed(Long userId, Long postId) {
-    FeedCache feed = getCachedFeedAllPosts(userId);
+  public void updateUserFeed(Long userId, PostEventDto dto) {
+    String feedKey = feedPrefix + userId;
 
-    LinkedHashSet<Long> postsIds = feed.getPostsIds();
+    Runnable runnable = () -> {
+      feedCacheRepository.addPost(userId, dto);
+    };
+    feedCacheRepository.executeWithOptimisticLock(runnable, feedKey);
+  }
 
-    feed.addPost(postId);
-
-    if (postsIds.size() > postsLimit) {
-      for (int i = 0; i < postsToDrop; i++) {
-        postsIds.remove(postsIds.iterator().next());
-      }
+  private List<List<Long>> splitIntoBatches(List<Long> followers) {
+    int totalSize = followers.size();
+    int batchNumbs = (totalSize + batchSize - 1) / batchSize;
+    List<List<Long>> batches = new ArrayList<>();
+    for (int i = 0; i < batchNumbs; i++) {
+      int start = i * batchSize;
+      int end = Math.min(totalSize, (i + 1) * batchSize);
+      batches.add(followers.subList(start, end));
     }
-    feedCacheRepository.save(feed);
+    return batches;
   }
 
   @Override
@@ -77,54 +86,11 @@ public class FeedServiceImpl implements FeedService {
   }
 
   private FeedCache getCachedFeed(Long userId, Long previousPostId, int pageSize) {
-    FeedCache feed = getCachedFeedAllPosts(userId);
-
-    LinkedHashSet<Long> allPostsIds = feed.getPostsIds();
-
-    if (allPostsIds == null || allPostsIds.isEmpty()) {
-      allPostsIds = postService.getUserFeed(userId, postsLimit);
-
-      if (allPostsIds != null) {
-        feed.setPostsIds(allPostsIds);
-        feedCacheRepository.save(feed);
-      } else {
-        return feed;
-      }
-    }
-
-    LinkedHashSet<Long> onePagePostsIds = getPostsIds(previousPostId, pageSize,
-        allPostsIds);
-
-    feed.setPostsIds(onePagePostsIds);
-
-    return feed;
-  }
-
-  private static LinkedHashSet<Long> getPostsIds(Long previousPostId, int pageSize,
-      LinkedHashSet<Long> postsIds) {
-    List<Long> postsIdsList = List.copyOf(postsIds);
-
-    int toIndex;
-
-    if (previousPostId == null) {
-
-      toIndex = postsIdsList.size();
-
-    } else {
-
-      toIndex = postsIdsList.indexOf(previousPostId);
-
-      if (toIndex == -1) {
-        throw new IllegalArgumentException("previous last post not found");
-      }
-    }
-
-    int fromIndex = Math.max(0, toIndex - pageSize);
-
-    List<Long> postsIdsToGetList = postsIdsList.subList(fromIndex, toIndex).stream().sorted(
-        Comparator.reverseOrder()).toList();
-
-    return new LinkedHashSet<>(postsIdsToGetList);
+    List<Long> posts = feedCacheRepository.findPostsByUserId(userId, previousPostId, pageSize);
+    return FeedCache.builder()
+        .id(userId)
+        .postsIds(new LinkedHashSet<>(posts))
+        .build();
   }
 
   private FeedDto mapToFeedDto(FeedCache feedCache) {
@@ -153,17 +119,6 @@ public class FeedServiceImpl implements FeedService {
     PostCache postCache = postMapper.toPostCache(postService.findPostById(postId));
     postCache.setAuthorName(userServiceClient.getUser(postCache.getAuthorId()).getUsername());
     return postCache;
-  }
-
-  private FeedCache getCachedFeedAllPosts(Long userId) {
-    LinkedHashSet<Long> set = new LinkedHashSet<>();
-    return feedCacheRepository.findById(userId)
-        .orElseGet(() ->
-            FeedCache.builder()
-                .id(userId)
-                .postsIds(set)
-                .build()
-        );
   }
 
 }

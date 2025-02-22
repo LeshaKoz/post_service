@@ -2,6 +2,7 @@ package faang.school.postservice.producer;
 
 import faang.school.postservice.config.kafka.KafkaProperties;
 import faang.school.postservice.dto.event.PostEventDto;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -45,11 +46,12 @@ public class PostEventProducer {
         .toList();
 
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-        .thenRun(() -> log.info("all messages delivered to Kafka"));
+        .thenRun(() -> log.info("all messages delivered to Kafka async"));
   }
 
   private List<PostEventDto> splitIntoBatches(PostEventDto postEventDto) {
     Long postId = postEventDto.getPosId();
+    LocalDateTime updatedAt = postEventDto.getUpdatedAt();
     List<Long> followers = postEventDto.getFollowers();
 
     int followersCount = followers.size();
@@ -66,6 +68,7 @@ public class PostEventProducer {
 
       PostEventDto postEventPart = PostEventDto.builder()
           .posId(postId)
+          .updatedAt(updatedAt)
           .followers(followersSublist)
           .build();
 

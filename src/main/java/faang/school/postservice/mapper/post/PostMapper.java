@@ -44,7 +44,5 @@ public interface PostMapper {
   }
 
   PostCache toPostCache(Post post);
-  // TODO перенести все новые для работы с Feed в FeedMapper???
-  // имя authorName нужно получить по authorId,  но сделать в feedService
 
 }

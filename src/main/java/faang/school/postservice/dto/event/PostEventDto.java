@@ -1,5 +1,6 @@
 package faang.school.postservice.dto.event;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,4 +14,5 @@ import lombok.NoArgsConstructor;
 public class PostEventDto {
     private Long posId;
     private List<Long> followers;
+    private LocalDateTime updatedAt;
 }

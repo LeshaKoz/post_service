@@ -56,14 +56,14 @@ spring:
     comment:
       moderator:
         path-curse-words: src/main/resources/curse-words.txt
-        cron: 0 * * * * *
+        cron: 0 0 * * * *
         partition-size: 1000
-        treads-count: 10
+        treads-count: 5
     post:
       publisher:
         cron: 0 * * * * *
         partition-size: 1000
-        threads-count: 10
+        threads-count: 5
 
 server:
   port: 8081
@@ -93,9 +93,11 @@ newsfeed:
   subscribers:
     batch-size: 3
   posts:
-    limit: 500
-    clean: 50
+    limit: 5
     page-size: 20
+  feed:
+    prefix: "Feed:"
+    batch-size: 2
 
 executor-service:
   core-pool-size: 5
