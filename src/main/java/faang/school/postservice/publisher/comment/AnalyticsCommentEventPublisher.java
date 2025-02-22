@@ -1,10 +1,13 @@
-package faang.school.postservice.publisher.like;
+package faang.school.postservice.publisher.comment;
+
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.event.Event;
 import faang.school.event.NotificationLikeEvent;
+import faang.school.postservice.event.AnalyticsCommentEvent;
+import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.mapper.LikeMapper;
+import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.publisher.EventPublisher;
 import lombok.RequiredArgsConstructor;
@@ -14,21 +17,20 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class NotificationLikeEventPublisher implements EventPublisher {
-
+public class AnalyticsCommentEventPublisher implements EventPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    private final LikeMapper likeMapper;
+    private final CommentMapper commentMapper;
 
-    @Value("${spring.kafka.topics.notification-like-topic.name}")
-    private String notificationLikeTopicName;
+    @Value("${spring.kafka.topics.analytics-comment-topic.name}")
+    private String analyticsCommentTopicName;
 
     @Override
     public void publishEvent(Object dto) {
         try {
-            NotificationLikeEvent event = likeMapper.toNotificationLikeEvent((Like) dto);
+            AnalyticsCommentEvent event = commentMapper.toAnalyticsCommentEvent((Comment) dto);
             String jsonEvent = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(notificationLikeTopicName, jsonEvent);
+            kafkaTemplate.send(analyticsCommentTopicName, jsonEvent);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

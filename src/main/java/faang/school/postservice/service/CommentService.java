@@ -1,6 +1,8 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.annotations.PublishCommentEvent;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.event.AnalyticsCommentEvent;
 import faang.school.postservice.exception.CommentNotFoundException;
 import faang.school.postservice.exception.UserNotFoundException;
 import faang.school.postservice.model.Comment;
@@ -62,6 +64,7 @@ public class CommentService {
                 .toList();
     }
 
+    @PublishCommentEvent(events = { AnalyticsCommentEvent.class })
     @Transactional
     public Comment createComment(Comment comment, Long postId, Long authorId) {
         Post post = postService.get(postId);
