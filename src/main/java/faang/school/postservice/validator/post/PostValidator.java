@@ -1,12 +1,12 @@
-package faang.school.postservice.validator;
+package faang.school.postservice.validator.post;
 
 import faang.school.postservice.client.ProjectServiceClient;
-import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.exception.DataValidationException;
-import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.service.UserService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,8 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PostValidator {
-
-    private final UserServiceClient userServiceClient;
+    private final UserService userService;
     private final ProjectServiceClient projectServiceClient;
     private final PostMapper postMapper;
 
@@ -37,7 +36,7 @@ public class PostValidator {
     }
 
     public void validatePostAuthorExist(Post post) {
-        if (post.getAuthorId() != null && isUserNotExist(post.getAuthorId())) {
+        if (post.getAuthorId() != null && !userService.isUserExists(post.getAuthorId())) {
             throw new DataValidationException("Автора не существует");
         }
 
@@ -60,20 +59,11 @@ public class PostValidator {
         }
     }
 
-    private boolean isUserNotExist(Long authorId) {
-        try {
-            userServiceClient.getUser(authorId);
-            return false;
-        } catch (FeignException.FeignClientException ex) {
-            return true;
-        }
-    }
-
     private boolean isProjectNotExist(Long projectId) {
         try {
             projectServiceClient.getProject(projectId);
             return false;
-        } catch (FeignException.FeignClientException ex) {
+        } catch (FeignException ex) {
             return true;
         }
     }

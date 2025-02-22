@@ -15,4 +15,5 @@ public class ReadPostDto {
     private Boolean published;
     private String content;
     private Boolean deleted;
+    private Integer likesCount;
 }

@@ -1,5 +1,6 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.ResourceDto;
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
@@ -56,7 +57,7 @@ public class PostController {
         return postService.delete(postId);
     }
 
-    @PostMapping(Url.POST_ID + Url.PUBLISHING)
+    @PostMapping("/{postId}/publishing")
     public ReadPostDto publishPost(@PathVariable long postId) {
         return postService.publish(postId);
     }

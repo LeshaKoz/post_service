@@ -4,7 +4,7 @@ import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.exception.BusinessException;
-import faang.school.postservice.mapper.CommentMapper;
+import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
@@ -17,8 +17,8 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class CommentService {
     private final UserService userService;
     private final CommentRepository commentRepository;
@@ -34,6 +34,12 @@ public class CommentService {
         comment.setPost(post);
 
         return commentMapper.toReadDto(commentRepository.save(comment));
+    }
+
+    public Comment getCommentById(long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        format("Комментарий с id=%d не найден", commentId)));
     }
 
     @Transactional
@@ -54,12 +60,6 @@ public class CommentService {
             throw new EntityNotFoundException(String.format("Комментарий с id=%d не найден", commentId));
         }
         commentRepository.deleteById(commentId);
-    }
-
-    private Comment getCommentById(long commentId) {
-        return commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        format("Комментарий с id=%d не найден", commentId)));
     }
 
     private void validateUserExists(long authorId) {
