@@ -29,6 +29,10 @@ spring:
         name: analytics-like-events
       notification-like-topic:
         name: notification_like_topic
+      notification-comment-topic:
+        name: notification_comment_topic
+      user-ban-topic:
+        name: user_ban_topic
 
   data:
     redis:
