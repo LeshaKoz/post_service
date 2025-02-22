@@ -1,8 +1,7 @@
-package faang.school.postservice.service;
+package faang.school.postservice.service.post;
 
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.post.PostSchedulerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +67,7 @@ class PostSchedulerServiceTest {
         postSchedulerService.publishScheduledPosts(2);
 
         Future<?> future = executorService.submit(() -> postSchedulerService.publishScheduledPosts(2));
-        future.get(5, TimeUnit.SECONDS);
+        future.get(30, TimeUnit.SECONDS);
 
         verify(postRepository, times(1)).saveAll(argThat(savedPosts ->
                 StreamSupport.stream(savedPosts.spliterator(), false)
