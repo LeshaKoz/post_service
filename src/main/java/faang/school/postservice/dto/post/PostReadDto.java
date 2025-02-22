@@ -60,6 +60,12 @@ public class PostReadDto {
     )
     private List<Long> hashtagIds;
     @Schema(
+            description = "Идентификаторы файлов поста",
+            example = "1",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
+    private List<String> fileKeys;
+    @Schema(
             description = "Опубликован ли пост",
             example = "true",
             accessMode = Schema.AccessMode.READ_ONLY

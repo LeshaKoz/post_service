@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.model.File;
+import faang.school.postservice.model.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,29 +27,29 @@ public class S3Service {
     @Value("${services.s3.bucketName}")
     private String bucketName;
 
+    private record UploadedFileInfo(long fileSize, String fileType, String key) {
+    }
+
     public File uploadFile(MultipartFile file, String folder) {
-        long fileSize = file.getSize();
-        String fileType = file.getContentType();
-
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentLength(fileSize);
-        objectMetadata.setContentType(fileType);
-        String key = String.format("%s/%d-%s", folder, System.currentTimeMillis(), file.getOriginalFilename());
-
-        try {
-            PutObjectRequest putObjectRequest = new PutObjectRequest(
-                    bucketName, key, file.getInputStream(), objectMetadata);
-            s3Client.putObject(putObjectRequest);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException(e);
-        }
+        UploadedFileInfo uploadFile = uploadToS3(file, folder);
 
         return File.builder()
-                .key(key)
-                .size(fileSize)
+                .key(uploadFile.key())
+                .size(uploadFile.fileSize())
                 .createdAt(LocalDateTime.now())
-                .type(fileType)
+                .type(uploadFile.fileType())
+                .build();
+    }
+
+    public Resource uploadResource(MultipartFile file, String folder) {
+        UploadedFileInfo uploadObject = uploadToS3(file, folder);
+
+        return Resource.builder()
+                .key(uploadObject.key())
+                .size(uploadObject.fileSize())
+                .createdAt(LocalDateTime.now())
+                .type(uploadObject.fileType())
+                .name(file.getOriginalFilename())
                 .build();
     }
 
@@ -72,5 +73,23 @@ public class S3Service {
         }
     }
 
+    private UploadedFileInfo uploadToS3(MultipartFile file, String folder) {
+        long fileSize = file.getSize();
+        String fileType = file.getContentType();
 
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentLength(fileSize);
+        objectMetadata.setContentType(fileType);
+        String key = String.format("%s/%d-%s", folder, System.currentTimeMillis(), file.getOriginalFilename());
+
+        try {
+            PutObjectRequest putObjectRequest = new PutObjectRequest(
+                    bucketName, key, file.getInputStream(), objectMetadata);
+            s3Client.putObject(putObjectRequest);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+        return new UploadedFileInfo(fileSize, fileType, key);
+    }
 }

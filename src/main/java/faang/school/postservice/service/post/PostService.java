@@ -9,13 +9,17 @@ import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.exception.BusinessException;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.PaginationService;
+import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,8 +27,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -44,8 +52,14 @@ public class PostService {
     private final ModerationDictionary moderationDictionary;
     private final PaginationService paginationService;
     private final PostProperties postProperties;
+    private final S3Service s3Service;
+    private final ResourceRepository resourceRepository;
+    private final PostImageService postImageService;
     @Value("${post.schedule.batch-size}")
     private int batchSize;
+
+    private static final int MAX_FILES = 10;
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     public PostReadDto createPostDraft(PostCreateDto dto) {
         validateCreateDraftDto(dto);
@@ -138,6 +152,67 @@ public class PostService {
                 postProperties.getPageSize(),
                 postProperties.getBatchSize()
         );
+    }
+
+    public PostReadDto uploadImages(long postId, List<MultipartFile> images) {
+        Post post = getPostById(postId);
+        validateImageUpload(images, post.getResources().size());
+
+        String folder = postId + "_post_attachments";
+        List<Resource> newResources = new ArrayList<>();
+
+        for (MultipartFile file : images) {
+            newResources.add(s3Service.uploadResource(file, folder));
+        }
+
+        resourceRepository.saveAll(newResources);
+        post.getResources().addAll(newResources);
+        postRepository.save(post);
+
+        post = postRepository.save(post);
+        return postMapper.toDto(post);
+    }
+
+    public PostReadDto deleteImages(Long postId, List<String> fileKeys) {
+        Post post = getPostById(postId);
+
+        for (String fileKey : fileKeys) {
+            Resource resource = resourceRepository.findByKey(fileKey);
+            if (resource != null) {
+                post.getResources().remove(resource);
+                resourceRepository.delete(resource);
+                s3Service.deleteFile(fileKey);
+            }
+        }
+
+        post = postRepository.save(post);
+        return postMapper.toDto(post);
+    }
+
+    public byte[] downloadImage(String fileKey) {
+        Resource resource = resourceRepository.findByKey(fileKey);
+        try (InputStream inputStream = s3Service.downloadFile(resource.getKey())) {
+            return inputStream.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка загрузки файла: " + e.getMessage());
+        }
+    }
+
+    private void validateImageUpload(List<MultipartFile> files, int currentSize) {
+        int totalSize = currentSize + files.size();
+
+        if (totalSize > MAX_FILES) {
+            throw new BusinessException("Максимум можно загрузить " + MAX_FILES + " файлов");
+        }
+        for (MultipartFile file : files) {
+            if (file.getSize() > MAX_FILE_SIZE) {
+                postImageService.getResizedCover(file);
+            }
+            String fileType = file.getContentType();
+            if (fileType == null || !fileType.startsWith("image/")) {
+                throw new DataValidationException("Неверный тип файла. Разрешено загружать только изображения");
+            }
+        }
     }
 
     private Stream<Post> moderatePostsBatch(List<Post> posts) {
