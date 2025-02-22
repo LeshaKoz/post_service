@@ -6,7 +6,7 @@ import lombok.Builder;
 
 @Builder
 public record HashtagCreateDto(
-        @NotBlank
+        @NotBlank(message = "Название хештега не должно быть пустым")
         @Size(max = 64)
         String name
 ) {

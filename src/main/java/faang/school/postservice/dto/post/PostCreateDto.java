@@ -19,7 +19,7 @@ import java.util.List;
 @Builder
 @Schema
 public class PostCreateDto {
-    @NotBlank
+    @NotBlank(message = "Текст поста не должен быть пустым")
     @Size(max = 4096)
     @Schema(description = "Содержимое поста", example = "Круто!")
     private String content;

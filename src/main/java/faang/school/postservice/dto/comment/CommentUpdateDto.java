@@ -8,20 +8,20 @@ import lombok.Builder;
 
 @Builder
 public record CommentUpdateDto(
-        @NotNull
+        @NotNull(message = "ID комментария не должен быть null")
         @Schema(
                 description = "Идентификатор комментария",
                 example = "1"
         )
         Long id,
-        @NotBlank
+        @NotBlank(message = "Текст комментария не должен быть пустым")
         @Size(max = 4096)
         @Schema(
                 description = "Текст комментария",
                 example = "Круто!"
         )
         String content,
-        @NotNull
+        @NotNull(message = "ID автора не доложен быть null")
         @Schema(
                 description = "Идентификатор автора комментария",
                 example = "1"
