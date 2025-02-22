@@ -64,6 +64,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ErrorResponse handleException(
+            ExternalServiceException ex
+    ) {
+        log.error(ex.getMessage(), ex);
+        return new ErrorResponse(
+                "Ошибка при обращении к внешнему сервису",
+                ex.getMessage(),
+                HttpStatus.BAD_GATEWAY
+        );
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
