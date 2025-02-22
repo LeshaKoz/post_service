@@ -57,7 +57,7 @@ public class PostController {
         return postService.delete(postId);
     }
 
-    @PostMapping("/{postId}/publishing")
+    @PostMapping(Url.POST_ID + Url.PUBLISHING)
     public ReadPostDto publishPost(@PathVariable long postId) {
         return postService.publish(postId);
     }
@@ -105,7 +105,7 @@ public class PostController {
         return ResponseEntity.ok(keys);
     }
 
-    @DeleteMapping(Url.ID + Url.IMAGE + "/all")
+    @DeleteMapping(Url.ID + Url.IMAGE + Url.ALL)
     public ResponseEntity<Void> deleteAllImages(@PathVariable("id") @Min(1) Long postId) {
         postResourceService.deleteAllImagesByPostId(postId);
         return ResponseEntity.ok().build();
