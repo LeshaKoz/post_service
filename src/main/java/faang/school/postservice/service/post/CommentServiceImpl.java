@@ -43,7 +43,7 @@ public class CommentServiceImpl implements CommentService {
         log.info("Get user with id = {} from user_service", author.id());
         Post post = postRepository.findById(dto.authorId()).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Post with id = %d not found", dto.postId())));
-        Comment createdComment = commentRepository.save(buildComment(dto.content(), post));
+        Comment createdComment = commentRepository.save(buildComment(dto, post));
         sendEventToKafka(new CommentEvent(dto.postId(), post.getAuthorId(), createdComment.getId(), LocalDateTime.now()));
         return commentMapper.toDto(createdComment);
     }
@@ -77,13 +77,13 @@ public class CommentServiceImpl implements CommentService {
         log.info("Deleted comment with id = {}", id);
     }
 
-    private Comment buildComment(String content, Post post) {
+    private Comment buildComment(CommentDto dto, Post post) {
         log.info("Found post with id = {}", post.getId());
         return Comment.builder()
-                .authorId(post.getAuthorId())
+                .authorId(dto.authorId())
                 .post(post)
                 .createdAt(LocalDateTime.now())
-                .content(content)
+                .content(dto.content())
                 .build();
     }
 
