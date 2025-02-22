@@ -1,12 +1,10 @@
 package faang.school.postservice.aspects;
 
 import faang.school.event.Event;
-import faang.school.event.NotificationLikeEvent;
 import faang.school.postservice.annotations.PublishCommentEvent;
-import faang.school.postservice.annotations.PublishLikeEvent;
+import faang.school.postservice.event.AnalyticsCommentEvent;
 import faang.school.postservice.publisher.EventPublisher;
 import faang.school.postservice.publisher.comment.AnalyticsCommentEventPublisher;
-import faang.school.postservice.publisher.like.NotificationLikeEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -23,7 +21,7 @@ public class CommentAspect {
     private final Map<Class<? extends Event>, EventPublisher> eventPublisherMap;
 
     public CommentAspect(AnalyticsCommentEventPublisher analyticsCommentEventPublisher) {
-        eventPublisherMap = Map.of(NotificationLikeEvent.class, analyticsCommentEventPublisher);
+        eventPublisherMap = Map.of(AnalyticsCommentEvent.class, analyticsCommentEventPublisher);
     }
 
     @AfterReturning(pointcut = "@annotation(publishCommentEvent)", returning = "result")
