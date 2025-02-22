@@ -31,6 +31,8 @@ spring:
         name: notification_like_topic
       notification-comment-topic:
         name: notification_comment_topic
+      user-ban-topic:
+        name: user_ban_topic
 
   data:
     redis:
@@ -116,3 +118,7 @@ file-controller:
   image:
     max-width: 1080
     max-height-rectangle: 566
+
+commenter-banner:
+  cron: "0 0 12 * * ?"
+  comments-count-for-ban: 5
