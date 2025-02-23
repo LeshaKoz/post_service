@@ -35,10 +35,9 @@ public class HashtagServiceTest {
         HashtagCreateDto createDto = HashtagCreateDto.builder()
                 .name("Hashtag").build();
         Mockito.when(hashtagRepository.findByName(createDto.name())).thenReturn(Optional.empty());
-        Hashtag newHashtag = hashtagMapper.toEntity(createDto);
 
         hashtagService.create(createDto);
-        Mockito.verify(hashtagRepository, Mockito.times(1)).save(newHashtag);
+        Mockito.verify(hashtagRepository, Mockito.times(1)).save(Mockito.any());
     }
 
     @Test

@@ -1,8 +1,9 @@
 package faang.school.postservice.service.comment;
 
-import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentCreateDto;
+import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
+import faang.school.postservice.event.comment.CommentEventType;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -10,11 +11,12 @@ import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.File;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.FileRepository;
 import faang.school.postservice.service.UserService;
-import faang.school.postservice.service.s3.S3Service;
 import faang.school.postservice.service.post.PostService;
+import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,19 +30,23 @@ import java.util.List;
 public class CommentService {
     @Value("${services.s3.max_image_size}")
     private int maxImageSize;
-    private static final int MB_TO_BYTES = 1048576;
+    private static final long MB_TO_BYTES = 1048576;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final UserService userService;
     private final PostService postService;
     private final S3Service s3Service;
     private final FileRepository fileRepository;
+    private final CommentCreateMessagePublisher commentCreateMessagePublisher;
 
     public CommentReadDto create(CommentCreateDto createDto) {
         validateCommentCreation(createDto);
-
         Comment newComment = commentMapper.toEntity(createDto);
         newComment = commentRepository.save(newComment);
+        commentCreateMessagePublisher.publish(
+                commentMapper.toEvent(newComment, CommentEventType.CREATE)
+        );
+
         return commentMapper.toDto(newComment);
     }
 
@@ -97,7 +103,7 @@ public class CommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Комментария с ID " + commentId + " не найден"));
     }
 
-    private void validateEditorAndAuthorEquality (long editorId, long authorId) {
+    private void validateEditorAndAuthorEquality(long editorId, long authorId) {
         if (editorId != authorId) {
             throw new BusinessException("Редактировать комментарий может только его автор");
         }
