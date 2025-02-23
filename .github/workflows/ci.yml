@@ -2,13 +2,27 @@ name: post_service CI pipeline
 
 on:
   pull_request:
-    types: [opened, edited]
     branches:
       - cerberus-master-stream8
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13.3
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -26,11 +40,11 @@ jobs:
       - name: Setup Gradle cache
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle.properties', '**/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-gradle-
+            path: |
+              ~/.gradle/caches
+              ~/.gradle/wrapper
+            key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle.properties', '**/gradle-wrapper.properties') }}
+            restore-keys: ${{ runner.os }}-gradle-
 
       - name: Run tests with Gradle
-        run: ./gradlew test --continue
+        run: ./gradlew test -Dspring.profiles.active=test --continue
