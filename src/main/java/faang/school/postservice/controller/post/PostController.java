@@ -4,6 +4,7 @@ import faang.school.postservice.dto.post.RequestPostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.service.annotation.ViewPost;
 import faang.school.postservice.service.post.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -79,7 +80,8 @@ public class PostController {
     }
 
 
-    @PostMapping("/post/{post-id}")
+    @ViewPost
+    @GetMapping("/post/{post-id}")
     public ResponseEntity<ResponsePostDto> getPost(
             @PathVariable("post-id") final Long postId) {
 
