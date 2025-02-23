@@ -24,5 +24,6 @@ public class PostViewEvent {
     @Positive
     private final Long userId;
 
-    private final LocalDateTime whenViewed;
+    @Builder.Default
+    private final LocalDateTime viewedAt = LocalDateTime.now();
 }

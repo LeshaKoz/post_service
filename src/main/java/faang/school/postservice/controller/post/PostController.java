@@ -2,10 +2,8 @@ package faang.school.postservice.controller.post;
 
 import faang.school.postservice.dto.post.RequestPostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
-import faang.school.postservice.event.PostViewEvent;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.service.annotation.ViewPost;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.post.PostViewEventPublisher;
 import jakarta.validation.Valid;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -83,20 +80,12 @@ public class PostController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-
-    @ViewPost
     @GetMapping("/post/{post-id}")
     public ResponseEntity<ResponsePostDto> getPost(
             @PathVariable("post-id") final Long postId) {
 
         Post post = postService.getPostById(postId);
         ResponsePostDto responsePostDto = postMapper.toDto(post);
-        PostViewEvent event = PostViewEvent.builder()
-                .postId(responsePostDto.getId())
-                .authorId(responsePostDto.getAuthorId())
-                .whenViewed(LocalDateTime.now())
-                .build();
-        publisher.publish(event);
 
         return new ResponseEntity<>(responsePostDto, HttpStatus.OK);
     }
