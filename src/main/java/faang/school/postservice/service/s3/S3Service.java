@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -18,9 +19,14 @@ import java.time.LocalDateTime;
 public class S3Service {
     private final AmazonS3 s3Client;
 
-    @Value("${services.s3.bucketName}")
+    @Value("${spring.services.s3.bucketName}")
     private String bucketName;
 
+    public List<Resource> uploadFiles(List<MultipartFile> files, String folder) {
+        return files.stream()
+                .map(file -> uploadFile(file, folder))
+                .toList();
+    }
     public Resource uploadFile(MultipartFile file, String folder) {
         long fileSize = file.getSize();
         ObjectMetadata objectMetadata = new ObjectMetadata();
