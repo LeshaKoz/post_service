@@ -70,6 +70,4 @@ class PostSchedulerServiceTest {
                         .allMatch(post -> post.isPublished() && post.getPublishedAt() != null)
         ));
     }
-
-
 }
