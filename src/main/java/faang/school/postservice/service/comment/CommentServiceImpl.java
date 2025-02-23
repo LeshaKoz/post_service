@@ -2,6 +2,7 @@ package faang.school.postservice.service.comment;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.dto.comment.CommentFiltersDto;
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
@@ -13,6 +14,7 @@ import faang.school.postservice.exception.UploadFileException;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.comment.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageService;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +39,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
     private final UserContext userContext;
     private final ImageService imageService;
+    private final CommentEventPublisher publisher;
 
     @Override
     public CommentResponseDto createComment(CommentRequestDto commentDto) {
@@ -43,7 +47,13 @@ public class CommentServiceImpl implements CommentService {
         Post post = getPostById(commentDto.postId());
         Comment comment = commentMapper.toCommentEntity(commentDto);
         comment.setPost(post);
-        return commentMapper.toCommentResponseDto(commentRepository.save(comment));
+        Comment savedComment = commentRepository.save(comment);
+        createCommentPublisherEvent(savedComment.getPost().getAuthorId(),
+                savedComment.getAuthorId(),
+                savedComment.getPost().getId(),
+                savedComment.getId(),
+                savedComment.getCreatedAt());
+        return commentMapper.toCommentResponseDto(savedComment);
     }
 
     @Override
@@ -111,5 +121,18 @@ public class CommentServiceImpl implements CommentService {
         if (user == null) {
             throw new EntityNotFoundException(String.format("User with id %s not found", authorId));
         }
+    }
+
+    private void createCommentPublisherEvent(Long postAuthorId,
+                                             Long commentAuthorId,
+                                             Long postId,
+                                             Long commentId,
+                                             LocalDateTime commentedAt) {
+        CommentEvent event = new CommentEvent(postAuthorId,
+                commentAuthorId,
+                postId,
+                commentId,
+                commentedAt);
+        publisher.publish(event);
     }
 }
