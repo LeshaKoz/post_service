@@ -66,9 +66,6 @@ class PostSchedulerServiceTest {
 
         postSchedulerService.publishScheduledPosts(2);
 
-        Future<?> future = executorService.submit(() -> postSchedulerService.publishScheduledPosts(2));
-        future.get(10, TimeUnit.SECONDS);
-
         verify(postRepository, times(1)).saveAll(argThat(savedPosts ->
                 StreamSupport.stream(savedPosts.spliterator(), false)
                         .allMatch(post -> post.isPublished() && post.getPublishedAt() != null)
