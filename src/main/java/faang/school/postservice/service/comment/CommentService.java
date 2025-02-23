@@ -30,7 +30,7 @@ import java.util.List;
 public class CommentService {
     @Value("${services.s3.max_image_size}")
     private int maxImageSize;
-    private static final int MB_TO_BYTES = 1048576;
+    private static final long MB_TO_BYTES = 1048576;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final UserService userService;
@@ -46,6 +46,7 @@ public class CommentService {
         commentMessagePublisher.publish(
                 commentMapper.toEvent(newComment, CommentEventType.CREATE)
         );
+
         return commentMapper.toDto(newComment);
     }
 
@@ -102,7 +103,7 @@ public class CommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Комментария с ID " + commentId + " не найден"));
     }
 
-    private void validateEditorAndAuthorEquality (long editorId, long authorId) {
+    private void validateEditorAndAuthorEquality(long editorId, long authorId) {
         if (editorId != authorId) {
             throw new BusinessException("Редактировать комментарий может только его автор");
         }
@@ -120,7 +121,7 @@ public class CommentService {
     }
 
     public void validateImageUpload(MultipartFile file) {
-        if (file.getSize() > (long) maxImageSize * MB_TO_BYTES) {
+        if (file.getSize() > maxImageSize * MB_TO_BYTES) {
             throw new DataValidationException("Размер файла не должен превышать " + maxImageSize + " Мб");
         }
         String fileType = file.getContentType();
