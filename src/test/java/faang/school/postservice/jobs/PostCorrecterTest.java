@@ -30,7 +30,7 @@ class PostCorrecterTest {
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
-        Field limitField = PostCorrecter.class.getDeclaredField("limit");
+        Field limitField = PostCorrecter.class.getDeclaredField("batchCount");
         limitField.setAccessible(true);
         limitField.set(postCorrecter, 10);
     }
@@ -58,7 +58,7 @@ class PostCorrecterTest {
 
     @Test
     void postCorrecterJob_whenLimitIsZero_shouldNotCorrectPosts() throws NoSuchFieldException, IllegalAccessException {
-        Field limitField = PostCorrecter.class.getDeclaredField("limit");
+        Field limitField = PostCorrecter.class.getDeclaredField("batchCount");
         limitField.setAccessible(true);
         limitField.set(postCorrecter, 0);
 
