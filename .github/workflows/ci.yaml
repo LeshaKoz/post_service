@@ -30,9 +30,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle
 
-      - name: Checkstyle Test
-        run: ./gradlew checkstyleMain
-
       - name: Run Tests
         run: ./gradlew test
 

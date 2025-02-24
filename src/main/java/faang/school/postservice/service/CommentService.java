@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.config.redis.KafkaProducer;
 import faang.school.postservice.dto.comment.CommentCreateEventDto;
 import faang.school.postservice.config.redis.RedisPublisher;
 import faang.school.postservice.dto.comment.CommentResponse;
@@ -41,6 +42,7 @@ public class CommentService {
     private final KafkaService kafkaService;
     private final PostService postService;
     private final RedisPublisher redisPublisher;
+    private final KafkaProducer kafkaProducer;
 
     @Transactional
     public CommentResponse create(@Valid CreateCommentRequest createCommentRequest) {
@@ -121,7 +123,7 @@ public class CommentService {
 
         groupedByAuthor.forEach((authorId, comments) -> {
             if (comments.size() > 5) {
-                redisPublisher.publishUserBanEvent(authorId);
+                kafkaProducer.sendEventToUserServiceForBan(authorId);
             }
         });
 
