@@ -71,5 +71,9 @@ service:
   name: post-service
 
 kafka:
+  album:
+    created:
+      topic: created-album
+
   comment:
     topic: comment_event

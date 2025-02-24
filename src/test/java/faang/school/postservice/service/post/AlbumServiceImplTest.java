@@ -1,20 +1,29 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.AlbumResponseDto;
 import faang.school.postservice.dto.post.AlbumUsersDto;
 import faang.school.postservice.enums.Visibility;
 import faang.school.postservice.exception.album.AlbumAccessDeniedException;
+import faang.school.postservice.filter.Filter;
+import faang.school.postservice.filter.album.AlbumFilterDto;
+import faang.school.postservice.filter.album.AlbumTitleFilter;
+import faang.school.postservice.kafka.album.AlbumCreatedEventKafkaProducer;
+import faang.school.postservice.mapper.post.AlbumMapper;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.repository.post.AlbumRepository;
+import faang.school.postservice.repository.post.PostRepository;
 import faang.school.postservice.strategy.album.VisibilityConverter;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +42,9 @@ class AlbumServiceImplTest {
     private AlbumRepository albumRepository;
 
     @Mock
+    private PostRepository postRepository;
+
+    @Mock
     private UserContext userContext;
 
     @Mock
@@ -41,14 +53,26 @@ class AlbumServiceImplTest {
     @Mock
     private VisibilityConverter followersConverter;
 
+    @Mock
+    private UserServiceClient userServiceClient;
+
+    @Mock
+    private AlbumCreatedEventKafkaProducer producer;
+
+    @Spy
+    private AlbumMapper albumMapper;
+
+    private final List<Filter<Album, AlbumFilterDto>> filters = new ArrayList<>();
+
     private AlbumServiceImpl albumService;
 
     @BeforeEach
     public void init() {
+        filters.add(new AlbumTitleFilter());
         when(allUsersConverter.getVisibility()).thenReturn(Visibility.ALL_USERS);
         when(followersConverter.getVisibility()).thenReturn(Visibility.FOLLOWERS);
-        albumService = new AlbumServiceImpl(albumRepository, userContext,
-                List.of(allUsersConverter, followersConverter));
+        albumService = new AlbumServiceImpl(albumRepository, postRepository, albumMapper, userContext,
+                List.of(allUsersConverter, followersConverter), userServiceClient, filters, producer);
     }
 
     @Test
@@ -149,7 +173,7 @@ class AlbumServiceImplTest {
     }
 
     private AlbumResponseDto getAlbumResponseDto(long albumId) {
-        return new AlbumResponseDto(albumId, "album", null, 1L);
+        return new AlbumResponseDto(albumId, "album", null, 1L, List.of());
     }
 
     private static Album getAlbum(long albumId, long authorId, Visibility visibility) {
