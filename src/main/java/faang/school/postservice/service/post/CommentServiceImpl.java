@@ -41,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
             throw new EntityNotFoundException(String.format("Author with id = %d not found", dto.authorId()));
         }
         log.info("Get user with id = {} from user_service", author.id());
-        Post post = postRepository.findById(dto.authorId()).orElseThrow(() ->
+        Post post = postRepository.findById(dto.postId()).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Post with id = %d not found", dto.postId())));
         Comment createdComment = commentRepository.save(buildComment(dto, post));
         sendEventToKafka(new CommentEvent(dto.postId(), post.getAuthorId(), createdComment.getId(), LocalDateTime.now()));
