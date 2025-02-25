@@ -9,6 +9,7 @@ import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -16,15 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -88,14 +86,9 @@ public class CommentService {
     @Async("scheduledCommentExecutorService")
     public void checkComments() {
         List<Long> notCheckedComments = commentRepository.findIdsByVerifiedDateIsNull();
-        AtomicInteger index = new AtomicInteger(0);
+        List<List<Long>> nonCheckedCommentsPerPage = ListUtils.partition(notCheckedComments, checkCommentSize);
 
-        Collection<List<Long>> commentsSubListen = notCheckedComments.stream()
-                .collect(Collectors.groupingBy(i -> index.getAndIncrement() / checkCommentSize))
-                .values();
-
-        List<Callable<List<Comment>>> commentsCallableTask = commentsSubListen.stream()
-                .map(commentRepository::findAllByIdIn)
+        List<Callable<List<Comment>>> commentsCallableTask = nonCheckedCommentsPerPage.stream()
                 .map(this::getCheckCommentsTask)
                 .toList();
 
@@ -125,9 +118,10 @@ public class CommentService {
         }
     }
 
-    private Callable<List<Comment>> getCheckCommentsTask(List<Comment> commentsList) {
+    private Callable<List<Comment>> getCheckCommentsTask(List<Long> commentsIdList) {
         return () -> {
-            List<Comment> comments = commentCheckService.checkComments(commentsList);
+            List<Comment> nonCheckedComments = commentRepository.findAllByIdIn(commentsIdList);
+            List<Comment> comments = commentCheckService.checkComments(nonCheckedComments);
             return commentRepository.saveAll(comments);
         };
     }
