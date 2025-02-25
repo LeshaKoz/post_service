@@ -2,6 +2,7 @@ package faang.school.postservice.service.comment;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,10 @@ public class CommentModerator {
     @Scheduled(cron = "${cron.comments.check-delay}")
     void checkComments() {
         log.info("Start checking comments by cron expression");
-        commentService.checkComments();
+        try {
+            commentService.checkComments();
+        } catch (TaskRejectedException e) {
+            log.error("Task is already running");
+        }
     }
 }

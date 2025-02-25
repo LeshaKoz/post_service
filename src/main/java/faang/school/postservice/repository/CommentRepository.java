@@ -17,4 +17,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Long> findIdsByVerifiedDateIsNull();
 
     List<Comment> findAllByIdIn(List<Long> ids);
+
+    Long countCommentsByVerified(boolean verified);
 }

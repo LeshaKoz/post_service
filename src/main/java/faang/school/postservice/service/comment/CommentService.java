@@ -22,11 +22,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -90,7 +86,6 @@ public class CommentService {
     }
 
     @Async("scheduledCommentExecutorService")
-    @Transactional
     public void checkComments() {
         List<Long> notCheckedComments = commentRepository.findIdsByVerifiedDateIsNull();
         AtomicInteger index = new AtomicInteger(0);
@@ -105,16 +100,7 @@ public class CommentService {
                 .toList();
 
         try {
-            List<Future<List<Comment>>> listFuture = commentExecutorService.invokeAll(commentsCallableTask);
-
-            listFuture.forEach(future -> {
-                try {
-                    future.get(2, TimeUnit.MINUTES);
-                } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                    log.error("Interrupted while check comment");
-                }
-
-            });
+            commentExecutorService.invokeAll(commentsCallableTask);
         } catch (InterruptedException e) {
             log.error("Interrupted while checking comments");
         }

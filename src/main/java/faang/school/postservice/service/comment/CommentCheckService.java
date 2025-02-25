@@ -20,11 +20,6 @@ public class CommentCheckService {
 
     public List<Comment> checkComments(@NotNull List<Comment> comments) {
         log.info("Checking comments in Thread {}", Thread.currentThread().getName());
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         return comments.stream()
                 .map(this::checkComment)
                 .toList();
