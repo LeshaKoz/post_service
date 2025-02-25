@@ -27,10 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,7 +64,7 @@ public class LikeServiceTest {
         post = Post.builder()
                 .id(1L)
                 .authorId(13L)
-                .likes(new HashSet<>())
+                .likes(new ArrayList<>())
                 .createdAt(LocalDateTime.now())
                 .build();
         comment = Comment.builder()
@@ -113,7 +110,7 @@ public class LikeServiceTest {
 
     @Test
     public void toggleLikePost_SuccessUnLike() {
-        Set<Like> likes = new HashSet<>();
+        List<Like> likes = new ArrayList<>();
         Like like = Like.builder().userId(userDto.id()).build();
         likes.add(like);
         post.setLikes(likes);

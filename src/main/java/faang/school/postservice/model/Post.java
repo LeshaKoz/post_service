@@ -44,7 +44,7 @@ public class Post {
     private Long projectId;
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
-    private Set<Like> likes;
+    private List<Like> likes;
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Comment> comments;
