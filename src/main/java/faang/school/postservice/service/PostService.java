@@ -4,22 +4,34 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.thread.pool.ThreadPoolConfig;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post.PostForNewsFeedDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.sightengine.textAnalysis.ModerationClasses;
 import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
+import faang.school.postservice.dto.user.UserForNewsFeedDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.UserMapper;
+import faang.school.postservice.message.event.PostEvent;
+import faang.school.postservice.message.producer.KafkaPostProducer;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.cache.PostCache;
+import faang.school.postservice.model.cache.UserCache;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.cache.RedisUserRepository;
 import faang.school.postservice.service.moderation.ModerationDictionary;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
+import faang.school.postservice.service.redis.RedisPostService;
+import faang.school.postservice.service.redis.RedisUserService;
 import faang.school.postservice.validator.PostValidator;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +53,10 @@ public class PostService {
     private final SightEngineReactiveClient sightEngineReactiveClient;
     private final ModerationDictionary moderationDictionary;
     private final ModerationVerifierFactory moderationVerifierFactory;
+    private final RedisPostService redisPostService;
+    private final RedisUserService redisUserService;
+    private final UserMapper userMapper;
+    private final KafkaPostProducer kafkaPostProducer;
 
     @Transactional
     public PostDto createPost(PostDto postDto) {
@@ -51,6 +67,9 @@ public class PostService {
         Post post = postMapper.toEntity(postDto);
         post = postRepository.save(post);
         log.info("Post with id {} created: {}", post.getId(), post);
+
+        kafkaPostProducer.publish(createPostEvent(post));
+
         return postMapper.toDto(post);
     }
 
@@ -58,7 +77,7 @@ public class PostService {
     public PostDto publishPost(long id) {
         Post post = findPostById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(id)));
-        log.info("Request to publish a post: {}", post);
+        log.debug("Request to publish a post: {}", post);
         if (post.isPublished()) {
             return postMapper.toDto(post);
         }
@@ -66,6 +85,10 @@ public class PostService {
 
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+
+        savePublishedPostToCache(post);
+        saveAuthorOfThePostToCache(post);
+
         log.info("Post {} published", post);
         return postMapper.toDto(post);
     }
@@ -227,5 +250,47 @@ public class PostService {
                 .violent(moderationClasses.getViolent())
                 .toxic(moderationClasses.getToxic())
                 .verify();
+    }
+
+    private void savePublishedPostToCache(Post post) {
+        if (post.isPublished()) {
+            log.debug("Saving published post to cache: {}", post.getId());
+            PostCache postCache = postMapper.toCache(post);
+            redisPostService.savePostToCache(postCache);
+        }
+    }
+
+    private void saveAuthorOfThePostToCache(Post post) {
+        if (post.isPublished()) {
+            log.debug("Saving author of the post to cache");
+            UserForNewsFeedDto user = userServiceClient.getUserForNewsFeed(post.getAuthorId());
+
+            UserCache userCache = userMapper.toUserCache(user);
+            redisUserService.saveUserToCache(userCache);
+        }
+    }
+
+    private PostEvent createPostEvent(Post post) {
+        List<Long> followerIds = userServiceClient.getFollowers(post.getAuthorId());
+        return PostEvent.builder()
+                .postId(post.getId())
+                .followerIds(followerIds)
+                .build();
+    }
+
+    public PostForNewsFeedDto getPostForNewsFeed(long postId, long userId) {
+        log.info("Trying to get post under id {} for news feed for user under id {}", postId, userId);
+        Post post = postRepository.findByPostIdWithLikes(postId);
+        validator.validatePostIsNotNull(post, postId);
+        return postMapper.toPostForNewsFeedDto(post);
+    }
+
+    public List<PostForNewsFeedDto> getLastNPostsByUserIdStartingFromPost(long userId, int numPosts, long lastPostId) {
+        log.info("Trying to get last {} posts for user under id {}. Last viewed post id: {}", userId, numPosts, lastPostId);
+        Pageable pageable = PageRequest.of(0, numPosts);
+        Optional<UserCache> userOptional = redisUserRepository.findById(userId);
+        List<Long> followeeIds = userOptional.isEmpty() ? userServiceClient.getUserForNewsFeed(userId).followeeIds() : userOptional.get().getFolloweeIds();
+        List<Post> posts = postRepository.findLastNPostsByUserIdStartingFromPostWithLikes(followeeIds, lastPostId, pageable);
+        return postMapper.toPostForNewsFeedDto(posts);
     }
 }

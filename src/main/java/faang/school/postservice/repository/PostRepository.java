@@ -24,4 +24,5 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     List<Post> findReadyToPublish();
 
     List<Post> findByVerifiedDateIsNull();
+
 }

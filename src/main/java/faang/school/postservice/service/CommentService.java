@@ -2,14 +2,19 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.message.event.UsersBanEvent;
-import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
+import faang.school.postservice.dto.user.UserForNewsFeedDto;
+import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.message.event.CommentEvent;
+import faang.school.postservice.message.event.UsersBanEvent;
+import faang.school.postservice.message.producer.KafkaCommentProducer;
 import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.cache.UserCache;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
+import faang.school.postservice.service.redis.RedisUserService;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -36,6 +41,9 @@ public class CommentService {
     private final UserServiceClient userServiceClient;
     private final UsersBanPublisher usersBanPublisher;
     private final SightEngineReactiveClient textAnalysisService;
+    private final RedisUserService redisUserService;
+    private final UserMapper userMapper;
+    private final KafkaCommentProducer kafkaCommentProducer;
 
     @Transactional
     public CommentDto addComment(long postId, CommentDto commentDto) {
@@ -49,7 +57,10 @@ public class CommentService {
         postService.addCommentToPost(post, comment);
         comment.setPost(post);
 
-        commentRepository.save(comment);
+        comment = commentRepository.save(comment);
+        saveAuthorOfTheCommentToCache(comment);
+        kafkaCommentProducer.publish(createCommentEvent(comment));
+
         return commentMapper.toDto(comment);
     }
 
@@ -133,9 +144,20 @@ public class CommentService {
         }
     }
 
-    private boolean textAnalysisProcessing(TextAnalysisResponse response) {
-        List<Double> analysisResults = response.getModerationClasses().collectingTextAnalysisResult();
-        return analysisResults.stream()
-                .allMatch(assessmentResult -> assessmentResult < 0.6);
+    private void saveAuthorOfTheCommentToCache(Comment comment) {
+        log.debug("Saving author of the comment to cache");
+        UserForNewsFeedDto user = userServiceClient.getUserForNewsFeed(comment.getAuthorId());
+
+        UserCache userCache = userMapper.toUserCache(user);
+        redisUserService.saveUserToCache(userCache);
+    }
+
+    private CommentEvent createCommentEvent(Comment comment) {
+        return CommentEvent.builder()
+                .id(comment.getId())
+                .authorId(comment.getAuthorId())
+                .postId(comment.getPost().getId())
+                .content(comment.getContent())
+                .build();
     }
 }

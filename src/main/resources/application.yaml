@@ -15,7 +15,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
+        format_sql: trueC
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
@@ -30,6 +30,36 @@ spring:
         like-event-topic: likeEventTopic
         users-ban-channel:
           name: users_ban_event
+      cache:
+        TTL:
+          post-cache: 86400
+          user-cache: 86400
+      lock-prefix:
+        posts: "lock:posts:"
+      hash-prefix:
+        posts: "posts"
+
+  kafka:
+    consumer:
+      group-id: newsfeed-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    bootstrap-servers: localhost:9092
+    topic:
+      default-replicas: 3
+      post-topic:
+        name: posts
+        partitions: 3
+      comment-topic:
+        name: comments
+        partitions: 3
+      like-topic:
+        name: likes
+        partitions: 3
+      view-topic:
+        name: views
+        partitions: 3
+
 
   task:
     scheduling:
@@ -88,6 +118,10 @@ thread-pool:
   verification-content-pool:
     num-of-thread: 5
     num-of-chunk: 10
+  clearing-old-posts:
+    num-of-thread: 5
+  post-event-processing:
+    num-of-thread: 5
 
 schedule:
   verify-posts:
@@ -108,3 +142,8 @@ daily:
   cron:
    comment-moderation: 0 0 10 * * *
    user-ban: 0 0 0 * * ?
+
+feed:
+  size: 500
+  posts-per-page: 20
+  comments-per-post: 3
