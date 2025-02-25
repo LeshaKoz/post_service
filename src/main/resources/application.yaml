@@ -4,10 +4,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/postgres
     username: user
     password: password
-  servlet:
-    multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -29,19 +25,25 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+  services:
+    s3:
+     endpoint: http://127.0.0.1:9000
+     region: US_EAST_1
+     accessKey: user
+     secretKey: password
+     bucketName: corpbucket
+
+  servlet:
+    multipart:
+      max-request-size: 100MB
+      max-file-size: 10MB
+
 server:
   port: 8081
 
 logging:
   level:
     root: info
-
-services:
-  s3:
-    endpoint: http://localhost:9000
-    accessKey: user
-    secretKey: password
-    bucketName: corpbucket
 
 user-service:
   host: localhost
@@ -66,7 +68,29 @@ cron:
 comment:
   check:
     size: 100
+    
+post:
+  publisher:
+    scheduler:
+      cron: "0 0/1 * 1/1 * ?" # every minute
+  ad-remover:
+    scheduler:
+      cron: "0 0/1 * 1/1 * ?" # every minute
+  max-images-per-post: 10
 
+resources:
+  file:
+    max-file-size: 5242880
+  image:
+    max-width-horizontal: 1080 # px
+    max-height-horizontal: 566
+    max-size-square: 1080
+    supported-image-types: "image/png,image/jpeg,image/jpg"
+  cleanup:
+    scheduler:
+      cron: "0 0 6 * * ?" # every day
+    retention-period: 1M # period: M - month, D - day
+    
 post-service:
   publish:
     scheduled:

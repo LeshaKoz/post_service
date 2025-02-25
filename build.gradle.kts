@@ -33,6 +33,15 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-s3:1.12.481")
 
     /**
+     * S3
+     */
+    implementation("software.amazon.awssdk:s3:2.30.0")
+    implementation("software.amazon.awssdk:url-connection-client:2.30.0")
+    implementation("software.amazon.awssdk:regions:2.30.0")
+    runtimeOnly ("aws.smithy.kotlin:aws-credentials-jvm:1.4.0")
+    implementation("net.coobird:thumbnailator:0.4.14")
+
+    /**
      * Utils & Logging
      */
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
