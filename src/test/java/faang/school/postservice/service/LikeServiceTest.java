@@ -105,7 +105,7 @@ public class LikeServiceTest {
         verify(likeRepository).save(captor.capture());
         Like newLike = captor.getValue();
 
-        verify(kafkaProducer).sendLikePostEvent(any(LikePostEvent.class));
+        verify(kafkaProducer).sendLikePostEvent(any(), any());
 
         Assertions.assertTrue(newLike.getUserId() == userDto.id());
         Assertions.assertTrue(newLike.getPost().getId() == post.getId());
