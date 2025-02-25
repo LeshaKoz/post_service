@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/v1/posts")
 @RequiredArgsConstructor
@@ -26,55 +25,46 @@ public class PostController {
 
     @PostMapping("/drafts")
     public PostDTO createDraft(@Valid @RequestBody PostDTO postDTO) {
-        log.info("Endpoint <createDraft> called with URI='/api/v1/posts'");
         return postService.createDraft(postDTO);
     }
 
     @PostMapping("/{postId}")
     public PostDTO publishPost(@PathVariable long postId) {
-        log.info("Endpoint <publishPost> called with URI='/api/v1/posts/publish/{postId}'");
         return postService.publishPost(postId);
     }
 
     @PutMapping
     public PostDTO updatePost(@Valid @RequestBody PostDTO postDTO) {
-        log.info("Endpoint <updatePost> called with URI='/api/v1/posts'");
         return postService.updatePost(postDTO);
     }
 
     @PutMapping("/{postId}")
     public PostDTO deletePost(@PathVariable long postId) {
-        log.info("Endpoint <deletePost> called with URI='/api/v1/posts/{postId}'");
         return postService.deletePost(postId);
     }
 
     @GetMapping("/{postId}")
     public PostDTO getPostById(@PathVariable long postId) {
-        log.info("Endpoint <getPostById> called with URI='/api/v1/posts/{postId}'");
         return postService.getPostById(postId);
     }
 
     @GetMapping("/drafts/user/{authorId}")
     public List<PostDTO> getAllDraftsByAuthorId(@PathVariable long authorId) {
-        log.info("Endpoint <getAllDraftsByAuthorId> called with URI='/api/v1/posts/drafts/user/{authorId}'");
         return postService.getAllDraftsByAuthorId(authorId);
     }
 
     @GetMapping("/drafts/project/{projectId}")
     public List<PostDTO> getAllDraftsByProjectId(@PathVariable long projectId) {
-        log.info("Endpoint <getAllDraftsByProjectId> called with URI='/api/v1/posts/drafts/project/{projectId}'");
         return postService.getAllDraftsByProjectId(projectId);
     }
 
     @GetMapping("/user/{authorId}")
     public List<PostDTO> getAllPostsByAuthorId(@PathVariable long authorId) {
-        log.info("Endpoint <getAllPostsByAuthorId> called with URI='/api/v1/posts/user/{authorId}'");
         return postService.getAllPostsByAuthorId(authorId);
     }
 
     @GetMapping("/project/{projectId}")
     public List<PostDTO> getAllPostsByProjectId(@PathVariable long projectId) {
-        log.info("Endpoint <getAllPostsByProjectId> called with URI='/api/v1/posts/project/{projectId}'");
         return postService.getAllPostsByProjectId(projectId);
     }
 }

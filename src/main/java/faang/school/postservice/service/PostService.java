@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.LongFunction;
@@ -45,6 +46,7 @@ public class PostService {
         return postMapper.toDto(draft);
     }
 
+    @Transactional
     public PostDTO publishPost(long postId) {
         Post post = postValidator.findPostWithId(postId);
 
@@ -150,7 +152,7 @@ public class PostService {
         return finder.apply(ownerId)
                 .stream()
                 .filter(filter)
-                .sorted((post1, post2) -> post2.getCreatedAt().compareTo(post1.getCreatedAt()))
+                .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
                 .map(postMapper::toDto)
                 .toList();
     }
