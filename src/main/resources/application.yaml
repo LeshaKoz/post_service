@@ -74,3 +74,9 @@ kafka:
   album:
     created:
       topic: created-album
+
+ad:
+  delete:
+    count: 1000
+  expired:
+    cron: "0 0 0 * * *" # every day at midnight
