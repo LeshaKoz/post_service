@@ -46,7 +46,7 @@ class CommentServiceImplTest {
         CommentDto commentDto = new CommentDto(null, "Test content", 1L, 1L);
         Comment comment = Comment.builder().id(1L).authorId(1L).post(Post.builder().id(1L).build()).content("Test content").build();
         when(userServiceClient.getUser(eq(1L)))
-                .thenReturn(new UserDto(1L, "username", "email"));
+                .thenReturn(new UserDto(1L, "username", "email", "phone"));
         when(postRepository.findById(eq(1L))).thenReturn(Optional.ofNullable(Post.builder().id(1L).build()));
         when(commentRepository.save(any())).thenReturn(comment);
 

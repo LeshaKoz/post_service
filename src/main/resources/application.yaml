@@ -70,6 +70,12 @@ post:
 service:
   name: post-service
 
+ad:
+  delete:
+    count: 1000
+  expired:
+    cron: "0 0 0 * * *" # every day at midnight
+
 kafka:
   album:
     created:
