@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dto.comment.CommentCreateEventDto;
 import faang.school.postservice.dto.comment.CommentResponse;
 import faang.school.postservice.dto.comment.CommentUpdateRequest;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
@@ -37,17 +38,19 @@ public class CommentService {
 
     @Transactional
     public CommentResponse create(@Valid CreateCommentRequest createCommentRequest) {
-        validateService.validateUser(createCommentRequest.userId());
-        validateService.validatePost(createCommentRequest.postId());
+        //validateService.validateUser(createCommentRequest.userId());
+        //validateService.validatePost(createCommentRequest.postId());
 
         Post post = postService.getPostById(createCommentRequest.postId());
         Comment comment = commentMapper.toEntity(createCommentRequest);
-        kafkaService.sendCommentCreateMessage(
-                post.getAuthorId(),
-                createCommentRequest.userId(),
-                createCommentRequest.postId()
-        );
-        return commentMapper.toCommentResponse(commentRepository.save(comment));
+        comment = commentRepository.save(comment);
+        CommentCreateEventDto eventDto = CommentCreateEventDto.builder()
+                .authorId(comment.getAuthorId())
+                .postId(post.getId())
+                .content(comment.getContent())
+                .build();
+        kafkaService.sendCommentCreateMessage(eventDto);
+        return commentMapper.toCommentResponse(comment);
     }
 
     @Transactional

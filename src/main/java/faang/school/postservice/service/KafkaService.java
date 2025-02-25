@@ -16,16 +16,10 @@ public class KafkaService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public void sendCommentCreateMessage(Long ownerPostUserId, Long userIdCommentCreated, Long postId) {
-        CommentCreateEventDto commentCreateEventDto = new CommentCreateEventDto(
-                ownerPostUserId,
-                postId,
-                userIdCommentCreated
-        );
-
+    public void sendCommentCreateMessage(CommentCreateEventDto commentCreateEventDto) {
         try {
             String message = objectMapper.writeValueAsString(commentCreateEventDto);
-            kafkaTemplate.send(COMMENT_CREATE_TOPIC, commentCreateEventDto.toString());
+            kafkaTemplate.send(COMMENT_CREATE_TOPIC, message);
             log.info("Sent comment create message {} to topic: {}", message, COMMENT_CREATE_TOPIC);
         } catch (Exception e) {
             log.error("Error while sending comment create message {}", e.getMessage());
