@@ -11,6 +11,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,6 +84,7 @@ public class CommentService {
         }
     }
 
+    @CacheEvict("comment")
     @Async("scheduledCommentExecutorService")
     public void checkComments() {
         List<Long> notCheckedComments = commentRepository.findIdsByVerifiedDateIsNull();
