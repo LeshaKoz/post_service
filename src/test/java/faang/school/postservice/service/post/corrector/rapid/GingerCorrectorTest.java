@@ -1,6 +1,6 @@
 package faang.school.postservice.service.post.corrector.rapid;
 
-import faang.school.postservice.model.Post;
+import faang.school.postservice.model.entity.Post;
 import faang.school.postservice.sheduler.postcorrector.ginger.GingerCorrector;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

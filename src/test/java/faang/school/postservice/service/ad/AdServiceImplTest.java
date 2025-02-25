@@ -1,7 +1,7 @@
 package faang.school.postservice.service.ad;
 
-import faang.school.postservice.model.Ad;
-import faang.school.postservice.repository.ad.AdRepository;
+import faang.school.postservice.model.entity.Ad;
+import faang.school.postservice.repository.entity.AdRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

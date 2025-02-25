@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changeset/post_V001__initial.sql
+  - include:
+      file: db/changelog/changeset/post_V002__ad.sql
+  - include:
+      file: db/changelog/changeset/post_V003_resource.sql
+  - include:
+      file: db/changelog/changeset/post_V004__verified.sql
+  - include:
+      file: db/changelog/changeset/post_V005_visibility.sql
+  - include:
+      file: db/changelog/changeset/post_V006_alter_post_ad.sql
+  - include:
+      file: db/changelog/changeset/test_data.sql

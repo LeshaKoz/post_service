@@ -23,3 +23,5 @@ auto-checking-posts-by-verification:
 size:
   # тут можно настроить кол-во не верифицированных постов до отправки юзера в бан
   not-verified-posts-for-users: 5
+  # to process posts in batches
+  batch: 5

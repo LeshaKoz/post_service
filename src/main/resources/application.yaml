@@ -39,6 +39,11 @@ spring:
         ad-bought-channel:
           name: ad_bought_channel
 
+    kafka:
+      properties:
+        bootstrapAddress: "localhost:9092"
+        postTopic: "post_topic"
+
   task:
     execution:
       pool:
@@ -46,18 +51,19 @@ spring:
         max-size: 10
         queue-capacity: 500
       thread-name-prefix: async-worker-thread- # префикс для имен потоков
+
   scheduler:
     comment:
       moderator:
         path-curse-words: src/main/resources/curse-words.txt
-        cron: 0 * * * * *
+        cron: 0 0 * * * *
         partition-size: 1000
-        treads-count: 10
+        treads-count: 5
     post:
       publisher:
-        cron: 1/5 * * * * *
+        cron: 0 * * * * *
         partition-size: 1000
-        threads-count: 10
+        threads-count: 5
 
 server:
   port: 8081
@@ -83,3 +89,17 @@ payment-service:
   host: localhost
   port: 9080
 
+newsfeed:
+  subscribers:
+    batch-size: 3
+  posts:
+    limit: 5
+    page-size: 20
+  feed:
+    prefix: "Feed:"
+    batch-size: 2
+
+executor-service:
+  core-pool-size: 5
+  threads:
+    number: 100

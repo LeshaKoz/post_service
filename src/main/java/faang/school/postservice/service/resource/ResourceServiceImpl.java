@@ -1,10 +1,8 @@
 package faang.school.postservice.service.resource;
 
 import faang.school.postservice.exception.ExceptionMessage;
-import faang.school.postservice.exception.FileException;
-import faang.school.postservice.model.Resource;
-import faang.school.postservice.repository.ResourceRepository;
-import faang.school.postservice.service.amazons3.Amazons3ServiceImpl;
+import faang.school.postservice.model.entity.Resource;
+import faang.school.postservice.repository.entity.ResourceRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

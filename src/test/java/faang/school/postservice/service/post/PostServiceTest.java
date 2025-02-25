@@ -1,23 +1,51 @@
 package faang.school.postservice.service.post;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json.student.DtoBanShema;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
-import faang.school.postservice.dto.post.*;
+import faang.school.postservice.dto.event.PostEventDto;
+import faang.school.postservice.dto.post.PostDraftCreateDto;
+import faang.school.postservice.dto.post.PostDraftResponseDto;
+import faang.school.postservice.dto.post.PostDraftWithFilesCreateDto;
+import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.post.PostMapperImpl;
-import faang.school.postservice.model.Album;
-import faang.school.postservice.model.Post;
-import faang.school.postservice.model.Resource;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.mapper.user.UserMapper;
+import faang.school.postservice.model.entity.Album;
+import faang.school.postservice.model.entity.Post;
+import faang.school.postservice.model.entity.Resource;
+import faang.school.postservice.model.redis.PostCache;
+import faang.school.postservice.model.redis.UserCache;
+import faang.school.postservice.producer.PostEventProducer;
+import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
+import faang.school.postservice.repository.entity.PostRepository;
+import faang.school.postservice.repository.redis.PostCacheRepository;
+import faang.school.postservice.repository.redis.UserCacheRepository;
 import faang.school.postservice.service.album.AlbumService;
 import faang.school.postservice.service.amazons3.Amazons3ServiceImpl;
 import faang.school.postservice.service.amazons3.processing.KeyKeeper;
-import faang.school.postservice.sheduler.postcorrector.ginger.GingerCorrector;
 import faang.school.postservice.service.resource.ResourceServiceImpl;
+import faang.school.postservice.sheduler.postcorrector.ginger.GingerCorrector;
 import faang.school.postservice.validator.dto.project.ProjectDtoValidator;
 import faang.school.postservice.validator.dto.user.UserDtoValidator;
 import faang.school.postservice.validator.file.FileValidator;
@@ -27,18 +55,6 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,11 +63,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -87,6 +113,20 @@ class PostServiceTest {
     private MessageSenderForUserBanImpl messageSenderForUserBan;
     @Mock
     private ObjectMapper objectMapper;
+    @Mock
+    private PostEventProducer postEventProducer;
+    @Mock
+    private PostCacheRepository postCacheRepository;
+    @Mock
+    private UserCacheRepository userCacheRepository;
+    @Spy
+    private UserMapper userMapper = Mappers.getMapper(UserMapper.class);
+    @Captor
+    private ArgumentCaptor<UserCache> userCacheArgumentCaptor;
+    @Captor
+    private ArgumentCaptor<PostCache> postCacheArgumentCaptor;
+    @Captor
+    private ArgumentCaptor<PostEventDto> postEventDtoArgumentCaptor;
 
     private Validator validator;
 
@@ -217,6 +257,8 @@ class PostServiceTest {
 
 
     @Test
+    @DisplayName("Should publish post with valid data and return postDto "
+        + "save user, post to Redis and send Post Event to Kafka")
     void testPublishPost_withValidPostId_shouldPublishAndReturnPostResponseDto() {
         long postId = 1L;
         PostResponseDto responseDto = PostResponseDto.builder()
@@ -226,15 +268,57 @@ class PostServiceTest {
                 .published(true)
                 .build();
 
-        when(postRepository.findById(anyLong())).thenReturn(Optional.of(new Post()));
-        when(postRepository.save(any())).thenReturn(new Post());
+        UserDto authorUserDto = UserDto.builder()
+          .id(1L)
+          .username("test name")
+          .email("test@email.com")
+          .build();
+
+        UserCache userCacheToSave = userMapper.toUserCache(authorUserDto);
+
+        Post post = Post.builder()
+            .id(1L)
+            .content("content")
+            .authorId(1L)
+            .published(false)
+            .build();
+
+        PostCache postCacheToSave = PostCache.builder()
+            .id(1L)
+            .content("content")
+            .build();
+
+        when(postRepository.findById(anyLong())).thenReturn(Optional.of(post));
+        when(postRepository.save(any())).thenReturn(post);
         when(postMapper.toDtoFromPost(any(Post.class))).thenReturn(responseDto);
+
+        when(postMapper.toPostCache(any(Post.class))).thenReturn(postCacheToSave);
+        when(userService.getUser(1L)).thenReturn(authorUserDto);
+        when(userCacheRepository.save(any(UserCache.class))).thenReturn(userCacheToSave);
+        when(postCacheRepository.save(any(PostCache.class))).thenReturn(postCacheToSave);
+
+        when(userService.getUserSubscribers(1L)).thenReturn(List.of(
+            UserDto.builder().id(2L).build(),
+            UserDto.builder().id(3L).build()));
 
         PostResponseDto result = postService.publishPost(postId);
 
         verify(postRepository, times(1)).findById(postId);
         verify(postRepository, times(1)).save(any());
         verify(postMapper, times(1)).toDtoFromPost(any(Post.class));
+
+        verify(userCacheRepository, times(1)).save(userCacheArgumentCaptor.capture());
+        verify(postCacheRepository, times(1)).save(postCacheArgumentCaptor.capture());
+
+        verify(postEventProducer, times(1)).sendEvent(postEventDtoArgumentCaptor.capture());
+
+        UserCache userCache = userCacheArgumentCaptor.getValue();
+        PostCache postCache = postCacheArgumentCaptor.getValue();
+        PostEventDto postEventDto = postEventDtoArgumentCaptor.getValue();
+
+        assertEquals(userCacheToSave.getEmail(), userCache.getEmail());
+        assertEquals(postCacheToSave.getAuthorName(), postCache.getAuthorName());
+        assertEquals(List.of(2L, 3L), postEventDto.getFollowers());
 
         assertNotNull(result);
         assertEquals(result, responseDto);

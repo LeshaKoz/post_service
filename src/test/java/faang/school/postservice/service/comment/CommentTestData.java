@@ -2,8 +2,8 @@ package faang.school.postservice.service.comment;
 
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.comment.ResponseCommentDto;
-import faang.school.postservice.model.Comment;
-import faang.school.postservice.model.Post;
+import faang.school.postservice.model.entity.Comment;
+import faang.school.postservice.model.entity.Post;
 import java.util.List;
 
 public class CommentTestData {

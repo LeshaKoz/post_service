@@ -1,8 +1,8 @@
 package faang.school.postservice.service.ad;
 
 
-import faang.school.postservice.model.Ad;
-import faang.school.postservice.repository.ad.AdRepository;
+import faang.school.postservice.model.entity.Ad;
+import faang.school.postservice.repository.entity.AdRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;

@@ -2,8 +2,8 @@ package faang.school.postservice.mapper.album;
 
 import faang.school.postservice.dto.album.AlbumCreateDto;
 import faang.school.postservice.dto.album.AlbumDto;
-import faang.school.postservice.model.Album;
-import faang.school.postservice.model.Post;
+import faang.school.postservice.model.entity.Album;
+import faang.school.postservice.model.entity.Post;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

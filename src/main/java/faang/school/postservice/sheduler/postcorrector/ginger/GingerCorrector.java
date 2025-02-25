@@ -1,6 +1,6 @@
 package faang.school.postservice.sheduler.postcorrector.ginger;
 
-import faang.school.postservice.model.Post;
+import faang.school.postservice.model.entity.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

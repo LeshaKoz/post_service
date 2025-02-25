@@ -2,7 +2,7 @@ package faang.school.postservice.mapper.ad;
 
 import faang.school.postservice.dto.ad.AdBoughtEvent;
 import faang.school.postservice.dto.ad.AdDto;
-import faang.school.postservice.model.Ad;
+import faang.school.postservice.model.entity.Ad;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

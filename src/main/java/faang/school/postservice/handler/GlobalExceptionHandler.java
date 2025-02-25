@@ -1,11 +1,14 @@
 package faang.school.postservice.handler;
 
 import faang.school.postservice.exception.FileException;
+import faang.school.postservice.exception.NoFeedException;
 import faang.school.postservice.exception.ValidationErrorResponse;
 import faang.school.postservice.exception.Violation;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +17,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-
-import javax.annotation.processing.FilerException;
-import java.io.IOException;
-import java.util.List;
 
 @ControllerAdvice
 @Slf4j
@@ -86,4 +84,12 @@ public class GlobalExceptionHandler {
         log.error("EntityNotFoundException occurred: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
+
+    @ExceptionHandler({NoFeedException.class})
+    public ResponseEntity<Object> handleNoFeedException(NoFeedException e) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(e.getMessage());
+    }
+
 }

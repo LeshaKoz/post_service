@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import faang.school.postservice.dto.album.AlbumFilterDto;
-import faang.school.postservice.model.Album;
+import faang.school.postservice.model.entity.Album;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;

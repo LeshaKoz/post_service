@@ -1,6 +1,6 @@
 package faang.school.postservice.dto.album;
 
-import faang.school.postservice.model.Visibility;
+import faang.school.postservice.model.entity.Visibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
