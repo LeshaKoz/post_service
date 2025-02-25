@@ -45,7 +45,7 @@ payment-service:
   port: 9080
 
 post-service:
-  thread-pool-size: 1
+  thread-pool-size: 5
 
 spell-service:
   url: https://speller.yandex.net/services/spellservice.json
@@ -54,3 +54,8 @@ spell-service:
     attempts: 3
     delay: 1
     multiplier: 1
+
+moderation:
+  cron: "0 0 0 * * ?"
+  batch-size: 100
+  bad-words-file-path: classpath:bad-words.regex

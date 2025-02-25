@@ -59,6 +59,11 @@ public class Post {
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Resource> resources;
 
+    private boolean verified;
+
+    @Column(name = "verified_date")
+    private LocalDateTime verifiedDate;
+
     @Column(name = "published", nullable = false)
     private boolean published;
 
