@@ -75,11 +75,6 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
-
-
-    /**
-    Kafka Events*/
-    implementation("io.github.narol01:kafkaEvent:1.0.4")
 }
 
 tasks.test {
