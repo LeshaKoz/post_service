@@ -1,10 +1,11 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
@@ -229,54 +230,83 @@ public class PostServiceTest {
 
     @Test
     public void getUserPosts_ShouldReturnPosts() {
-        long userId = 1L;
         Post post = new Post();
+        post.setId(100L);
         post.setPublished(true);
         post.setDeleted(false);
-        List<Post> posts = List.of(post);
+        post.setLikes(List.of(new Like(), new Like()));
+        post.setPublishedAt(LocalDateTime.now());
 
-        when(postRepository.findByAuthorId(userId)).thenReturn(posts);
+        long userId = 1L;
+        when(postRepository.findByAuthorIdWithLikes(userId)).thenReturn(List.of(post));
 
         List<PostResponseDto> result = postService.getUserPosts(userId);
 
         assertEquals(1, result.size());
         assertTrue(result.get(0).isPublished());
         assertFalse(result.get(0).isDeleted());
+        assertEquals(2, result.get(0).getLikesCount());
+        assertEquals(2, result.get(0).getLikesIds().size());
     }
 
     @Test
     public void getUserPosts_ShouldCorrectlySort() {
-        Post post = new Post();
-        post.setPublished(true);
-        post.setDeleted(false);
-        post.setPublishedAt(LocalDateTime.of(1, 1, 1, 1, 1));
+        Post olderPost = new Post();
+        olderPost.setPublished(true);
+        olderPost.setDeleted(false);
+        olderPost.setPublishedAt(LocalDateTime.of(2023, 1, 1, 10, 0));
+        Post newerPost = new Post();
+        newerPost.setPublished(true);
+        newerPost.setDeleted(false);
+        newerPost.setPublishedAt(LocalDateTime.of(2024, 1, 1, 10, 0));
 
-        Post post1 = new Post();
-        post1.setPublished(true);
-        post1.setDeleted(false);
-        post1.setPublishedAt(LocalDateTime.of(2, 1, 1, 1, 1));
+        long userId = 1L;
+        when(postRepository.findByAuthorIdWithLikes(userId)).thenReturn(List.of(olderPost, newerPost));
 
-        when(postRepository.findByAuthorId(anyLong())).thenReturn(List.of(post, post1));
+        List<PostResponseDto> result = postService.getUserPosts(userId);
 
-        List<PostResponseDto> result = postService.getUserPosts(1L);
-
+        assertEquals(2, result.size());
         assertTrue(result.get(0).getPublishedAt().isAfter(result.get(1).getPublishedAt()));
     }
 
     @Test
     public void getProjectPosts_ShouldReturnPosts() {
-        long projectId = 1L;
         Post post = new Post();
+        post.setId(200L);
         post.setPublished(true);
         post.setDeleted(false);
-        List<Post> posts = List.of(post);
+        post.setLikes(List.of(new Like()));
+        post.setPublishedAt(LocalDateTime.now());
 
-        when(postRepository.findByProjectId(projectId)).thenReturn(posts);
+        long projectId = 1L;
+        when(postRepository.findByProjectIdWithLikes(projectId)).thenReturn(List.of(post));
 
         List<PostResponseDto> result = postService.getProjectPosts(projectId);
 
         assertEquals(1, result.size());
         assertTrue(result.get(0).isPublished());
         assertFalse(result.get(0).isDeleted());
+        assertEquals(1, result.get(0).getLikesCount());
+        assertEquals(1, result.get(0).getLikesIds().size());
+    }
+
+    @Test
+    public void getProjectPosts_ShouldCorrectlySort() {
+        Post olderPost = new Post();
+        olderPost.setPublished(true);
+        olderPost.setDeleted(false);
+        olderPost.setPublishedAt(LocalDateTime.of(2022, 5, 5, 10, 0));
+        Post newerPost = new Post();
+        newerPost.setPublished(true);
+        newerPost.setDeleted(false);
+        newerPost.setPublishedAt(LocalDateTime.of(2023, 5, 5, 10, 0));
+
+        long projectId = 1L;
+        when(postRepository.findByProjectIdWithLikes(projectId)).thenReturn(List.of(olderPost, newerPost));
+
+        List<PostResponseDto> result = postService.getProjectPosts(projectId);
+
+        assertEquals(2, result.size());
+        assertTrue(result.get(0).getPublishedAt().isAfter(result.get(1).getPublishedAt()));
     }
 }

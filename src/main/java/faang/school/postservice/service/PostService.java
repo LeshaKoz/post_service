@@ -84,19 +84,35 @@ public class PostService {
     }
 
     public List<PostResponseDto> getUserDrafts(long userId) {
-        return getExistingPostsSortedByDate(postRepository::findByAuthorId, Post::getCreatedAt, userId, false);
+        return getExistingPostsSortedByDate(
+                postRepository::findByAuthorId,
+                Post::getCreatedAt,
+                userId, false
+        );
     }
 
     public List<PostResponseDto> getProjectDrafts(long projectId) {
-        return getExistingPostsSortedByDate(postRepository::findByProjectId, Post::getCreatedAt, projectId, false);
+        return getExistingPostsSortedByDate(
+                postRepository::findByProjectId,
+                Post::getCreatedAt,
+                projectId, false
+        );
     }
 
     public List<PostResponseDto> getUserPosts(long userId) {
-        return getExistingPostsSortedByDate(postRepository::findByAuthorId, Post::getPublishedAt, userId, true);
+        return getExistingPostsSortedByDate(
+                postRepository::findByAuthorIdWithLikes,
+                Post::getPublishedAt,
+                userId, true
+        );
     }
 
     public List<PostResponseDto> getProjectPosts(long projectId) {
-        return getExistingPostsSortedByDate(postRepository::findByProjectId, Post::getPublishedAt, projectId, true);
+        return getExistingPostsSortedByDate(
+                postRepository::findByProjectIdWithLikes,
+                Post::getPublishedAt,
+                projectId, true
+        );
     }
 
     @Transactional(readOnly = true)
