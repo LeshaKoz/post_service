@@ -23,25 +23,26 @@ public class KafkaProducerConfig {
     @Value("${spring.kafka.topics.analytic-topics.add-like-topic-name}")
     private String addLikeEventTopicName;
 
-    @Bean
-    public ProducerFactory<String, Object> producerFactory() {
+    @Bean("addLikeProducerFactory")
+    public ProducerFactory<String, Object> addLikeProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
                 bootstrapAddress);
         configProps.put(
                 ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                StringSerializer.class);
+                StringSerializer.class.getName());
         configProps.put(
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                JsonSerializer.class);
+                JsonSerializer.class.getName());
+        configProps.put(JsonSerializer.TYPE_MAPPINGS, ("LikeEvent:faang.school.postservice.event.LikeEvent"));
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    @Bean("addLikeKafkaTemplate")
+    public KafkaTemplate<String, Object> addLikeKafkaTemplate() {
+        return new KafkaTemplate<>(addLikeProducerFactory());
     }
 
     @Bean
