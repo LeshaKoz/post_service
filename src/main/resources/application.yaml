@@ -24,6 +24,19 @@ spring:
       hibernate:
         format_sql: true
 
+  kafka:
+    producer:
+      acks: all
+      bootstrap-servers: localhost:9092
+      security:
+        protocol: PLAINTEXT
+      retries: 3
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      batch-size: 1000
+      properties:
+        linger-ms: 30000
+
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
@@ -67,3 +80,10 @@ resource:
   folder: files
   max-width: 1080
   max-height: 566
+
+author:
+  banner:
+    kafka_topic: "user_ban"
+    rejected_posts_to_ban: 5
+    scheduler:
+      cron: "0 0 3 * * *" #every day at 03.00

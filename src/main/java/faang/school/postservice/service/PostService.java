@@ -9,21 +9,36 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
+@Slf4j
 @AllArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class PostService {
+
     private final PostRepository postRepository;
+    private final KafkaTemplate<String, Long> kafkaTemplate;
     private final PostMapper postMapper;
     private final PostValidator postValidator;
     private final ResourseService resourseService;
+
+    @Value("${author.banner.rejected_posts_to_ban}")
+    private int rejectedPostsToBan;
+    @Value("${author.banner.kafka_topic}")
+    private String banTopic;
 
     public PostResponseDto createDraft(CreatePostDraftDto postDraftDto) {
         Post post = postMapper.fromCreateDto(postDraftDto);
@@ -67,21 +82,69 @@ public class PostService {
         return postMapper.toResponseDto(post);
     }
 
+    @Transactional(readOnly = true)
+    public Post getPost(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+    }
+
     public List<PostResponseDto> getUserDrafts(long userId) {
-        return getExistingPostsSortedByDate(postRepository::findByAuthorId, Post::getCreatedAt, userId, false);
+        return getExistingPostsSortedByDate(
+                postRepository::findByAuthorId,
+                Post::getCreatedAt,
+                userId, false
+        );
     }
 
     public List<PostResponseDto> getProjectDrafts(long projectId) {
-        return getExistingPostsSortedByDate(postRepository::findByProjectId, Post::getCreatedAt, projectId, false);
+        return getExistingPostsSortedByDate(
+                postRepository::findByProjectId,
+                Post::getCreatedAt,
+                projectId, false
+        );
     }
 
     public List<PostResponseDto> getUserPosts(long userId) {
-        return getExistingPostsSortedByDate(postRepository::findByAuthorId, Post::getPublishedAt, userId, true);
+        return getExistingPostsSortedByDate(
+                postRepository::findByAuthorIdWithLikes,
+                Post::getPublishedAt,
+                userId, true
+        );
     }
 
     public List<PostResponseDto> getProjectPosts(long projectId) {
-        return getExistingPostsSortedByDate(postRepository::findByProjectId, Post::getPublishedAt, projectId, true);
+        return getExistingPostsSortedByDate(
+                postRepository::findByProjectIdWithLikes,
+                Post::getPublishedAt,
+                projectId, true
+        );
     }
+
+    @Transactional(readOnly = true)
+    public void postAuthorsToBan() {
+        List<Long> authorIdsToBan = findAuthorIdsToBan();
+        log.info("Start publishing authors to ban");
+        for (Long authorIdToBan : authorIdsToBan) {
+            log.debug("Publishing author {} to ban", authorIdToBan);
+            kafkaTemplate.send(banTopic, authorIdToBan);
+        }
+        log.info("Finish publishing authors to ban");
+    }
+
+    public void uploadImages(Long postId, List<MultipartFile> files) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        for (MultipartFile file : files) {
+            resourseService.addResource(post, file);
+        }
+    }
+
+    private List<Long> findAuthorIdsToBan() {
+        log.info("Start search authors to ban.");
+        List<Long> authorIdsForBan = postRepository.findAuthorsForBan(rejectedPostsToBan);
+        log.info("End search authors to ban. Found {} authors", authorIdsForBan);
+        return authorIdsForBan;
+    }
+
     private List<PostResponseDto> getExistingPostsSortedByDate(
             Function<Long, List<Post>> repositoryMethod,
             Function<Post, LocalDateTime> fieldToSortBy,
@@ -91,12 +154,5 @@ public class PostService {
                 .sorted(Comparator.comparing(fieldToSortBy).reversed())
                 .map(postMapper::toResponseDto)
                 .toList();
-    }
-
-    public void uploadImages(Long postId, List<MultipartFile> files) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        for (MultipartFile file : files) {
-            resourseService.addResource(post, file);
-        }
     }
 }

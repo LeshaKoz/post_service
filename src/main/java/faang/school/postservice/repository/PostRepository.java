@@ -18,6 +18,16 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.likes WHERE p.authorId = :authorId")
     List<Post> findByAuthorIdWithLikes(long authorId);
 
-    @Query("SELECT p FROM Post p WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
+    @Query("SELECT p FROM Post p WHERE p.published = false AND " +
+            "p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
+
+    @Query(nativeQuery = true, value = """
+            SELECT p.author_id
+            FROM post p
+            WHERE p.verified = false
+            GROUP BY p.author_id
+            HAVING COUNT(*) > :rejectedPostsToBan
+            """)
+    List<Long> findAuthorsForBan(int rejectedPostsToBan);
 }
