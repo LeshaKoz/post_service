@@ -44,7 +44,7 @@ public class Post {
     @Column(name = "project_id")
     private Long projectId;
 
-    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likes;
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
