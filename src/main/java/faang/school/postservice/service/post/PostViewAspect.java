@@ -17,7 +17,7 @@ import java.util.Objects;
 @Aspect
 @Component
 public class PostViewAspect {
-    private final PostViewEventPublisher publisher;
+    private final EventProducerService publisher;
     private final UserContext userContext;
 
     @AfterReturning(pointcut = "@annotation(faang.school.postservice.service.annotation.ViewPost)", returning = "result")

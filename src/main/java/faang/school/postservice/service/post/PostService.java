@@ -91,6 +91,7 @@ public class PostService {
     }
 
     @ViewPost
+    @Transactional(readOnly = true)
     public Post getPostById(Long postId) {
         Post post = getPost(postId);
 
@@ -101,6 +102,7 @@ public class PostService {
         return post;
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getNotPublishedPostsByUser(Long userId) {
         doesUserExist(userId);
         return postRepository
@@ -109,6 +111,7 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getNotPublishedPostsByProject(Long projectId) {
         doesProjectExist(projectId);
         return postRepository
@@ -119,6 +122,7 @@ public class PostService {
     }
 
     @ViewPost
+    @Transactional(readOnly = true)
     public List<Post> getPublishedPostsByUser(Long userId) {
         doesUserExist(userId);
         return postRepository
@@ -127,6 +131,7 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPublishedPostsByProject(Long projectId) {
         doesProjectExist(projectId);
         return postRepository

@@ -27,6 +27,7 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    post-view-topic: user-post-viewed
 
   services:
     s3:

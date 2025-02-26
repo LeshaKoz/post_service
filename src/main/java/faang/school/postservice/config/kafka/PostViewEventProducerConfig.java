@@ -16,12 +16,12 @@ import java.util.Map;
 
 @EnableKafka
 @Configuration
-public class KafkaProducerConfig {
+public class PostViewEventProducerConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Bean
+    @Bean(name = "postViewEventFactory")
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -30,7 +30,7 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    @Bean
+    @Bean(name = "postViewEventTemplate")
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
