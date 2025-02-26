@@ -2,6 +2,7 @@ package faang.school.postservice.service.comment;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.dto.comment.CommentFiltersDto;
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
@@ -16,6 +17,7 @@ import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.comment.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageService;
@@ -80,6 +82,9 @@ public class CommentServiceTest {
     @Mock
     private ImageService imageService;
 
+    @Mock
+    private CommentEventPublisher publisher;
+
     @InjectMocks
     private CommentServiceImpl commentService;
 
@@ -100,6 +105,7 @@ public class CommentServiceTest {
     private CommentRequestDto commentRequestDto;
     private CommentUpdateDto commentUpdateDto;
     private CommentFiltersDto commentFiltersDto;
+    private CommentEvent commentEvent;
 
     @BeforeEach
     void setUp() {
@@ -125,6 +131,12 @@ public class CommentServiceTest {
         like3 = createLike(3L, 3L, post, comment);
         likes = List.of(like1, like2, like3);
         likeIds = Arrays.asList(like1.getId(), like2.getId(), like3.getId());
+        commentEvent = CommentEvent.builder()
+                .commentAuthorId(comment.getAuthorId())
+                .postAuthorId(comment.getPost().getAuthorId())
+                .postId(comment.getPost().getId())
+                .commentId(comment.getId())
+                .build();
     }
 
     @Test
@@ -155,6 +167,7 @@ public class CommentServiceTest {
         assertEquals(likeIds.get(0), commentResponseDtoFromDb.likeDtos().get(0).id());
         assertEquals(likeIds.get(1), commentResponseDtoFromDb.likeDtos().get(1).id());
         assertEquals(likeIds.get(2), commentResponseDtoFromDb.likeDtos().get(2).id());
+        verify(publisher).publish(commentEvent);
     }
 
     @Test
