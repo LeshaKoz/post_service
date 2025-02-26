@@ -40,7 +40,7 @@ public class CommentService {
         Comment comment = commentMapper.toEntity(createCommentRequest);
         commentValidator.verificationCreatingData(comment);
         comment.setPost(post);
-        Comment savedComment = commentRepository.save(comment);
+        final Comment savedComment = commentRepository.save(comment);
         CommentEvent event = commentMapper.toEvent(comment);
         event.setAuthorPostId(post.getAuthorId());
         event.setPostId(post.getId());
