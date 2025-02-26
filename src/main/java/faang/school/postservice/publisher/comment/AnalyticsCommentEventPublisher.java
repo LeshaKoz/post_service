@@ -3,12 +3,11 @@ package faang.school.postservice.publisher.comment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.event.NotificationLikeEvent;
-import faang.school.postservice.event.AnalyticsCommentEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
+import faang.school.postservice.model.event.AnalyticsCommentEvent;
 import faang.school.postservice.publisher.EventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
