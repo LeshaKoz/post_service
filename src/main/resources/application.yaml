@@ -50,6 +50,9 @@ post:
     initial-delay: 500
     delay-multiplier: 2
     batchCount: 3
+  upload:
+    max-files: 10
+    max-file-size-mb: 5
 
 thread:
   pool:

@@ -55,11 +55,15 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
+
     @Value("${post.schedule.batch-size}")
     private int batchSize;
 
-    private static final int MAX_FILES = 10;
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+    @Value("${post.upload.max-files}")
+    private int maxFiles;
+
+    @Value("${post.upload.max-file-size-mb}")
+    private int maxFileSizeMb;
 
     public PostReadDto createPostDraft(PostCreateDto dto) {
         validateCreateDraftDto(dto);
@@ -167,7 +171,6 @@ public class PostService {
 
         resourceRepository.saveAll(newResources);
         post.getResources().addAll(newResources);
-        postRepository.save(post);
 
         post = postRepository.save(post);
         return postMapper.toDto(post);
@@ -198,14 +201,18 @@ public class PostService {
         }
     }
 
+    private long getMaxFileSizeBytes() {
+        return maxFileSizeMb * 1024L * 1024L;
+    }
+
     private void validateImageUpload(List<MultipartFile> files, int currentSize) {
         int totalSize = currentSize + files.size();
 
-        if (totalSize > MAX_FILES) {
-            throw new BusinessException("Максимум можно загрузить " + MAX_FILES + " файлов");
+        if (totalSize > maxFiles) {
+            throw new BusinessException("Максимум можно загрузить " + maxFiles + " файлов");
         }
         for (MultipartFile file : files) {
-            if (file.getSize() > MAX_FILE_SIZE) {
+            if (file.getSize() > getMaxFileSizeBytes()) {
                 postImageService.getResizedCover(file);
             }
             String fileType = file.getContentType();

@@ -6,6 +6,7 @@ import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.config.props.PostProperties;
 import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostOwnerType;
+import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.BusinessException;
@@ -13,9 +14,12 @@ import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.PaginationService;
+import faang.school.postservice.service.s3.S3Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -30,15 +34,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -65,6 +77,12 @@ public class PostServiceTest {
     private PostProperties postProperties;
     @InjectMocks
     private PostService postService;
+    @Mock
+    private S3Service s3Service;
+    @Mock
+    private ResourceRepository resourceRepository;
+    @Mock
+    private PostImageService postImageService;
 
     private Post post;
 
@@ -245,6 +263,66 @@ public class PostServiceTest {
         long projectId = 1;
         postService.getAllPublished(projectId, PostOwnerType.PROJECT);
         verify(postRepository, atLeastOnce()).findAllPublishedByProjectId(projectId);
+    }
+
+    @Test
+    void uploadImagesUploadAndSaveImages() {
+        post.setResources(new ArrayList<>());
+        long postId = post.getId();
+
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getSize()).thenReturn(1024L);
+        when(file.getContentType()).thenReturn("image/png");
+
+        Resource resource = new Resource();
+        ReflectionTestUtils.setField(postService, "maxFiles", 10);
+        when(s3Service.uploadResource(file, postId + "_post_attachments")).thenReturn(resource);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postRepository.save(postArgumentCaptor.capture())).thenReturn(post);
+
+        PostReadDto result = postService.uploadImages(postId, List.of(file));
+
+        assertNotNull(result);
+        verify(s3Service).uploadResource(file, postId + "_post_attachments");
+        verify(resourceRepository).saveAll(anyList());
+        verify(postRepository, times(1)).save(post);
+    }
+
+    @Test
+    void deleteImagesRemoveImagesAndUpdatePost() {
+        String fileKey = "image.png";
+        Resource resource = new Resource();
+        resource.setKey(fileKey);
+        long postId = post.getId();
+        post.setResources(new ArrayList<>(List.of(resource)));
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(resourceRepository.findByKey(fileKey)).thenReturn(resource);
+        when(postRepository.save(postArgumentCaptor.capture())).thenReturn(post);
+
+        PostReadDto result = postService.deleteImages(postId, List.of(fileKey));
+
+        assertNotNull(result);
+        verify(resourceRepository).delete(resource);
+        verify(s3Service).deleteFile(fileKey);
+        verify(postRepository).save(post);
+    }
+
+    @Test
+    void downloadImageDownloadImage() {
+        String fileKey = "image.png";
+        Resource resource = new Resource();
+        resource.setKey(fileKey);
+
+        InputStream inputStream = new ByteArrayInputStream("image data".getBytes());
+        when(resourceRepository.findByKey(fileKey)).thenReturn(resource);
+        when(s3Service.downloadFile(fileKey)).thenReturn(inputStream);
+
+        byte[] result = postService.downloadImage(fileKey);
+
+        assertNotNull(result);
+        assertEquals("image data", new String(result));
+        verify(s3Service).downloadFile(fileKey);
     }
 
     @RepeatedTest(5)

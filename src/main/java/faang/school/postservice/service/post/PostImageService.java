@@ -17,10 +17,10 @@ import java.io.IOException;
 public class PostImageService {
 
     @Value("${cover.max-image-width}")
-    private int maxWidth;
+    protected int maxWidth;
 
     @Value("${cover.max-image-height-horizontal}")
-    private int maxHeightHorizontal;
+    protected int maxHeightHorizontal;
 
     public MultipartFile getResizedCover(MultipartFile cover) {
             try {
@@ -44,7 +44,7 @@ public class PostImageService {
 
     }
 
-    private int calculateNewHeight(BufferedImage image) {
+    public int calculateNewHeight(BufferedImage image) {
         double aspectRatio = (double) image.getHeight() / image.getWidth();
         return image.getWidth() > image.getHeight()
                 ? (int) (maxWidth * aspectRatio)
