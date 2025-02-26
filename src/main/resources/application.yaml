@@ -79,6 +79,7 @@ post:
     cronPeriod: "0 0 0 * * *"
   schedule:
     batch-size: 1000
+    page-size: 20
     scheduled-cron: "0 * * * * *"
     max-retries: 5
     timeout: 10

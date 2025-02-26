@@ -1,4 +1,4 @@
-package faang.school.postservice.dto.messaging;
+package faang.school.postservice.event;
 
 import lombok.Builder;
 
