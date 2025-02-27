@@ -8,6 +8,7 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.post.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.post.PostRepository;
+import faang.school.postservice.service.kafka.KafkaMessageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,6 +36,9 @@ class CommentServiceImplTest {
     @Mock
     private UserServiceClient userServiceClient;
 
+    @Mock
+    private KafkaMessageService kafkaMessageService;
+
     @Spy
     private CommentMapperImpl commentMapper;
 
@@ -47,7 +51,7 @@ class CommentServiceImplTest {
         Comment comment = Comment.builder().id(1L).authorId(1L).post(Post.builder().id(1L).build()).content("Test content").build();
         when(userServiceClient.getUser(eq(1L)))
                 .thenReturn(new UserDto(1L, "username", "email", "phone"));
-        when(postRepository.findById(eq(1L))).thenReturn(Optional.ofNullable(Post.builder().id(1L).build()));
+        when(postRepository.findById(eq(1L))).thenReturn(Optional.ofNullable(Post.builder().id(1L).authorId(1L).build()));
         when(commentRepository.save(any())).thenReturn(comment);
 
         CommentDto result = commentService.createComment(commentDto);

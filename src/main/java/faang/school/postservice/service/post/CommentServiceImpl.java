@@ -7,15 +7,16 @@ import faang.school.postservice.dto.post.CommentDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.KafkaProduceException;
 import faang.school.postservice.exception.comment.AccessDeniedCommentException;
-import faang.school.postservice.kafka.KafkaProducer;
 import faang.school.postservice.mapper.post.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.post.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.post.PostRepository;
+import faang.school.postservice.service.kafka.KafkaMessageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -31,7 +32,10 @@ public class CommentServiceImpl implements CommentService {
     private final PostRepository postRepository;
     private final CommentMapper commentMapper;
     private final UserServiceClient userServiceClient;
-    private final KafkaProducer<CommentEvent> kafkaProducer;
+    private final KafkaMessageService kafkaMessageService;
+
+    @Value("${kafka.comment.topic}")
+    private String topic;
 
     @Override
     public CommentDto createComment(CommentDto dto) {
@@ -44,7 +48,7 @@ public class CommentServiceImpl implements CommentService {
         Post post = postRepository.findById(dto.postId()).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Post with id = %d not found", dto.postId())));
         Comment createdComment = commentRepository.save(buildComment(dto, post));
-        sendEventToKafka(new CommentEvent(dto.postId(), post.getAuthorId(), createdComment.getId(), LocalDateTime.now()));
+        saveKafkaMessage(new CommentEvent(dto.postId(), post.getAuthorId(), createdComment.getId(), LocalDateTime.now()));
         return commentMapper.toDto(createdComment);
     }
 
@@ -87,9 +91,9 @@ public class CommentServiceImpl implements CommentService {
                 .build();
     }
 
-    private void sendEventToKafka(CommentEvent commentEvent) {
+    private void saveKafkaMessage(CommentEvent commentEvent) {
         try {
-            kafkaProducer.produce(commentEvent);
+            kafkaMessageService.saveMessage(topic, commentEvent);
         } catch (JsonProcessingException e) {
             throw new KafkaProduceException(
                     String.format("Failed kafka produce comment event. Comment id = %d", commentEvent.commentId()));

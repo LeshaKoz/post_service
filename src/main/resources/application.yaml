@@ -77,6 +77,10 @@ ad:
     cron: "0 0 0 * * *" # every day at midnight
 
 kafka:
+  message:
+    send:
+      max-attempts: 3
+      interval: 30000 # 30 sec
   album:
     created:
       topic: created-album

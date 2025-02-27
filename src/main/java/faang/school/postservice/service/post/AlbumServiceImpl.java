@@ -13,16 +13,17 @@ import faang.school.postservice.exception.KafkaProduceException;
 import faang.school.postservice.exception.album.AlbumAccessDeniedException;
 import faang.school.postservice.filter.Filter;
 import faang.school.postservice.filter.album.AlbumFilterDto;
-import faang.school.postservice.kafka.album.AlbumCreatedEventKafkaProducer;
 import faang.school.postservice.mapper.post.AlbumMapper;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.post.Post;
 import faang.school.postservice.repository.post.AlbumRepository;
 import faang.school.postservice.repository.post.PostRepository;
+import faang.school.postservice.service.kafka.KafkaMessageService;
 import faang.school.postservice.strategy.album.VisibilityConverter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,12 +47,15 @@ public class AlbumServiceImpl implements AlbumService {
     private final Map<Visibility, VisibilityConverter> visibilities;
     private final UserServiceClient userServiceClient;
     private final List<Filter<Album, AlbumFilterDto>> albumFilters;
-    private final AlbumCreatedEventKafkaProducer kafkaProducer;
+    private final KafkaMessageService kafkaMessageService;
+
+    @Value("${kafka.album.created.topic}")
+    private String topic;
 
     public AlbumServiceImpl(AlbumRepository albumRepository, PostRepository postRepository,
                             AlbumMapper albumMapper, UserContext userContext,
                             List<VisibilityConverter> converters, UserServiceClient userServiceClient,
-                            List<Filter<Album, AlbumFilterDto>> filters, AlbumCreatedEventKafkaProducer kafkaProducer) {
+                            List<Filter<Album, AlbumFilterDto>> filters, KafkaMessageService kafkaMessageService) {
         this.albumRepository = albumRepository;
         this.postRepository = postRepository;
         this.albumMapper = albumMapper;
@@ -60,7 +64,7 @@ public class AlbumServiceImpl implements AlbumService {
                 .collect(toMap(VisibilityConverter::getVisibility, Function.identity()));
         this.userServiceClient = userServiceClient;
         this.albumFilters = filters;
-        this.kafkaProducer = kafkaProducer;
+        this.kafkaMessageService = kafkaMessageService;
     }
 
     @Transactional
@@ -72,7 +76,7 @@ public class AlbumServiceImpl implements AlbumService {
         album.setAuthorId(userId);
         album.setVisibility(ALL_USERS);
         Album savedAlbum = albumRepository.save(album);
-        sendEventToKafka(userId, album);
+        saveKafkaMessage(new AlbumCreatedEvent(userId, album.getId(), album.getTitle()));
         return albumMapper.toDto(savedAlbum);
     }
 
@@ -266,12 +270,12 @@ public class AlbumServiceImpl implements AlbumService {
         }
     }
 
-    private void sendEventToKafka(long userId, Album album) {
+    private void saveKafkaMessage(AlbumCreatedEvent albumCreatedEvent) {
         try {
-            kafkaProducer.produce(new AlbumCreatedEvent(userId, album.getId(), album.getTitle()));
+            kafkaMessageService.saveMessage(topic, albumCreatedEvent);
         } catch (JsonProcessingException e) {
             throw new KafkaProduceException(
-                    String.format("Failed kafka produce created album event. Goal id = %d", album.getId()));
+                    String.format("Failed kafka produce created album event. Goal id = %d", albumCreatedEvent.albumId()));
         }
     }
 }

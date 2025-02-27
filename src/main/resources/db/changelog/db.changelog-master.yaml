@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/changeset/post_V009__album_allowed_users.sql
   - include:
       file: db/changelog/changeset/post_V010__favorite_albums_idx.sql
+  - include:
+      file: db/changelog/changeset/post_V011__kafka_message.sql

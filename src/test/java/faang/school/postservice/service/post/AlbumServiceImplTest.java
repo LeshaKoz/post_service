@@ -9,11 +9,11 @@ import faang.school.postservice.exception.album.AlbumAccessDeniedException;
 import faang.school.postservice.filter.Filter;
 import faang.school.postservice.filter.album.AlbumFilterDto;
 import faang.school.postservice.filter.album.AlbumTitleFilter;
-import faang.school.postservice.kafka.album.AlbumCreatedEventKafkaProducer;
 import faang.school.postservice.mapper.post.AlbumMapper;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.repository.post.AlbumRepository;
 import faang.school.postservice.repository.post.PostRepository;
+import faang.school.postservice.service.kafka.KafkaMessageService;
 import faang.school.postservice.strategy.album.VisibilityConverter;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ class AlbumServiceImplTest {
     private UserServiceClient userServiceClient;
 
     @Mock
-    private AlbumCreatedEventKafkaProducer producer;
+    private KafkaMessageService kafkaMessageService;
 
     @Spy
     private AlbumMapper albumMapper;
@@ -72,7 +72,7 @@ class AlbumServiceImplTest {
         when(allUsersConverter.getVisibility()).thenReturn(Visibility.ALL_USERS);
         when(followersConverter.getVisibility()).thenReturn(Visibility.FOLLOWERS);
         albumService = new AlbumServiceImpl(albumRepository, postRepository, albumMapper, userContext,
-                List.of(allUsersConverter, followersConverter), userServiceClient, filters, producer);
+                List.of(allUsersConverter, followersConverter), userServiceClient, filters, kafkaMessageService);
     }
 
     @Test
@@ -111,7 +111,7 @@ class AlbumServiceImplTest {
 
         assertEquals(2, result.size());
         verify(albumRepository).findByAuthorId(authorId);
-        verify(allUsersConverter).apply(getAlbum(1L,1L, Visibility.ALL_USERS));
+        verify(allUsersConverter).apply(getAlbum(1L, 1L, Visibility.ALL_USERS));
         verify(followersConverter).apply(getAlbum(2L, 1L, Visibility.FOLLOWERS));
     }
 
