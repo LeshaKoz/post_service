@@ -31,7 +31,16 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
-    comment_create_event_topic_name: comment_create_event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      enable-idempotence: true
+      max-in-flight-requests-per-connection: 5
+    topics:
+      comment_create_event: comment_create_event
+
 
 expired:
   ad:

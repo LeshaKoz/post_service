@@ -16,7 +16,7 @@ public class KafkaProducerCommentService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${spring.kafka.comment_create_event_topic_name}")
+    @Value("${spring.kafka.topics.comment_create_event}")
     private String commentCreateEventTopicName;
 
     public void sendCommentCreateEvent(CommentCreateEvent event) {
