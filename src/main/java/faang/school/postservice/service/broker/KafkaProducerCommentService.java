@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class KafkaProducerCommentService {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @Value("${spring.kafka.comment_create_event_topic_name}")
+    @Value("${spring.kafka.topics.comment_create_event}")
     private String commentCreateEventTopicName;
 
     public void sendCommentCreateEvent(CommentCreateEvent event) {
