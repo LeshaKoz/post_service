@@ -1,6 +1,7 @@
 package faang.school.postservice.service.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
+import faang.school.postservice.model.Resource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -51,9 +53,16 @@ public class S3ServiceTest {
                 "image/jpeg",
                 inputStream
         );
+        long fileSize = mockFile.getSize();
+        Resource resource = new Resource();
+        resource.setKey("null/" + mockFile.getOriginalFilename());
+        resource.setName(mockFile.getOriginalFilename());
+        resource.setType(mockFile.getContentType());
+        resource.setSize(fileSize);
 
-        s3Service.uploadFile(mockFile);
 
+        Resource resourceResult = s3Service.uploadFile(mockFile);
+        assertEquals(resource, resourceResult);
     }
 
     @Test
