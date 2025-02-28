@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -19,4 +21,5 @@ public class PostDto {
     private Long authorId;
     @Schema(description = "Identifier of the project", example = "1")
     private Long projectId;
+    private LocalDateTime scheduledAt;
 }

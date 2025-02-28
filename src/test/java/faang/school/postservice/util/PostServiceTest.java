@@ -8,7 +8,7 @@ import faang.school.postservice.service.AsyncModerationService;
 import faang.school.postservice.service.InternalServices;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.validation.ModerationDictionaryValidation;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.security.InvalidParameterException;
@@ -24,7 +25,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +38,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,9 +54,6 @@ public class PostServiceTest {
     @Mock
     private InternalServices internalServices;
 
-    @InjectMocks
-    private PostService postService;
-
     @Mock
     private ModerationDictionaryValidation moderationDictionaryValidation;
 
@@ -61,14 +63,21 @@ public class PostServiceTest {
     @Mock
     private AsyncModerationService asyncModerationService;
 
-    private static Post post;
-    private static Post projectPost;
-    private static Post originalPost;
-    private static Post post1;
-    private static Post post2;
+    @Mock
+    private ThreadPoolTaskExecutor publishingThreadPool;
 
-    @BeforeAll
-    public static void SetUp() {
+    @InjectMocks
+    private PostService postService;
+
+    private Post post;
+    private Post projectPost;
+    private Post originalPost;
+    private Post post1;
+    private Post post2;
+    private List<Post> postsToPublish;
+
+    @BeforeEach
+    public void SetUp() {
         post = new Post();
         post.setId(1L);
         post.setAuthorId(1L);
@@ -96,6 +105,8 @@ public class PostServiceTest {
         post2.setDeleted(false);
         post2.setPublished(false);
         post2.setCreatedAt(LocalDateTime.now());
+
+        postsToPublish = List.of(post1, post2);
     }
 
     @Test
@@ -317,5 +328,32 @@ public class PostServiceTest {
 
         verify(postRepository, times(1)).findUserIdsToBanWithUnverifiedPosts(5);
         assertEquals(mockUserIds, result);
+    }
+  
+    public void publishScheduledPostsTest() throws Exception {
+        when(postRepository.findReadyToPublish()).thenReturn(postsToPublish);
+
+        ThreadPoolExecutor mockThreadPoolExecutor = mock(ThreadPoolExecutor.class);
+        when(publishingThreadPool.getThreadPoolExecutor()).thenReturn(mockThreadPoolExecutor);
+
+        postService = new PostService(postRepository, internalServices, publishingThreadPool, asyncModerationService);
+
+        doAnswer(invocation -> {
+            List<Callable<Void>> tasks = invocation.getArgument(0);
+            for (Callable<Void> task : tasks) {
+                task.call();
+            }
+            return null;
+        }).when(mockThreadPoolExecutor).invokeAll(anyList());
+
+        postService.publishScheduledPosts();
+
+        verify(postRepository).findReadyToPublish();
+        verify(publishingThreadPool, times(2)).getThreadPoolExecutor();
+        verify(postRepository).saveAll(postsToPublish);
+        postsToPublish.forEach(post -> {
+            assertTrue(post.isPublished());
+            assertNotNull(post.getPublishedAt());
+        });
     }
 }

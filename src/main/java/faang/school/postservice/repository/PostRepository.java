@@ -22,6 +22,9 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
 
+    @Query("SELECT p.id FROM Post p WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
+    List<Integer> findPostIdsReadyToPublish();
+
     List<Post> findByVerifiedDateIsNull();
 
     @Query("SELECT p FROM Post p JOIN p.resources r WHERE r.key IN :resourceKeys")
