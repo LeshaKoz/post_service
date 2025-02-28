@@ -32,9 +32,9 @@ public class S3ServiceTest {
 
     @InjectMocks
     private S3Service s3Service;
-    
+
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() {
         ReflectionTestUtils.setField(s3Service, "maxWidth", 500);
         ReflectionTestUtils.setField(s3Service, "maxHeight", 500);
     }
@@ -59,7 +59,6 @@ public class S3ServiceTest {
         resource.setName(mockFile.getOriginalFilename());
         resource.setType(mockFile.getContentType());
         resource.setSize(fileSize);
-
 
         Resource resourceResult = s3Service.uploadFile(mockFile);
         assertEquals(resource, resourceResult);
