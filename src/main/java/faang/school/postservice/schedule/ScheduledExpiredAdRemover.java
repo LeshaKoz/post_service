@@ -1,6 +1,7 @@
 package faang.school.postservice.schedule;
 
 import faang.school.postservice.service.ad.AdService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,11 +20,15 @@ public class ScheduledExpiredAdRemover {
     @Value("${ad-service.ad-removal.batch-size}")
     private int batchSize;
 
+    @PostConstruct
+    private void checkBatchSize(){
+        if (batchSize <= 0) {
+            throw new IllegalArgumentException("Batch size must be greater than 0");
+        }
+    }
+
     @Scheduled(cron = "${ad-service.ad-removal.cron}")
     public void removeExpiredAds() {
-        if (batchSize <= 0) {
-            throw new IllegalArgumentException("batchSize must be greater than 0");
-        }
         List<Long> expiredAdsIds = adService.findExpiredAds();
         List<List<Long>> batches = ListUtils.partition(expiredAdsIds, batchSize);
 
