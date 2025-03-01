@@ -27,7 +27,7 @@ public class CommentModerator {
     private int batchSize;
 
     @Scheduled(cron = "${moderation.cron}")
-    public void runModeration() {
+    private void runModeration() {
         List<Comment> comments = commentRepository.findUnverifiedWithLimit(commentLimit);
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
@@ -44,7 +44,7 @@ public class CommentModerator {
         log.info("All comment is verified !");
     }
 
-    public <T> List<List<T>> partitionList(List<T> list, int batchSize) {
+    private  <T> List<List<T>> partitionList(List<T> list, int batchSize) {
         List<List<T>> partitions = new ArrayList<>();
         for (int i = 0; i < list.size(); i += batchSize) {
             partitions.add(list.subList(i, Math.min(i + batchSize, list.size())));
