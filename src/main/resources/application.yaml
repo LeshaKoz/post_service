@@ -65,9 +65,6 @@ moderation:
   comment-limit: 500
   batch-size: 100
   cron: "0 0 3 * * ?"
-  dictionary-black:
-    path: classpath:moderation/blacklist.txt
-
 
 user-service:
   host: localhost

@@ -9,7 +9,7 @@ import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.service.comment.ModerationBlackListDictionary;
+import faang.school.postservice.service.moderation.ModerationDictionary;
 import faang.school.postservice.utils.ImageService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -42,7 +42,6 @@ public class CommentService {
     private final KafkaService kafkaService;
     private final PostService postService;
     private final ModerationDictionary moderationDictionary;
-    private final ModerationBlackListDictionary moderationBlackListDictionary;
 
     @Transactional
     public CommentResponse create(@Valid CreateCommentRequest createCommentRequest) {
@@ -119,9 +118,9 @@ public class CommentService {
     public CompletableFuture<Void> moderateComments(List<Comment> comments) {
         return CompletableFuture.runAsync(() -> {
             for (Comment comment : comments) {
-                boolean hasBadWords = moderationBlackListDictionary.containsBadWord(comment.getContent());
+                boolean hasBadWords = moderationDictionary.containsBadWord(comment.getContent());
                 comment.setVerified(!hasBadWords);
-                comment.setVerifiedDate(LocalDateTime.now());
+                comment.setVerifiedAt(LocalDateTime.now());
             }
             commentRepository.saveAll(comments);
             log.info("{} - {} comment checked", Thread.currentThread().getName(), comments.size());
