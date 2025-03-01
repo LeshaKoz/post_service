@@ -13,7 +13,7 @@ public class KafkaProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @Value("${spring.kafka.user-ban-topic}")
+    @Value("${spring.kafka.topics.user-ban-topic}")
     private String userTopic;
 
     public void sendEventToUserServiceForBan(Long userId) {

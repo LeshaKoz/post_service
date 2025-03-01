@@ -1,9 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.config.kafka.KafkaProducer;
-import faang.school.postservice.config.redis.KafkaProducer;
 import faang.school.postservice.dto.comment.CommentCreateEventDto;
-import faang.school.postservice.config.redis.RedisPublisher;
 import faang.school.postservice.dto.comment.CommentResponse;
 import faang.school.postservice.dto.comment.CommentUpdateRequest;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
@@ -40,7 +38,6 @@ public class CommentService {
     private final ImageService imageService;
     private final KafkaService kafkaService;
     private final PostService postService;
-    private final RedisPublisher redisPublisher;
     private final KafkaProducer kafkaProducer;
 
     @Transactional
