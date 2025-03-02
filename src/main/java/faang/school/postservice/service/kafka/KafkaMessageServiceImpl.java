@@ -29,16 +29,15 @@ public class KafkaMessageServiceImpl implements KafkaMessageService {
 
     @Transactional
     @Override
-    public void saveMessage(String topic, Object message) throws JsonProcessingException {
-        KafkaMessage kafkaMessage = KafkaMessage.builder()
-                .topic(topic)
-                .message(objectMapper.writeValueAsString(message))
-                .status(KafkaStatus.PENDING)
-                .attempts(0)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-        kafkaMessageRepository.save(kafkaMessage);
+    public void sendMessage(String topic, Object message) {
+        String messageToSend = mapObjectToString(message);
+        try {
+            kafkaProducer.produce(topic, messageToSend);
+            log.info("Message sent to topic: {}", topic);
+        } catch (Exception e) {
+            log.warn("Failed message send to topic: {}. Message added to queue", topic);
+            kafkaMessageRepository.save(buildKafkaMessage(topic, messageToSend));
+        }
     }
 
     @Transactional
@@ -52,11 +51,11 @@ public class KafkaMessageServiceImpl implements KafkaMessageService {
         for (KafkaMessage message : kafkaMessages) {
             try {
                 kafkaProducer.produce(message.getTopic(), message.getMessage());
-                kafkaMessageRepository.updateStatus(message.getId(), KafkaStatus.SENT);
+                kafkaMessageRepository.deleteById(message.getId());
             } catch (Exception e) {
                 log.error("Failed send to kafka message with id: {}", message.getId());
                 if (message.getAttempts() > maxAttempts) {
-                    kafkaMessageRepository.updateStatusAndIncrementAttempts(message.getId(), KafkaStatus.FAILED);
+                    kafkaMessageRepository.updateStatus(message.getId(), KafkaStatus.FAILED);
                     log.error("Message with id = {} marked as FAILED after max attempts", message.getId());
                 } else {
                     kafkaMessageRepository.updateStatusAndIncrementAttempts(message.getId(), KafkaStatus.PENDING);
@@ -64,5 +63,24 @@ public class KafkaMessageServiceImpl implements KafkaMessageService {
                 }
             }
         }
+    }
+
+    private String mapObjectToString(Object message) {
+        try {
+            return objectMapper.writeValueAsString(message);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private KafkaMessage buildKafkaMessage(String topic, String messageToSend) {
+        return KafkaMessage.builder()
+                .topic(topic)
+                .message(messageToSend)
+                .status(KafkaStatus.PENDING)
+                .attempts(0)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 }

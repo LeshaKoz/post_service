@@ -5,7 +5,6 @@ import lombok.Getter;
 @Getter
 public enum KafkaStatus {
     PENDING("PENDING"),
-    SENT("SENT"),
     FAILED("FAILED");
 
     private final String value;

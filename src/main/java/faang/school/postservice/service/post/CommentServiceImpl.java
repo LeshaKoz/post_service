@@ -1,11 +1,9 @@
 package faang.school.postservice.service.post;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.event.CommentEvent;
 import faang.school.postservice.dto.post.CommentDto;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.exception.KafkaProduceException;
 import faang.school.postservice.exception.comment.AccessDeniedCommentException;
 import faang.school.postservice.mapper.post.CommentMapper;
 import faang.school.postservice.model.Comment;
@@ -48,7 +46,8 @@ public class CommentServiceImpl implements CommentService {
         Post post = postRepository.findById(dto.postId()).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Post with id = %d not found", dto.postId())));
         Comment createdComment = commentRepository.save(buildComment(dto, post));
-        saveKafkaMessage(new CommentEvent(dto.postId(), post.getAuthorId(), createdComment.getId(), LocalDateTime.now()));
+        kafkaMessageService.sendMessage(topic,
+                new CommentEvent(dto.postId(), post.getAuthorId(), createdComment.getId(), LocalDateTime.now()));
         return commentMapper.toDto(createdComment);
     }
 
@@ -89,14 +88,5 @@ public class CommentServiceImpl implements CommentService {
                 .createdAt(LocalDateTime.now())
                 .content(dto.content())
                 .build();
-    }
-
-    private void saveKafkaMessage(CommentEvent commentEvent) {
-        try {
-            kafkaMessageService.saveMessage(topic, commentEvent);
-        } catch (JsonProcessingException e) {
-            throw new KafkaProduceException(
-                    String.format("Failed kafka produce comment event. Comment id = %d", commentEvent.commentId()));
-        }
     }
 }

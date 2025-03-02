@@ -1,6 +1,5 @@
 package faang.school.postservice.service.post;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.kafka.AlbumCreatedEvent;
@@ -9,7 +8,6 @@ import faang.school.postservice.dto.post.AlbumResponseDto;
 import faang.school.postservice.dto.post.AlbumUsersDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.enums.Visibility;
-import faang.school.postservice.exception.KafkaProduceException;
 import faang.school.postservice.exception.album.AlbumAccessDeniedException;
 import faang.school.postservice.filter.Filter;
 import faang.school.postservice.filter.album.AlbumFilterDto;
@@ -76,7 +74,7 @@ public class AlbumServiceImpl implements AlbumService {
         album.setAuthorId(userId);
         album.setVisibility(ALL_USERS);
         Album savedAlbum = albumRepository.save(album);
-        saveKafkaMessage(new AlbumCreatedEvent(userId, album.getId(), album.getTitle()));
+        kafkaMessageService.sendMessage(topic, new AlbumCreatedEvent(userId, album.getId(), album.getTitle()));
         return albumMapper.toDto(savedAlbum);
     }
 
@@ -267,15 +265,6 @@ public class AlbumServiceImpl implements AlbumService {
             log.error("Visibility isn't {} in album with id = {}", visibility, album.getId());
             throw new IllegalArgumentException(
                     String.format("Needed selected_users visibility for add users for access. Album: %d", album.getId()));
-        }
-    }
-
-    private void saveKafkaMessage(AlbumCreatedEvent albumCreatedEvent) {
-        try {
-            kafkaMessageService.saveMessage(topic, albumCreatedEvent);
-        } catch (JsonProcessingException e) {
-            throw new KafkaProduceException(
-                    String.format("Failed kafka produce created album event. Goal id = %d", albumCreatedEvent.albumId()));
         }
     }
 }
