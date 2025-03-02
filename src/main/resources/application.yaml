@@ -8,7 +8,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
@@ -26,10 +26,10 @@ spring:
           name: calculations_channel
 
 
-          servlet:
-            multipart:
-              max-file-size: 10MB
-              max-request-size: 10MB
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 51MB
 
 server:
   port: 8081
@@ -46,9 +46,10 @@ services:
     bucketName: corpbucket
     max-image-size-mb: 5
     max-images-count-for-post: 10
-    max-width-horizontal-image: 1080
-    max-height-horizontal-image: 566
-    max-side-square-image: 1080
+    image:
+      max-width-horizontal: 1080
+      max-height-horizontal: 566
+      max-side-square: 1080
 
 user-service:
   host: localhost

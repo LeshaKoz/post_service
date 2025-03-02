@@ -19,7 +19,7 @@ public class ImageResizer {
     public MultipartFile resizeImage(MultipartFile image, int targetWidth, int targetHeight) throws IOException {
         BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
         if (bufferedImage == null) {
-            throw new IllegalArgumentException("Invalid image file.");
+            throw new IllegalArgumentException("Недопустимый формат изображения");
         }
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 

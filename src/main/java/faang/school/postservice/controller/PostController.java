@@ -2,13 +2,11 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.ResourceDto;
-import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ReadPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.service.PostResourceService;
 import faang.school.postservice.service.PostService;
-import faang.school.postservice.utilities.Url;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -34,7 +32,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(Url.MAIN_URL + Url.V1 + Url.POSTS)
+@RequestMapping("/post-service/posts")
 @Log4j2
 @Validated
 public class PostController {
@@ -47,27 +45,27 @@ public class PostController {
         return postService.create(createPostDto);
     }
 
-    @PutMapping(Url.POST_ID)
+    @PutMapping("/{postId}")
     public ReadPostDto update(@PathVariable long postId, @Valid @NotNull @RequestBody UpdatePostDto updatePostDto) {
         return postService.update(postId, updatePostDto);
     }
 
-    @DeleteMapping(Url.POST_ID)
+    @DeleteMapping("/{postId}")
     public ReadPostDto delete(@PathVariable long postId) {
         return postService.delete(postId);
     }
 
-    @PostMapping(Url.POST_ID + Url.PUBLISHING)
+    @PostMapping("/{postId}/publishing")
     public ReadPostDto publishPost(@PathVariable long postId) {
         return postService.publish(postId);
     }
 
-    @GetMapping(Url.POST_ID)
+    @GetMapping("/{postId}")
     public ReadPostDto getPost(@PathVariable long postId) {
         return postService.getPost(postId);
     }
 
-    @GetMapping(Url.FILTER)
+    @GetMapping("/filter")
     public List<ReadPostDto> getFilteredPosts(
             @RequestParam(required = false) Long authorId,
             @RequestParam(required = false) Long projectId,
@@ -77,21 +75,21 @@ public class PostController {
         return postService.getFilteredPosts(postFilterDto);
     }
 
-    @PutMapping(Url.ID + Url.IMAGE)
+    @PutMapping("/{id}/image")
     public ResponseEntity<ResourceDto> addImage(@PathVariable("id") @Min(1) Long postId,
                                                 @RequestParam("image") MultipartFile image) {
         ResourceDto resourceDto = postResourceService.addPostImage(postId, image);
         return ResponseEntity.ok(resourceDto);
     }
 
-    @DeleteMapping(Url.ID + Url.IMAGE)
+    @DeleteMapping("/{id}/image")
     public ResponseEntity<String> deleteImage(@PathVariable("id") @Min(1) Long postId,
                                               @RequestParam("key") @NotBlank String key) {
         String deletedKey = postResourceService.deleteImageByKey(postId, key);
         return ResponseEntity.ok(deletedKey);
     }
 
-    @GetMapping(Url.IMAGE)
+    @GetMapping("/image")
     public ResponseEntity<byte[]> getImage(@RequestParam("key") @NotBlank String key) {
         byte[] imageBytes = postResourceService.getImageByKey(key);
         return ResponseEntity.ok()
@@ -99,13 +97,13 @@ public class PostController {
                 .body(imageBytes);
     }
 
-    @GetMapping(Url.ID + Url.IMAGE + Url.ALL)
+    @GetMapping("/{id}/image/all")
     public ResponseEntity<List<String>> getAllImageKeys(@PathVariable("id") @Min(1) Long postId) {
         List<String> keys = postResourceService.getAllImageKeysByPostId(postId);
         return ResponseEntity.ok(keys);
     }
 
-    @DeleteMapping(Url.ID + Url.IMAGE + Url.ALL)
+    @DeleteMapping("/{id}/image/all")
     public ResponseEntity<Void> deleteAllImages(@PathVariable("id") @Min(1) Long postId) {
         postResourceService.deleteAllImagesByPostId(postId);
         return ResponseEntity.ok().build();

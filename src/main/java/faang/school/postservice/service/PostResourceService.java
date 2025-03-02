@@ -1,7 +1,9 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.ResourceDto;
+import faang.school.postservice.exception.FileProcessingException;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.properties.S3Properties;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.s3.S3Service;
 import faang.school.postservice.utilities.ImageResizer;
@@ -9,7 +11,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,26 +30,17 @@ public class PostResourceService {
     private final PostRepository postRepository;
     private final S3Service s3Service;
     private final ImageResizer imageResizer;
-
-    @Value("${services.s3.max-image-size-mb}")
-    private long maxImageSizeMb;
-    @Value("${services.s3.max-images-count-for-post}")
-    private int maxCountImagesForPost;
-    @Value("${services.s3.max-width-horizontal-image}")
-    private int maxWidthHorizontalImage;
-    @Value("${services.s3.max-height-horizontal-image}")
-    private int maxHeightHorizontalImage;
-    @Value("${services.s3.max-side-square-image}")
-    private int maxSideSquareImage;
+    private final S3Properties s3Properties;
 
     public ResourceDto addPostImage(Long postId, MultipartFile image) {
         Post post = getPostOrThrow(postId);
 
         MultipartFile processedImage = resizeOrThrow(image);
 
-        if (post.getFileKeys().size() >= maxCountImagesForPost) {
+        if (post.getFileKeys().size() >= s3Properties.getMaxImagesCountForPost()) {
             throw new IllegalArgumentException(
-                    String.format("В одном посте может быть максимум %d изображений", maxCountImagesForPost));
+                    String.format("В одном посте может быть максимум %d изображений",
+                            s3Properties.getMaxImagesCountForPost()));
         }
 
         String folder = "Post" + postId;
@@ -57,13 +49,13 @@ public class PostResourceService {
         post.getFileKeys().add(key);
         postRepository.save(post);
 
-       ResourceDto resourceDto = ResourceDto.builder()
+        ResourceDto resourceDto = ResourceDto.builder()
                 .key(key)
                 .name(image.getOriginalFilename())
                 .type(image.getContentType())
                 .size(processedImage.getSize())
-               .postId(post.getId())
-               .createdAt(LocalDateTime.now())
+                .postId(post.getId())
+                .createdAt(LocalDateTime.now())
                 .build();
         return resourceDto;
     }
@@ -83,8 +75,8 @@ public class PostResourceService {
         try (InputStream inputStream = s3Service.downloadFile(key)) {
             return inputStream.readAllBytes();
         } catch (IOException e) {
-            log.error("Ошибка обработки файла", e);
-            throw new RuntimeException("Ошибка обработки файла", e);
+            log.error("Ошибка обработки файла с ключом {}", key, e);
+            throw new FileProcessingException("Ошибка обработки файла с ключом: " + key, e);
         }
     }
 
@@ -122,17 +114,18 @@ public class PostResourceService {
             int height = bufferedImage.getHeight();
 
             if (width > height) {
-                if (width > maxWidthHorizontalImage || height > maxHeightHorizontalImage) {
-                    resultImage = imageResizer.resizeImage(image, maxWidthHorizontalImage, maxHeightHorizontalImage);
+                if (width > s3Properties.getImage().getMaxWidthHorizontal() ||
+                        height > s3Properties.getImage().getMaxHeightHorizontal()) {
+                    resultImage = imageResizer.resizeImage(image, s3Properties.getImage().getMaxWidthHorizontal(),
+                            s3Properties.getImage().getMaxHeightHorizontal());
                 }
             }
-
             else if (width == height) {
-                if (width > maxSideSquareImage) {
-                    resultImage = imageResizer.resizeImage(image, maxSideSquareImage, maxSideSquareImage);
+                if (width > s3Properties.getImage().getMaxSideSquare()) {
+                    resultImage = imageResizer.resizeImage(image, s3Properties.getImage().getMaxSideSquare(),
+                            s3Properties.getImage().getMaxSideSquare());
                 }
             }
-
             else {
                 throw new IllegalArgumentException("Вертикальные изображения не поддерживаются.");
             }
@@ -140,8 +133,9 @@ public class PostResourceService {
             throw new IllegalArgumentException("Ошибка обработки изображения", e);
         }
 
-        if (image.getSize() > maxImageSizeMb * 1024 * 1024) {
-            throw new IllegalArgumentException("Размер изображения не должен превышать " + maxImageSizeMb + " МБ.");
+        if (resultImage.getSize() > s3Properties.getMaxImageSizeMb() * 1024 * 1024) {
+            throw new IllegalArgumentException("Размер изображения не должен превышать "
+                    + s3Properties.getMaxImageSizeMb() + " МБ.");
         }
         return resultImage;
     }
