@@ -5,6 +5,7 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.comment.CommentCheckService;
 import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.service.post.PostService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +17,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,6 +48,9 @@ public class CommentServiceTest {
 
     @Mock
     private PostService postService;
+
+    @Mock
+    private CommentCheckService commentCheckService;
 
     @InjectMocks
     private CommentService commentService;
@@ -168,5 +178,50 @@ public class CommentServiceTest {
 
         assertEquals("Comment not found", exception.getMessage());
         verify(commentRepository).findById(1L);
+    }
+
+    @Test
+    public void checkComments() {
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        CommentService service = new CommentService(userServiceClient, commentRepository, commentCheckService,
+                postService, executorService);
+        service.setCheckCommentSize(100);
+
+        List<Long> commentsIds = LongStream.range(0, 999)
+                .boxed()
+                .toList();
+
+
+        List<Comment> comments = IntStream.range(0, 99)
+                .boxed()
+                .map(i -> Comment.builder()
+                        .id(Long.valueOf(i))
+                        .content("Content %d".formatted(i))
+                        .verified(false)
+                        .verifiedDate(null)
+                        .build())
+                .toList();
+
+        List<Comment> resultComments = IntStream.range(0, 99)
+                .boxed()
+                .map(i -> Comment.builder()
+                        .id(Long.valueOf(i))
+                        .content("Content %d".formatted(i))
+                        .verified(false)
+                        .verifiedDate(LocalDateTime.now())
+                        .build())
+                .toList();
+
+        when(commentRepository.findIdsByVerifiedDateIsNull()).thenReturn(commentsIds);
+        when(commentCheckService.checkComments(any())).thenReturn(resultComments);
+        when(commentRepository.saveAll(any())).thenReturn(resultComments);
+
+        assertDoesNotThrow(service::checkComments);
+
+        verify(commentRepository, times(1)).findIdsByVerifiedDateIsNull();
+        verify(commentRepository, times(10)).findAllByIdIn(any());
+        verify(commentRepository, times(10)).saveAll(any());
+        verify(commentCheckService, times(10)).checkComments(any());
+
     }
 }

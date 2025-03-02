@@ -7,7 +7,12 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +22,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,7 +31,13 @@ import java.util.Objects;
 public class CommentService {
     private final UserServiceClient userServiceClient;
     private final CommentRepository commentRepository;
+    private final CommentCheckService commentCheckService;
     private final PostService postService;
+    private final ExecutorService commentExecutorService;
+
+    @Setter
+    @Value("${comment.check.size}")
+    private int checkCommentSize;
 
     @Transactional
     public Comment createComment(Comment comment, Long postId) {
@@ -71,6 +84,23 @@ public class CommentService {
         }
     }
 
+    @CacheEvict("comment")
+    @Async("scheduledCommentExecutorService")
+    public void checkComments() {
+        List<Long> notCheckedComments = commentRepository.findIdsByVerifiedDateIsNull();
+        List<List<Long>> nonCheckedCommentsPerPage = ListUtils.partition(notCheckedComments, checkCommentSize);
+
+        List<Callable<List<Comment>>> commentsCallableTask = nonCheckedCommentsPerPage.stream()
+                .map(this::getCheckCommentsTask)
+                .toList();
+
+        try {
+            commentExecutorService.invokeAll(commentsCallableTask);
+        } catch (InterruptedException e) {
+            log.error("Interrupted while checking comments");
+        }
+    }
+
     private void checkUserIsOwnerComment(Long savedId, Long receivedId) {
         if (!Objects.equals(savedId, receivedId)) {
             throw new UserUnauthorizedAccessException("User cannot change comments the other users");
@@ -88,5 +118,13 @@ public class CommentService {
         } catch (Exception e) {
             throw new NoSuchElementException(String.format("User with ID#%d not found", authorId));
         }
+    }
+
+    private Callable<List<Comment>> getCheckCommentsTask(List<Long> commentsIdList) {
+        return () -> {
+            List<Comment> nonCheckedComments = commentRepository.findAllByIdIn(commentsIdList);
+            List<Comment> comments = commentCheckService.checkComments(nonCheckedComments);
+            return commentRepository.saveAll(comments);
+        };
     }
 }
