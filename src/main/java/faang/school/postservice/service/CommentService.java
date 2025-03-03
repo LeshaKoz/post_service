@@ -40,7 +40,7 @@ public class CommentService {
     @Transactional
     public CommentResponse create(@Valid CreateCommentRequest createCommentRequest) {
         validateService.validateUser(createCommentRequest.userId());
-        validateService.validatePost(createCommentRequest.postId());
+//        validateService.validatePost(createCommentRequest.postId());
 
         Post post = postService.getPostById(createCommentRequest.postId());
         Comment comment = commentMapper.toEntity(createCommentRequest);
