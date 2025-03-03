@@ -53,6 +53,12 @@ public class CommentServiceIntegrationTest {
         CompletableFuture<Void> executionFuture = CompletableFuture.runAsync(task);
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> Assertions.assertTrue(executionFuture.isDone()));
 
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         nonCheckedComments = commentRepository.findIdsByVerifiedDateIsNull().size();
         Assertions.assertEquals(0, nonCheckedComments);
 

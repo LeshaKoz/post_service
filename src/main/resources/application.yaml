@@ -25,6 +25,14 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+  kafka:
+    bootstrap:
+      server:
+        address: localhost:9092
+    topics:
+      analytic-topics:
+        add-like-topic-name: "user-like-post"
+
   services:
     s3:
      endpoint: http://127.0.0.1:9000
@@ -90,7 +98,7 @@ resources:
     scheduler:
       cron: "0 0 6 * * ?" # every day
     retention-period: 1M # period: M - month, D - day
-    
+
 post-service:
   publish:
     scheduled:

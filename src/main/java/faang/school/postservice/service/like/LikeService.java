@@ -7,6 +7,7 @@ import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.service.comment.CommentService;
+import faang.school.postservice.service.like.annotation.AddLike;
 import faang.school.postservice.service.post.PostService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,6 +28,7 @@ public class LikeService {
     private final PostService postService;
     private final CommentService commentService;
 
+    @AddLike
     @Transactional
     public Like saveLikePost(long postId, Long userId) {
         checkExistUserId(userId);

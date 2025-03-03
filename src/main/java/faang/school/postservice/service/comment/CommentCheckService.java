@@ -2,8 +2,8 @@ package faang.school.postservice.service.comment;
 
 import faang.school.postservice.model.Comment;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -12,11 +12,14 @@ import java.util.List;
 
 @Validated
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class CommentCheckService {
 
     private final List<String> badWords;
+
+    public CommentCheckService(@Qualifier("badWords") List<String> badWords) {
+        this.badWords = badWords;
+    }
 
     public List<Comment> checkComments(@NotNull List<Comment> comments) {
         log.info("Checking comments in Thread {}", Thread.currentThread().getName());
