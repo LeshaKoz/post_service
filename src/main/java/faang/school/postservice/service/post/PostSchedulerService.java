@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class PostSchedulerService {
     private final PostRepository postRepository;
-    private final ExecutorService executorService;
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Value("${post.schedule.max-retries}")
     private int maxRetries;
@@ -47,41 +48,22 @@ public class PostSchedulerService {
 
         int totalPages = page.getTotalPages();
         List<Future<List<Post>>> futures = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(totalPages);
 
-        futures.add(executorService.submit((Callable<List<Post>>) () -> {
-            try {
-                return processBatch(page.getContent());
-            } finally {
-                latch.countDown();
-            }
-        }));
+        futures.add(threadPoolTaskExecutor.submit(() -> processBatch(page.getContent())));
+
 
         for (int i = 1; i < totalPages; i++) {
             Page<Post> postPage = postRepository.findReadyToPublish(PageRequest.of(i, batchSize));
 
             if (postPage.isEmpty()) continue;
 
-            futures.add(executorService.submit((Callable<List<Post>>) () -> {
-                try {
-                    return processBatch(postPage.getContent());
-                } finally {
-                    latch.countDown();
-                }
-            }));
+            futures.add(threadPoolTaskExecutor.submit(() -> processBatch(postPage.getContent())));
+
 
             if (futures.size() % batchCount == 0) {
                 saveProcessedBatches(futures);
             }
         }
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Ошибка ожидания завершения задач", e);
-        }
-
         saveProcessedBatches(futures);
     }
 

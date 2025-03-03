@@ -1,7 +1,4 @@
 spring:
-  profiles:
-    active: local
-
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/post-service
@@ -91,10 +88,6 @@ post:
     batch-size: 20
     page-size: 20
 
-thread:
-  pool:
-    size: 10
-
 services:
   s3:
     endpoint: http://localhost:9000
@@ -112,6 +105,19 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+ad:
+  schedule:
+    removal-cron: "0 0 12 * * ?"
+  batch:
+    size: 1000
+
+task:
+  execution:
+    pool:
+      core-size: 4
+      max-size: 8
+      keep-alive: 60
 
 ---
 
