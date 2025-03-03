@@ -1,5 +1,6 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.DataValidationException;
@@ -7,8 +8,10 @@ import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.service.LikeService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,18 +28,20 @@ public class LikeController {
     private LikeService likeServiceV2;
     private LikeMapper likeMapper;
     private PostMapper postMapper;
+    private UserContext userContext;
 
     private static final String POST_NEGATIVE_ID = "postId is negative";
 
     @PostMapping("/post/{postId}/like")
     @ResponseBody
-    public LikeDto likePost(@RequestBody LikeDto likeDto) {
-        if (likeDtoIsValidForPost(likeDto)) {
+    public LikeDto likePost(@Validated @RequestBody LikeDto likeDto) {
+//        if (likeDtoIsValidForPost(likeDto)) {
+            likeDto.setUserId(userContext.getUserId());
             Like like = likeServiceV2.likePost(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
-        } else {
-            throw new DataValidationException(POST_NEGATIVE_ID);
-        }
+//        } else {
+//            throw new DataValidationException(POST_NEGATIVE_ID);
+//        }
     }
 
     @PostMapping("/post/{postId}/dislike")
