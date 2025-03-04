@@ -1,5 +1,6 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.DataValidationException;
@@ -25,6 +26,7 @@ public class LikeController {
     private LikeService likeServiceV2;
     private LikeMapper likeMapper;
     private PostMapper postMapper;
+    private UserContext userContext;
 
     private static final String POST_NEGATIVE_ID = "postId is negative";
 
@@ -32,6 +34,7 @@ public class LikeController {
     @ResponseBody
     public LikeDto likePost(@RequestBody LikeDto likeDto) {
         if (likeDtoIsValidForPost(likeDto)) {
+            likeDto.setUserId(userContext.getUserId());
             Like like = likeServiceV2.likePost(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
         } else {
@@ -43,6 +46,7 @@ public class LikeController {
     @ResponseBody
     public LikeDto dislikePost(@RequestBody LikeDto likeDto) {
         if (likeDtoIsValidForPost(likeDto)) {
+            likeDto.setUserId(userContext.getUserId());
             Like like = likeServiceV2.dislikePost(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
         } else {
@@ -54,6 +58,7 @@ public class LikeController {
     @ResponseBody
     public LikeDto likeComment(@RequestBody LikeDto likeDto) {
         if (likeDtoIsValidForComment(likeDto)) {
+            likeDto.setUserId(userContext.getUserId());
             Like like = likeServiceV2.likeComment(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
         } else {
@@ -65,6 +70,7 @@ public class LikeController {
     @ResponseBody
     public LikeDto dislikeComment(@RequestBody LikeDto likeDto) {
         if (likeDtoIsValidForComment(likeDto)) {
+            likeDto.setUserId(userContext.getUserId());
             Like like = likeServiceV2.dislikeComment(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
         } else {

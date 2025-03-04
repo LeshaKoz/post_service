@@ -1,7 +1,6 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Comment;
@@ -24,7 +23,6 @@ public class LikeService {
     private PostRepository postRepository;
     private LikeRepository likeRepository;
     private CommentRepository commentRepository;
-    private UserContext userContext;
     private UserServiceClient userServiceClient;
 
     private static final String ERROR_POST_DOES_NOT_EXIST = "Post doesn't exist: postId={}";
@@ -38,15 +36,13 @@ public class LikeService {
     private static final String ERROR_USER_IS_NOT_PRESENTED_IN_DB = "User is not presented in DB: userId={}";
 
     public Like likePost(Like like) {
-        Post post = getPost(like.getPost().getId());
-        UserDto userDto = getUserFromUserService(userContext.getUserId());
-        like.setUserId(userContext.getUserId());
+        Post post = validatePostAndUser(like);
 
         List<Like> userLikesOfPost = getUserLikesOfPost(post, like.getUserId());
         if (userLikesOfPost.isEmpty()) {
             like.setComment(null);
             Like likeFromDataBase = likeRepository.save(like);
-            log.info(USER_LIKES_POST, userContext.getUserId(), like.getPost().getId());
+            log.info(USER_LIKES_POST, like.getUserId(), like.getPost().getId());
             return likeFromDataBase;
         } else {
             logWarningSameLikeStatus(like);
@@ -55,15 +51,13 @@ public class LikeService {
     }
 
     public Like dislikePost(Like like) {
-        Post post = getPost(like.getPost().getId());
-        UserDto userDto = getUserFromUserService(userContext.getUserId());
-        like.setUserId(userContext.getUserId());
+        Post post = validatePostAndUser(like);
 
         List<Like> userLikesOfPost = getUserLikesOfPost(post, like.getUserId());
         if (!userLikesOfPost.isEmpty()) {
             likeRepository.deleteById(userLikesOfPost.get(0).getId());
             like.setId(userLikesOfPost.get(0).getId());
-            log.info(USER_TAKES_LIKE_AWAY_FROM_POST, userContext.getUserId(), like.getPost().getId());
+            log.info(USER_TAKES_LIKE_AWAY_FROM_POST, like.getUserId(), like.getPost().getId());
         } else {
             logWarningSameLikeStatus(like);
         }
@@ -71,14 +65,12 @@ public class LikeService {
     }
 
     public Like likeComment(Like like) {
-        Comment comment = getComment(like.getComment().getId(), like.getPost().getId());
-        UserDto userDto = getUserFromUserService(userContext.getUserId());
-        like.setUserId(userContext.getUserId());
+        Comment comment = validateCommentAndUser(like);
 
         List<Like> userLikesOfComment = getUserLikesOfComment(comment, like.getUserId());
         if (userLikesOfComment.isEmpty()) {
             Like likeFromDataBase = likeRepository.save(like);
-            log.info(USER_LIKES_COMMENT, userContext.getUserId(), like.getComment().getId(), like.getPost().getId());
+            log.info(USER_LIKES_COMMENT, like.getUserId(), like.getComment().getId(), like.getPost().getId());
             return likeFromDataBase;
         } else {
             logWarningSameLikeStatus(like);
@@ -87,15 +79,13 @@ public class LikeService {
     }
 
     public Like dislikeComment(Like like) {
-        Comment comment = getComment(like.getComment().getId(), like.getPost().getId());
-        UserDto userDto = getUserFromUserService(userContext.getUserId());
-        like.setUserId(userContext.getUserId());
+        Comment comment = validateCommentAndUser(like);
 
         List<Like> userLikesOfComment = getUserLikesOfComment(comment, like.getUserId());
         if (!userLikesOfComment.isEmpty()) {
             likeRepository.deleteById(userLikesOfComment.get(0).getId());
             like.setId(userLikesOfComment.get(0).getId());
-            log.info(USER_TAKES_LIKE_AWAY_FROM_COMMENT, userContext.getUserId(), like.getComment().getId(), like.getPost().getId());
+            log.info(USER_TAKES_LIKE_AWAY_FROM_COMMENT, like.getUserId(), like.getComment().getId(), like.getPost().getId());
         } else {
             logWarningSameLikeStatus(like);
         }
@@ -104,6 +94,18 @@ public class LikeService {
 
     public Post getNumberOfPostLikes(Long postId) {
         return getPost(postId);
+    }
+
+    private Post validatePostAndUser(Like like) {
+        Post post = getPost(like.getPost().getId());
+        UserDto userDto = getUserFromUserService(like.getUserId());
+        return post;
+    }
+
+    private Comment validateCommentAndUser(Like like) {
+        Comment comment = getComment(like.getComment().getId(), like.getPost().getId());
+        UserDto userDto = getUserFromUserService(like.getUserId());
+        return comment;
     }
 
     private Post getPost(Long postId) {

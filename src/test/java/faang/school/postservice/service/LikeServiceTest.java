@@ -37,6 +37,7 @@ public class LikeServiceTest {
 
     Like like;
     Like like1;
+    Like like2;
     Comment comment;
     Post post;
 
@@ -45,6 +46,9 @@ public class LikeServiceTest {
         like1 = new Like();
         like1.setUserId(2L);
         like1.setId(3);
+
+        like2 = new Like();
+        like2.setUserId(9L);
 
         post = new Post();
         post.setId(1L);
@@ -57,6 +61,7 @@ public class LikeServiceTest {
 
         like = new Like();
         like.setPost(post);
+        like.setUserId(2L);
         like.setComment(comment);
     }
 
@@ -64,8 +69,8 @@ public class LikeServiceTest {
     @Test
     public void testLikePostLikeIsSavedToDataBase() {
         Mockito.when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
-        Mockito.when(userContext.getUserId()).thenReturn(1L);
-        Mockito.when(userServiceClient.getUser(1L)).thenReturn(new UserDto(1L, "testUser", "t@mail.com"));
+        Mockito.when(userServiceClient.getUser(like.getUserId())).thenReturn(new UserDto(like.getUserId(), "testUser", "t@mail.com"));
+        post.setLikes(List.of(like2));
         likeService.likePost(like);
 
         Mockito.verify(likeRepository, Mockito.times(1)).save(Mockito.any());
@@ -74,8 +79,7 @@ public class LikeServiceTest {
     @Test
     public void testDislikePostLikeIsRemovedFromDataBase() {
         Mockito.when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
-        Mockito.when(userContext.getUserId()).thenReturn(2L);
-        Mockito.when(userServiceClient.getUser(2L)).thenReturn(new UserDto(2L, "testUser", "t@mail.com"));
+        Mockito.when(userServiceClient.getUser(like.getUserId())).thenReturn(new UserDto(like.getUserId(), "testUser", "t@mail.com"));
         likeService.dislikePost(like);
 
         Mockito.verify(likeRepository, Mockito.times(1)).deleteById(like.getId());
@@ -84,8 +88,8 @@ public class LikeServiceTest {
     @Test
     public void testLikeCommentLikeIsSavedToDataBase() {
         Mockito.when(commentRepository.findById(comment.getId())).thenReturn(Optional.of(comment));
-        Mockito.when(userContext.getUserId()).thenReturn(1L);
-        Mockito.when(userServiceClient.getUser(1L)).thenReturn(new UserDto(1L, "testUser", "t@mail.com"));
+        Mockito.when(userServiceClient.getUser(2L)).thenReturn(new UserDto(2L, "testUser", "t@mail.com"));
+        comment.setLikes(List.of(like2));
         likeService.likeComment(like);
 
         Mockito.verify(likeRepository, Mockito.times(1)).save(Mockito.any());
@@ -94,7 +98,6 @@ public class LikeServiceTest {
     @Test
     public void testDislikeCommentLikeIsRemovedFromDataBase() {
         Mockito.when(commentRepository.findById(comment.getId())).thenReturn(Optional.of(comment));
-        Mockito.when(userContext.getUserId()).thenReturn(2L);
         Mockito.when(userServiceClient.getUser(2L)).thenReturn(new UserDto(2L, "testUser", "t@mail.com"));
         likeService.dislikeComment(like);
 

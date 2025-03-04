@@ -1,5 +1,6 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
@@ -22,16 +23,21 @@ public class LikeControllerTest {
     @Mock
     private LikeMapper likeMapper;
 
+    @Mock
+    private UserContext userContext;
+
     @InjectMocks
     private LikeDto likeDtoInvalidPostId;
     private LikeDto likeDtoInvalidCommentId;
     private LikeDto likeDtoValid;
+    Long positiveUserId;
 
     @BeforeEach
     void setUp() {
         likeDtoInvalidPostId = new LikeDto(1L, 1L, 1L, -1L);
         likeDtoInvalidCommentId = new LikeDto(1L, 1L, -1L, 1L);
         likeDtoValid = new LikeDto(1L, 1L, 1L, 1L);
+        positiveUserId = 1L;
     }
 
     @InjectMocks
@@ -45,6 +51,7 @@ public class LikeControllerTest {
 
     @Test
     public void testLikePostWithValidLikeDto() {
+        Mockito.when(userContext.getUserId()).thenReturn(positiveUserId);
         likeController.likePost(likeDtoValid);
         Mockito.verify(likeService, Mockito.times(1)).likePost(Mockito.any());
     }
@@ -57,6 +64,7 @@ public class LikeControllerTest {
 
     @Test
     public void testLikeCommentWithValidLikeDto() {
+        Mockito.when(userContext.getUserId()).thenReturn(positiveUserId);
         likeController.likeComment(likeDtoValid);
         Mockito.verify(likeService, Mockito.times(1)).likeComment(Mockito.any());
     }
