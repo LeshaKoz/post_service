@@ -1,8 +1,8 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.broker.KafkaProducerLikeService;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentRequest;
+import faang.school.postservice.dto.like.LikePostEvent;
 import faang.school.postservice.dto.like.LikePostRequest;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exceptions.CommentWasNotFoundException;
@@ -48,7 +48,7 @@ public class LikeServiceTest {
     @Mock
     private CommentRepository commentRepository;
     @Mock
-    private KafkaProducerLikeService kafkaProducer;
+    private KafkaService kafkaService;
     @InjectMocks
     private LikeService likeService;
 
@@ -101,7 +101,7 @@ public class LikeServiceTest {
         verify(likeRepository).save(captor.capture());
         Like newLike = captor.getValue();
 
-        verify(kafkaProducer).sendLikePostEvent(any(), any());
+        verify(kafkaService).sendPostLikeMessage(any(LikePostEvent.class));
 
         Assertions.assertTrue(newLike.getUserId() == userDto.id());
         Assertions.assertTrue(newLike.getPost().getId() == post.getId());
@@ -278,6 +278,4 @@ public class LikeServiceTest {
         assertEquals("Failed users service", exception.getMessage());
         verify(userServiceClient, times(1)).getUsersByIds(List.of(1L, 2L, 3L));
     }
-
-
 }

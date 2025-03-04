@@ -1,8 +1,8 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.broker.MessageBuilder;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentRequest;
+import faang.school.postservice.dto.like.LikePostEvent;
 import faang.school.postservice.dto.like.LikePostRequest;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exceptions.CommentWasNotFoundException;
@@ -17,8 +17,6 @@ import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,10 +34,7 @@ public class LikeService {
     private final CommentRepository commentRepository;
     private final PostService postService;
     private final CommentService commentService;
-    private final MessageBuilder messageBuilder;
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final NewTopic likePostEventTopic;
-
+    private final KafkaService kafkaService;
 
     @Transactional
     public void toggleLikePost(LikePostRequest request) {
@@ -62,9 +57,7 @@ public class LikeService {
                     .build();
             post.getLikes().add(newLike);
             likeRepository.save(newLike);
-
-            kafkaTemplate.send(likePostEventTopic.name(),
-                    messageBuilder.generateLikeEventMessage(post.getAuthorId(), userDto.id(), post.getId()));
+            kafkaService.sendPostLikeMessage(new LikePostEvent(post.getAuthorId(), userDto.id(), post.getId()));
         }
     }
 
@@ -75,12 +68,13 @@ public class LikeService {
                         "Комментарий с id " + request.commentId() + " не был найден"));
         UserDto userDto = getUserDto(request.userId());
 
-        List<Like> likes = new ArrayList<>(comment.getLikes() == null ? Collections.emptyList() : comment.getLikes());
-        boolean likeAlreadyExists = likes.stream().anyMatch(like -> like.getUserId() == userDto.id());
+        Set<Like> likes = new HashSet<>(comment.getLikes() == null ? Collections.emptyList() : comment.getLikes());
+        Optional<Like> like = likes.stream().filter(likeItem -> likeItem.getUserId() == userDto.id()).findFirst();
 
-        if (likeAlreadyExists) {
-            comment.setLikes(likes.stream().filter(like -> like.getUserId() != userDto.id()).toList());
-            likeRepository.deleteByCommentIdAndUserId(comment.getId(), userDto.id());
+        if (like.isPresent()) {
+            assert comment.getLikes() != null;
+            comment.getLikes().remove(like.get());
+            likeRepository.delete(like.get());
         } else {
             Like newLike = Like.builder()
                     .userId(userDto.id())
