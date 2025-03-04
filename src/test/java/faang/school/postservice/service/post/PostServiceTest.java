@@ -271,6 +271,7 @@ public class PostServiceTest {
         MultipartFile file = mock(MultipartFile.class);
         when(file.getSize()).thenReturn(1024L);
         when(file.getContentType()).thenReturn("image/png");
+        when(postImageService.getResizedCover(file)).thenReturn(file);
 
         Resource resource = new Resource();
         ReflectionTestUtils.setField(postService, "maxFiles", 10);

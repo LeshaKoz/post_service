@@ -32,9 +32,9 @@ public class PostImageService {
                         maxWidth,
                         calculateNewHeight(image));
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(resizedCover, "jpg", baos);
-                byte[] imageBytes = baos.toByteArray();
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                ImageIO.write(resizedCover, "jpg", outputStream);
+                byte[] imageBytes = outputStream.toByteArray();
 
                 return new ByteArrayMultipartFile(imageBytes, cover.getOriginalFilename(), cover.getContentType());
             } catch (IOException e) {

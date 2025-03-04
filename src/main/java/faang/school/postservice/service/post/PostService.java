@@ -31,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -149,11 +148,8 @@ public class PostService {
         validateImageUpload(images, post.getResources().size());
 
         String folder = postId + "_post_attachments";
-        List<Resource> newResources = new ArrayList<>();
-
-        for (MultipartFile file : images) {
-            newResources.add(s3Service.uploadResource(file, folder));
-        }
+        List<Resource> newResources = images.stream()
+                .map(file -> s3Service.uploadResource(file, folder)).toList();
 
         resourceRepository.saveAll(newResources);
         post.getResources().addAll(newResources);
@@ -199,7 +195,7 @@ public class PostService {
         }
         for (MultipartFile file : files) {
             if (file.getSize() > getMaxFileSizeBytes()) {
-                postImageService.getResizedCover(file);
+                file = postImageService.getResizedCover(file);
             }
             String fileType = file.getContentType();
             if (fileType == null || !fileType.startsWith("image/")) {

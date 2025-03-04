@@ -37,7 +37,7 @@ class PostImageServiceTest {
     }
 
     @Test
-    void getResizedCover_shouldReturnResizedImage() throws IOException {
+    void getResizedCoverShouldReturnResizedImage() throws IOException {
         byte[] imageData = createTestImage();
 
         when(multipartFile.getInputStream()).thenReturn(new ByteArrayInputStream(imageData));
@@ -56,14 +56,14 @@ class PostImageServiceTest {
     }
 
     @Test
-    void getResizedCover_shouldHandleIOException() throws IOException {
+    void getResizedCoverShouldHandleIOException() throws IOException {
         when(multipartFile.getInputStream()).thenThrow(new IOException("Input stream error"));
 
         assertThrows(RuntimeException.class, () -> postImageService.getResizedCover(multipartFile));
     }
 
     @Test
-    void calculateNewHeight_shouldReturnCorrectHeightForLandscapeImage() {
+    void calculateNewHeightShouldReturnCorrectHeightForLandscapeImage() {
         BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
         int newHeight = postImageService.calculateNewHeight(image);
 
@@ -71,7 +71,7 @@ class PostImageServiceTest {
     }
 
     @Test
-    void calculateNewHeight_shouldReturnMaxHeightForPortraitImage() {
+    void calculateNewHeightShouldReturnMaxHeightForPortraitImage() {
         BufferedImage image = new BufferedImage(800, 1200, BufferedImage.TYPE_INT_RGB);
         int newHeight = postImageService.calculateNewHeight(image);
 
@@ -80,10 +80,10 @@ class PostImageServiceTest {
 
     private byte[] createTestImage() throws IOException {
         BufferedImage img = new BufferedImage(800, 600, BufferedImage.TYPE_INT_RGB);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(img, "jpg", baos);
-        baos.flush();
-        return baos.toByteArray();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(img, "jpg", outputStream);
+        outputStream.flush();
+        return outputStream.toByteArray();
     }
 }
 
