@@ -5,6 +5,7 @@ import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.album.AlbumFilterDto;
 import faang.school.postservice.dto.album.CreateAlbumRequestDto;
 import faang.school.postservice.dto.album.UpdateAlbumRequestDto;
+import faang.school.postservice.exceptions.AccessDeniedException;
 import faang.school.postservice.mapper.AlbumMapper;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Post;
@@ -12,12 +13,11 @@ import faang.school.postservice.repository.AlbumRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.album.filter.AlbumFilter;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -31,13 +31,18 @@ public class AlbumService {
     private final List<AlbumFilter> albumFilters;
 
     @Transactional(readOnly = true)
-    public AlbumDto getAlbumById(Long albumId) {
-        return albumMapper.toDto(getAlbum(albumId));
+    public AlbumDto getAlbumById(Long albumId, Long userId) {
+        Album album = getAlbum(albumId);
+        validatedAlbumVisibility(album, userId);
+        return albumMapper.toDto(album);
     }
 
     @Transactional(readOnly = true)
-    public List<AlbumDto> getAllAlbums(AlbumFilterDto filter) {
-        List<Album> albums = albumRepository.findAll();
+    public List<AlbumDto> getAllAlbums(AlbumFilterDto filter, Long userId) {
+        List<Album> albums = albumRepository.findAll()
+                .stream()
+                .filter(album -> hasViewAccess(album, userId))
+                .toList();
         return applyFilters(albums, filter);
     }
 
@@ -149,6 +154,24 @@ public class AlbumService {
             }
         }
 
-        return albumStream.map(albumMapper::toDto).collect(Collectors.toList());
+        return albumStream.map(albumMapper::toDto)
+                .toList();
+    }
+
+    private void validatedAlbumVisibility(Album album, Long userId) {
+        if (!hasViewAccess(album, userId)) {
+            throw new AccessDeniedException("Вы не можете просматривать данный альбом");
+        }
+    }
+
+    private boolean hasViewAccess(Album album, Long userId) {
+        return switch (album.getVisibility()) {
+            case ALL -> true;
+            case AUTHOR -> album.getAuthorId() == userId;
+            case SUBSCRIBERS -> userServiceClient.isFollow(userId, album.getAuthorId())
+                    || album.getAuthorId() == userId;
+            case SELECT_USERS -> (album.getAllowedUsers() != null && album.getAllowedUsers().contains(userId))
+                    || album.getAuthorId() == userId;
+        };
     }
 }

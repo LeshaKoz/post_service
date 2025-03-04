@@ -1,14 +1,14 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dto.comment.CommentCreateEventDto;
 import faang.school.postservice.dto.comment.CommentResponse;
 import faang.school.postservice.dto.comment.CommentUpdateRequest;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.exceptions.FileIsEmptyException;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
-import faang.school.postservice.model.event.CommentCreateEvent;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.service.broker.KafkaProducerCommentService;
 import faang.school.postservice.utils.ImageService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static faang.school.postservice.config.MinioBuckets.COMMENT_IMAGE_BUCKET_NAME;
@@ -30,27 +31,27 @@ public class CommentService {
     private final ValidateService validateService;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final KafkaProducerCommentService kafkaProducerCommentService;
-
     private static final int SMALL_IMAGE_SIZE = 170;
     private static final int LARGE_IMAGE_SIZE = 1080;
     private final ImageService imageService;
+    private final KafkaService kafkaService;
+    private final PostService postService;
 
     @Transactional
     public CommentResponse create(@Valid CreateCommentRequest createCommentRequest) {
         validateService.validateUser(createCommentRequest.userId());
-//        validateService.validatePost(createCommentRequest.postId());
+        validateService.validatePost(createCommentRequest.postId());
 
+        Post post = postService.getPostById(createCommentRequest.postId());
         Comment comment = commentMapper.toEntity(createCommentRequest);
-        Comment savedComment = commentRepository.save(comment);
-
-        kafkaProducerCommentService.sendCommentCreateEvent(
-                new CommentCreateEvent(savedComment.getPost().getId(),
-                        savedComment.getAuthorId(),
-                        savedComment.getId(),
-                        savedComment.getCreatedAt()));
-
-        return commentMapper.toCommentResponse(savedComment);
+        CommentCreateEventDto eventDto = CommentCreateEventDto.builder()
+                .authorId(comment.getAuthorId())
+                .postId(post.getId())
+                .content(comment.getContent())
+                .date(LocalDateTime.now())
+                .build();
+        kafkaService.sendCommentCreateMessage(eventDto);
+        return commentMapper.toCommentResponse(commentRepository.save(comment));
     }
 
     @Transactional

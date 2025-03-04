@@ -1,5 +1,6 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.exceptions.AccessDeniedException;
 import faang.school.postservice.exceptions.ErrorResponse;
 import faang.school.postservice.exceptions.FileIsEmptyException;
 import faang.school.postservice.exceptions.UserServiceConnectException;
@@ -68,5 +69,11 @@ public class GlobalExceptionHandler {
                 .path(request.getContextPath())
                 .message(e.getMessage())
                 .build();
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAccessDeniedException(AccessDeniedException e, WebRequest request) {
+        return buildErrorMessage(e, request);
     }
 }

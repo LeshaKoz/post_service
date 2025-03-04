@@ -1,0 +1,2 @@
+ALTER TABLE album
+    ADD COLUMN visibility VARCHAR(100) NOT NULL;

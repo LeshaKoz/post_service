@@ -225,6 +225,12 @@ public class PostService {
         log.info("Successfully moderated posts");
     }
 
+    @Transactional(readOnly = true)
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new PostWasNotFoundException("No posts was found!"));
+    }
+
     private void moderateBatch(List<Post> posts, Set<String> moderationSet) {
         posts.forEach(post -> moderatePost(post, moderationSet));
     }

@@ -56,13 +56,19 @@ class CommentServiceTest {
 
     @Mock
     private KafkaProducerCommentService kafkaProducerCommentService;
+    
+    @Mock
+    private PostService postService;
 
-    @Captor
-    private ArgumentCaptor<CommentCreateEvent> commentCreateCaptor;
+    @Mock
+    private KafkaService kafkaService;
 
     @InjectMocks
     private CommentService commentService;
 
+    @Captor
+    private ArgumentCaptor<CommentCreateEvent> commentCreateCaptor;
+    
     @Test
     void create_Success() {
         CreateCommentRequest request = new CreateCommentRequest(1L, "Текст", 2L);
@@ -84,8 +90,11 @@ class CommentServiceTest {
 
         doNothing().when(validateService).validateUser(request.userId());
         doNothing().when(validateService).validatePost(request.postId());
+        doNothing().when(kafkaService)
+                .sendCommentCreateMessage(any());
 
         when(commentRepository.save(any(Comment.class))).thenReturn(commentSaved);
+        when(postService.getPostById(request.postId())).thenReturn(post);
 
         CommentResponse actualResponse = commentService.create(request);
 

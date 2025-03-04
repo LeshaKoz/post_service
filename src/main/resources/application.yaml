@@ -28,6 +28,17 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+  kafka:
+    topics:
+      comment_create: comment-create
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      enable-idempotence: true
+      max-in-flight-requests-per-connection: 5
 
   kafka:
     bootstrap-servers: localhost:9092
@@ -66,6 +77,7 @@ moderation:
 user-service:
   host: localhost
   port: 8080
+  api-prefix: api/v1
 project-service:
   host: localhost
   port: 8082
@@ -73,6 +85,6 @@ payment-service:
   host: localhost
   port: 9080
 minio:
-  url: "${MINIO_URL: http://localhost:9000}"
+  url: "${MINIO_URL:http://localhost:9000}"
   user: ${MINIO_USER:user}
   password: ${MINIO_PASSWORD:password}
