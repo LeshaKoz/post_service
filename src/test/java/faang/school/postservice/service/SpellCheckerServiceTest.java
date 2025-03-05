@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.config.SpellerConfig;
 import faang.school.postservice.model.SpellCheckResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,85 +8,88 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class SpellCheckerServiceTest {
 
     private static final String SPELLER_URL = "https://speller.yandex.net/services/spellservice.json/checkText";
-    private static final String TEST_TEXT = "helo";
-    private static final String CORRECTED_TEXT = "hello";
 
+    private String spellerUrl = "https://speller.yandex.net/services/spellservice.json/checkTexts";
     @Mock
     private RestTemplate restTemplate;
+
+    @Mock
+    private SpellerConfig spellerConfig;
 
     @InjectMocks
     private SpellCheckerService spellCheckerService;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(spellCheckerService, "spellerUrl", SPELLER_URL);
+        spellCheckerService = new SpellCheckerService(restTemplate, spellerUrl, spellerConfig);
     }
 
     @Test
-    public void testCorrectTextWithYandexSpeller_Success() {
-        URI uri = UriComponentsBuilder
-                .fromHttpUrl(SPELLER_URL)
-                .queryParam("text", URLEncoder.encode(TEST_TEXT, StandardCharsets.UTF_8))
-                .build()
-                .toUri();
+    void testCalculateBatchSize() {
+        int maxRequestUriLength = 10000;
+        int baseUrlLength = 70;
+        int maxContentLength = 4096;
+        int separatorLength = 6;
+        when(spellerConfig.getMaxRequestUriLength()).thenReturn(maxRequestUriLength);
+        when(spellerConfig.getBaseUrlLength()).thenReturn(baseUrlLength);
+        when(spellerConfig.getMaxContentLength()).thenReturn(maxContentLength);
+        when(spellerConfig.getSeparatorLength()).thenReturn(separatorLength);
 
-        SpellCheckResponse[] responses = new SpellCheckResponse[]{
-                new SpellCheckResponse(TEST_TEXT, List.of(CORRECTED_TEXT), 0, 4)
+        int batchSize = spellCheckerService.calculateBatchSize();
+
+        assertEquals(2, batchSize);
+    }
+
+    @Test
+    void testSendBatchRequestToYandexSpeller() {
+        List<String> texts = List.of("Приветт", "Мирр");
+        SpellCheckResponse[][] responses = new SpellCheckResponse[][]{
+                {new SpellCheckResponse("Приветт", List.of("Привет"), 0, 7)},
+                {new SpellCheckResponse("Мирр", List.of("Мир"), 0, 4)}
         };
 
-        when(restTemplate.getForObject(uri, SpellCheckResponse[].class)).thenReturn(responses);
+        when(restTemplate.postForObject(any(URI.class), isNull(), eq(SpellCheckResponse[][].class)))
+                .thenReturn(responses);
 
-        String correctedText = spellCheckerService.correctTextWithYandexSpeller(TEST_TEXT);
+        List<String> correctedTexts = spellCheckerService.sendBatchRequestToYandexSpeller(texts);
 
-        assertEquals(CORRECTED_TEXT, correctedText);
+        assertEquals(List.of("Привет", "Мир"), correctedTexts);
+        verify(restTemplate, times(1)).postForObject(any(URI.class), isNull(), eq(SpellCheckResponse[][].class));
     }
 
     @Test
-    public void testCorrectTextWithYandexSpeller_NoCorrections() {
-        URI uri = UriComponentsBuilder
-                .fromHttpUrl(SPELLER_URL)
-                .queryParam("text", URLEncoder.encode(CORRECTED_TEXT, StandardCharsets.UTF_8))
-                .build()
-                .toUri();
+    void testSendBatchRequestToYandexSpeller_EmptyResponse() {
+        List<String> texts = List.of("Приветт", "Мирр");
 
-        when(restTemplate.getForObject(uri, SpellCheckResponse[].class)).thenReturn(new SpellCheckResponse[0]);
+        when(restTemplate.postForObject(any(URI.class), isNull(), eq(SpellCheckResponse[][].class)))
+                .thenReturn(null);
 
-        String correctedText = spellCheckerService.correctTextWithYandexSpeller(CORRECTED_TEXT);
-
-        assertEquals(CORRECTED_TEXT, correctedText);
+        assertThrows(IllegalStateException.class, () -> spellCheckerService.sendBatchRequestToYandexSpeller(texts));
     }
 
     @Test
-    public void testCorrectTextWithYandexSpeller_ApiError() {
-        URI uri = UriComponentsBuilder
-                .fromHttpUrl(SPELLER_URL)
-                .queryParam("text", URLEncoder.encode(TEST_TEXT, StandardCharsets.UTF_8))
-                .build()
-                .toUri();
+    void testSendBatchRequestToYandexSpeller_ResponseSizeMismatch() {
+        List<String> texts = List.of("Приветт", "Мирр");
+        SpellCheckResponse[][] responses = new SpellCheckResponse[][]{
+                {new SpellCheckResponse("Приветт", List.of("Привет"), 0, 7)}
+        };
 
-        when(restTemplate.getForObject(uri, SpellCheckResponse[].class)).thenThrow(new RuntimeException("API error"));
+        when(restTemplate.postForObject(any(URI.class), isNull(), eq(SpellCheckResponse[][].class)))
+                .thenReturn(responses);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            spellCheckerService.correctTextWithYandexSpeller(TEST_TEXT);
-        });
-
-        assertEquals("API error", exception.getMessage());
+        assertThrows(IllegalStateException.class, () -> spellCheckerService.sendBatchRequestToYandexSpeller(texts));
     }
 }

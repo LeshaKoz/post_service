@@ -11,7 +11,7 @@ public class PostCorrecter {
 
     private final PostService postService;
 
-    @Scheduled(cron = "${schedule.correct-posts}")
+   @Scheduled(cron = "${schedulers.correct-posts}")
     public void correctPostJob() {
         postService.correctPosts();
     }

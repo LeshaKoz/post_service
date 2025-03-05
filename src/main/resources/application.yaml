@@ -144,7 +144,16 @@ commenter-banner:
 
 app:
   speller:
-    url: "https://speller.yandex.net/services/spellservice.json/checkText"
+    url: "https://speller.yandex.net/services/spellservice.json"
+    max-request-uri-length: 10000
+    max-content-length: 4096
+    base-url-length: 70
+    separator-length: 6
+    async:
+      core-pool-size: 10
+      max-pool-size: 50
+      queue-capacity: 100
+      thread-name-prefix: "Async-"
     retry:
       maxAttempts: 5
       backoffDelay: 1000

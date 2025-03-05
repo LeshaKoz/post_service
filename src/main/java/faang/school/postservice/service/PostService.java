@@ -6,6 +6,9 @@ import faang.school.postservice.repository.PostRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,24 +21,30 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
 public class PostService {
     private final PostRepository postRepository;
     private final InternalServices internalServices;
-    private final SpellCheckerService spellCheckerService;
     private final ExecutorService executorService;
     private final AsyncModerationService asyncModerationService;
+    private final SpellCheckerService spellCheckerService;
     @Value("${moderation.threadSize}")
     private int threadSize;
 
-    public PostService(PostRepository postRepository, InternalServices internalServices,
-                       ThreadPoolTaskExecutor publishingThreadPool, AsyncModerationService asyncModerationService) {
+    public PostService(PostRepository postRepository,
+                       InternalServices internalServices,
+                       ThreadPoolTaskExecutor publishingThreadPool,
+                       AsyncModerationService asyncModerationService,
+                       SpellCheckerService spellCheckerService) {
         this.postRepository = postRepository;
         this.internalServices = internalServices;
         this.asyncModerationService = asyncModerationService;
         this.executorService = publishingThreadPool.getThreadPoolExecutor();
+        this.spellCheckerService = spellCheckerService;
     }
 
     @Transactional
@@ -167,21 +176,57 @@ public class PostService {
                 post.setPublishedAt(LocalDateTime.now());
             });
 
-        postRepository.saveAll(postsToPublish);
-        return null;
+            postRepository.saveAll(postsToPublish);
+            return null;
         };
     }
 
     @Transactional
     public void correctPosts() {
-        postRepository.findByPublishedFalse().stream()
-                .filter(post -> {
-                    String correctedText = spellCheckerService.correctTextWithYandexSpeller(post.getContent());
-                    return !correctedText.equals(post.getContent());
-                })
-                .forEach(post -> {
-                    post.setContent(spellCheckerService.correctTextWithYandexSpeller(post.getContent()));
-                    postRepository.save(post);
-                });
+        int page = 0;
+        int batchSize = spellCheckerService.calculateBatchSize();
+        Pageable pageable = PageRequest.of(page, batchSize);
+
+        do {
+            Page<Post> postsPage = postRepository.findByPublishedFalse(pageable);
+
+            if (postsPage == null || postsPage.isEmpty()) {
+                log.error("Received null page from repository");
+                break;
+            }
+
+            List<Post> posts = postsPage.getContent();
+
+            if (posts.isEmpty()) {
+                log.info("No more posts to process");
+                break;
+            }
+
+            List<String> contents = posts.stream()
+                    .map(Post::getContent)
+                    .collect(Collectors.toList());
+
+            try {
+                List<String> correctedContents = spellCheckerService.sendBatchRequestToYandexSpeller(contents);
+
+                if (correctedContents.size() != contents.size()) {
+                    log.error("Size mismatch: correctedContents size = {}, contents size = {}",
+                            correctedContents.size(), contents.size());
+                    continue;
+                }
+
+                for (int i = 0; i < posts.size(); i++) {
+                    Post post = posts.get(i);
+                    String correctedContent = correctedContents.get(i);
+                    post.setContent(correctedContent);
+                }
+
+                postRepository.saveAll(posts);
+            } catch (Exception ex) {
+                log.error("Failed to process batch: {}", ex.getMessage());
+            }
+
+            pageable = postsPage.nextPageable();
+        } while (pageable.isPaged());
     }
 }
