@@ -50,6 +50,8 @@ post_service:
 logging:
   level:
     root: info
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 user-service:
   host: localhost
@@ -77,8 +79,10 @@ image:
   largeImageSize: 1080
 
 comment:
+  path-to-dictionary: /bad_words_list.txt
+
   schedule:
-    verify: "* */10 * * * * *"
+    verify: "*/10 * * * * *"
     user-ban: "* */50 * * * * *"
   batchSize: 100
   thread-pool-size: 4
