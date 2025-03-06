@@ -30,7 +30,8 @@ spring:
           name: calculations_channel
   kafka:
     topics:
-      comment_create: comment-create
+      comment_create_event: comment-create
+      post_like_event: post-like
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
