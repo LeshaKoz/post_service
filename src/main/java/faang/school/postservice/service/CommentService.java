@@ -2,12 +2,13 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.annotations.PublishCommentEvent;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.events.NotificationCommentEvent;
 import faang.school.postservice.exception.CommentNotFoundException;
 import faang.school.postservice.exception.UserNotFoundException;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.model.event.AnalyticsCommentEvent;
+import faang.school.postservice.model.event.NotificationCommentEvent;
 import faang.school.postservice.repository.CommentRepository;
 
 import faang.school.postservice.service.s3.AwsService;
@@ -53,6 +54,9 @@ public class CommentService {
     @Value("${comment.image.smallImageMaxSize}")
     private int SMALL_IMAGE_MAX_SIZE;
 
+    @Value("${commenter-banner.comments-count-for-ban}")
+    private int unverifiedCommentsCountForBan;
+
     private final ModerationDictionaryUtil moderationDictionaryUtil;
 
     @Transactional(readOnly = true)
@@ -64,7 +68,7 @@ public class CommentService {
                 .toList();
     }
 
-    @PublishCommentEvent(events = { NotificationCommentEvent.class } )
+    @PublishCommentEvent(events = {AnalyticsCommentEvent.class, NotificationCommentEvent.class})
     @Transactional
     public Comment createComment(Comment comment, Long postId, Long authorId) {
         Post post = postService.get(postId);
@@ -74,7 +78,6 @@ public class CommentService {
             throw new UserNotFoundException("User with id = " + authorId + " was not found");
         }
 
-        comment.setVerified(false);
         comment.setPost(post);
         comment.setAuthorId(authorId);
 
@@ -151,6 +154,11 @@ public class CommentService {
         comment.setSmallImageFileKey(keySmall);
 
         return commentRepository.save(comment);
+    }
+
+    @Transactional
+    public List<Long> findAuthorIdsForBan() {
+        return commentRepository.findAuthorsForBanWithUnverifiedCommentsCount(unverifiedCommentsCountForBan);
     }
 
     public byte[] getCommentImage(@PathVariable Long commentId, Function<Comment, String> keyExtractor) {

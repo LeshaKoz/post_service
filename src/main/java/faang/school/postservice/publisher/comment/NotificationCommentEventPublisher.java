@@ -2,9 +2,9 @@ package faang.school.postservice.publisher.comment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.events.NotificationCommentEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.event.NotificationCommentEvent;
 import faang.school.postservice.publisher.EventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,17 +22,17 @@ public class NotificationCommentEventPublisher implements EventPublisher {
     private final ObjectMapper objectMapper;
 
     @Value("${spring.kafka.topics.notification-comment-topic.name}")
-    private String commentNotificationTopic;
+    private String notificationCommentTopicName;
 
     @Override
-    public void publishEvent(Object event) {
+    public void publishEvent(Object dto) {
+        NotificationCommentEvent event = commentMapper.toNotificationCommentEvent((Comment) dto);
         try {
-            NotificationCommentEvent notificationEvent = commentMapper.toNotificationCommentEvent((Comment) event);
-            String json = objectMapper.writeValueAsString(notificationEvent);
-            kafkaTemplate.send(commentNotificationTopic, json);
+            String jsonEvents = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(notificationCommentTopicName, jsonEvents);
         } catch (JsonProcessingException e) {
-            log.warn("Error parsing event: {}", event);
-            throw new RuntimeException(e);
+            log.error("Failed to serialize NotificationCommentEvent to JSON. Event data: {}. Error message: {}",
+                    event, e.getMessage(), e);
         }
     }
 }
