@@ -20,6 +20,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest(
         classes = {
                 PostServiceApp.class
@@ -65,6 +67,7 @@ public class BaseContextTest {
 
     @Test
     void contextLoads() {
-        Assertions.assertThat(40 + 2).isEqualTo(42);
+        assertThat(mockMvc).isNotNull();
+        assertThat(objectMapper).isNotNull();
     }
 }
