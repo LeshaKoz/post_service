@@ -22,6 +22,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -122,9 +123,8 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
     public void verifyComments() {
-        List<Comment> commentsToVerify = commentRepository.findAllByVerifiedDateIsNull();
+        List<Comment> commentsToVerify = commentRepository.findAllByVerifiedIsFalse();
         List<List<Comment>> partitions = partitionList(commentsToVerify, batchSize);
 
         List<CompletableFuture<Void>> futures = partitions.stream()
@@ -166,10 +166,7 @@ public class CommentServiceImpl implements CommentService {
         if (partitionSize <= 0) {
             throw new IllegalArgumentException("Partition size must be greater than zero");
         }
-
-        return IntStream.range(0, (list.size() + partitionSize - 1) / partitionSize)
-                .mapToObj(i -> list.subList(i * partitionSize, Math.min(list.size(), (i + 1) * partitionSize)))
-                .toList();
+        return ListUtils.partition(list, partitionSize);
     }
 
     private Comment getById(Long id) {

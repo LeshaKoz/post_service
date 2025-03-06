@@ -79,8 +79,8 @@ image:
 
 comment:
   schedule:
-    verify: "*/10 * * * * *" # every 10 minutes
-    user-ban: "*/50 * * * * *"
+    verify: "*/10 * * * * *"
+    user-ban: "*/30 * * * * *"
   batchSize: 100
   thread-pool-size: 4
   word-split-regex: "(?<=\\p{L})(?=\\p{P})|(?<=\\p{P})(?=\\p{L})|\\s+"

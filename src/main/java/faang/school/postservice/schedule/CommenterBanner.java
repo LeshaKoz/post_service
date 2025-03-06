@@ -1,4 +1,4 @@
-package faang.school.postservice.scheduler;
+package faang.school.postservice.schedule;
 
 
 import faang.school.postservice.service.comment.CommentService;
