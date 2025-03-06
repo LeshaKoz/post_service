@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -39,6 +40,7 @@ public class Comment {
     @Column(name = "author_id", nullable = false)
     private Long authorId;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "comment", orphanRemoval = true)
     private List<Like> likes;
 

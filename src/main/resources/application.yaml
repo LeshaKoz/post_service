@@ -22,6 +22,7 @@ spring:
       port: 6379
       host: localhost
       channels:
+        comment-channel: comment_channel
         calculations_channel:
           name: calculations_channel
 
@@ -36,8 +37,6 @@ spring:
 
 server:
   port: 8081
-  servlet:
-    context-path: /api/v1
 
   tomcat:
     max-swallow-size: 5MB
@@ -61,6 +60,11 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+ad-service:
+  ad-removal:
+    batch-size: 10
+    cron: "0 0 0 * * ?"
+    #Каждый день в 00:00
 
 aws:
   url: http://localhost:9000
