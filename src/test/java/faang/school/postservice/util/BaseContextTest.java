@@ -3,6 +3,8 @@ package faang.school.postservice.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redis.testcontainers.RedisContainer;
 import faang.school.postservice.PostServiceApp;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(
         classes = {
@@ -59,5 +63,11 @@ public class BaseContextTest {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void contextLoads() {
+        assertThat(mockMvc).isNotNull();
+        assertThat(objectMapper).isNotNull();
     }
 }
