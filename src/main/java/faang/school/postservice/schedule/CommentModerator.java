@@ -8,11 +8,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class CommentModerator {
-
     private final CommentService commentService;
 
     @Scheduled(cron = "${comment.schedule.verify}")
-    public void moderateComments() {
+    public final void moderateComments() {
         commentService.verifyComments();
     }
 }
