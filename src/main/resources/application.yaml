@@ -32,6 +32,7 @@ spring:
     topics:
       comment_create_event: comment-create
       post_like_event: post-like
+      user-ban-topic: user-ban-topic
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -60,6 +61,7 @@ logging:
 
 moderation:
   dictionary: classpath:obscene_words.txt
+  cron-ban-user: "0 30 3 * * ?"
 
 user-service:
   host: localhost
