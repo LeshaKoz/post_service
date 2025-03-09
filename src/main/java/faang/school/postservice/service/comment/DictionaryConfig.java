@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 
 @Configuration
-public class BadWord {
+public class DictionaryConfig {
 
     @Bean
     public Set<String> badWords(@Value("${comment.path-to-dictionary}") String pathToFile) {

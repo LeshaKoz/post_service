@@ -22,9 +22,11 @@ spring:
       port: 6379
       host: localhost
       channels:
-        comment-channel: comment_channel
         calculations_channel:
           name: calculations_channel
+        user-ban-channel:
+          name: user_ban
+        comment-channel: comment_channel
 
   mvc:
     servlet:
@@ -37,7 +39,6 @@ spring:
 
 server:
   port: 8081
-
   tomcat:
     max-swallow-size: 5MB
 
@@ -50,8 +51,6 @@ post_service:
 logging:
   level:
     root: info
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 user-service:
   host: localhost
@@ -80,13 +79,14 @@ image:
   smallImageSize: 170
   largeImageSize: 1080
 
+
 comment:
   path-to-dictionary: /bad_words_list.txt
 
   schedule:
     verify: "*/10 * * * * *"
-    user-ban: "* */50 * * * * *"
+    user-ban: "*/30 * * * * *"
   batchSize: 100
   thread-pool-size: 4
   word-split-regex: "(?<=\\p{L})(?=\\p{P})|(?<=\\p{P})(?=\\p{L})|\\s+"
-
+  number-bad-comments: 5
