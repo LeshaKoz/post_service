@@ -10,14 +10,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("unchecked")
 public class EventProducerServiceTest {
 
     @Mock
@@ -53,8 +50,6 @@ public class EventProducerServiceTest {
 
         assertEquals(event, valueCaptor.getValue());
 
-        String capturedKey = keyCaptor.getValue();
-        assertNotNull(capturedKey);
-        UUID.fromString(capturedKey);
+        assertNotNull(keyCaptor.getValue());
     }
 }

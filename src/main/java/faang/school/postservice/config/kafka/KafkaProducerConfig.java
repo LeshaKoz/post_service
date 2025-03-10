@@ -24,7 +24,7 @@ public class KafkaProducerConfig {
     private String addLikeEventTopicName;
 
     @Bean("addLikeProducerFactory")
-    public ProducerFactory<String, Object> addLikeProducerFactory() {
+    public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -35,14 +35,18 @@ public class KafkaProducerConfig {
         configProps.put(
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 JsonSerializer.class.getName());
-        configProps.put(JsonSerializer.TYPE_MAPPINGS, ("LikeEvent:faang.school.postservice.event.LikeEvent"));
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean("addLikeKafkaTemplate")
     public KafkaTemplate<String, Object> addLikeKafkaTemplate() {
-        return new KafkaTemplate<>(addLikeProducerFactory());
+        return new KafkaTemplate<>(defaultProducerFactory());
+    }
+
+    @Bean(name = "postViewEventTemplate")
+    public KafkaTemplate<String, Object> postViewKafkaTemplate() {
+        return new KafkaTemplate<>(defaultProducerFactory());
     }
 
     @Bean

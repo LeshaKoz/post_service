@@ -7,24 +7,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 public class EventProducerService {
 
-    private final KafkaTemplate<String, Object> postViewKafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired
     public EventProducerService(
             @Qualifier("postViewEventTemplate") KafkaTemplate<String, Object> postViewKafkaTemplate) {
-        this.postViewKafkaTemplate = postViewKafkaTemplate;
+        this.kafkaTemplate = postViewKafkaTemplate;
     }
 
-    @Value("${spring.kafka.post-view-topic}")
+    @Value("${spring.kafka.topics.analytic-topics.post-view-topic}")
     private String postViewTopic;
 
     public void publish(PostViewEvent event) {
-        String uniqueKey = UUID.randomUUID().toString();
-        postViewKafkaTemplate.send(postViewTopic, uniqueKey, event);
+        String messageKey = event.getPostId().toString();
+        kafkaTemplate.send(postViewTopic, messageKey, event);
     }
 }

@@ -3,13 +3,18 @@ package faang.school.postservice.service.post;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.event.PostViewEvent;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.service.annotation.ViewPost;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 @Slf4j
@@ -21,24 +26,26 @@ public class PostViewAspect {
     private final UserContext userContext;
 
     @AfterReturning(pointcut = "@annotation(faang.school.postservice.service.annotation.ViewPost)", returning = "result")
-    public void publishPostView(Object result) {
+    public void publishPostView(JoinPoint joinPoint, Object result) {
         Long viewerId = userContext.getUserId();
 
-        if (result instanceof Post post) {
-            sendMessageToKafka(post, viewerId);
-            return;
-        }
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
 
-        if (result instanceof List<?> list) {
-            if (!list.isEmpty() && list.get(0) instanceof Post) {
-                List<Post> posts = list.stream()
-                        .filter(Post.class::isInstance)
-                        .map(Post.class::cast)
-                        .toList();
+        ViewPost myAnnotation = method.getAnnotation(ViewPost.class);
 
-                posts.forEach(post -> sendMessageToKafka(post, viewerId));
+        Class<?> resultClass = myAnnotation.targetValue();
+        Collection<?> results = (result instanceof Collection)
+                ? (Collection<?>) result
+                : Collections.singletonList(result);
+
+        results.forEach(obj -> {
+            if (resultClass.isInstance(obj)) {
+                Post post = (Post) obj;
+                sendMessageToKafka(post, viewerId);
             }
-        }
+        });
+
     }
 
     private void sendMessageToKafka(Post post, Long viewerId) {
