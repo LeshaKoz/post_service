@@ -63,6 +63,8 @@ ad-service:
     batch-size: 10
     cron: "0 0 0 * * ?"
     #Каждый день в 00:00
+like-service:
+  batch-size: 100
 
 aws:
   url: http://localhost:9000
@@ -73,3 +75,4 @@ aws:
 image:
   smallImageSize: 170
   largeImageSize: 1080
+
