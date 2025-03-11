@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.config.app.PostServiceConfiguration;
 import faang.school.postservice.config.async.AsyncConfig;
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
@@ -24,7 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
 import static java.lang.String.format;
 
