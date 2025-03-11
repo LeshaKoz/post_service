@@ -103,7 +103,7 @@ public class PostResourceService {
         return post;
     }
 
-    private MultipartFile resizeOrThrow(MultipartFile image) {
+    public MultipartFile resizeOrThrow(MultipartFile image) {
         MultipartFile resultImage = image;
         try {
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());

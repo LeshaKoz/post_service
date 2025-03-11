@@ -32,7 +32,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/post-service/posts")
+@RequestMapping("/posts")
 @Log4j2
 @Validated
 public class PostController {
