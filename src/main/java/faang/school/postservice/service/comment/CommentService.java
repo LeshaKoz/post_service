@@ -20,4 +20,8 @@ public interface CommentService {
     void deleteComment(long commentId);
 
     void uploadImage(Long commentId, MultipartFile file);
+
+    void verifyComments();
+
+    void publishUsersToBanEvent();
 }

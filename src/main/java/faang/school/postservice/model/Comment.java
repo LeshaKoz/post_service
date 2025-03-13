@@ -58,6 +58,12 @@ public class Comment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "verified")
+    private Boolean verified;
+
+    @Column(name = "verified_date")
+    private LocalDateTime verifiedDate;
+
     @Column(name = "large_image_file_key")
     private String largeImageFileKey;
 

@@ -51,4 +51,13 @@ public class TestData {
                 .postId(postId)
                 .build();
     }
+
+    public static Comment createCommentForBan(Long id, String content, boolean verified,Long authorId) {
+        return Comment.builder()
+                .id(id)
+                .content(content)
+                .verified(verified)
+                .authorId(authorId)
+                .build();
+    }
 }
