@@ -16,7 +16,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Configuration
-public class KafkaProducerConfig {
+public class LikeEventKafkaProducerConfig {
 
     @Value("${spring.kafka.bootstrap.server.address}")
     private String bootstrapAddress;
@@ -27,14 +27,14 @@ public class KafkaProducerConfig {
     public ProducerFactory<String, Object> addLikeProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                bootstrapAddress);
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+            bootstrapAddress);
         configProps.put(
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                StringSerializer.class.getName());
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+            StringSerializer.class.getName());
         configProps.put(
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                JsonSerializer.class.getName());
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+            JsonSerializer.class.getName());
         configProps.put(JsonSerializer.TYPE_MAPPINGS, ("LikeEvent:faang.school.postservice.event.LikeEvent"));
 
         return new DefaultKafkaProducerFactory<>(configProps);

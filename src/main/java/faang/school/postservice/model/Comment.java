@@ -62,8 +62,9 @@ public class Comment {
     @Column(name = "small_image_file_key")
     private String smallImageFileKey;
 
+    @Builder.Default
     @Column(name = "verified")
-    private Boolean verified;
+    private Boolean verified = false;
 
     @Column(name = "verified_date")
     private LocalDateTime verifiedDate;
