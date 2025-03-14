@@ -46,12 +46,8 @@ public class S3Service {
 
     public void deleteFile(String key) {
         try {
-            if (s3client.doesObjectExist(bucketName, key)) {
-                s3client.deleteObject(new DeleteObjectRequest(bucketName, key));
-                log.info("Файл с ключом {} успешно удалён", key);
-            } else {
-                log.warn("Файл с ключом {} не найден в хранилище", key);
-            }
+            s3client.deleteObject(new DeleteObjectRequest(bucketName, key));
+            log.info("Файл с ключом {} успешно удалён", key);
         } catch (AmazonServiceException e) {
             log.error("Ошибка при удалении файла из хранилища: {}", e.getMessage(), e);
             throw new IntegrationException("Ошибка при удалении файла из хранилища", e);
@@ -60,12 +56,12 @@ public class S3Service {
 
     public InputStream downloadFile(String key) {
         try {
-            if (!s3client.doesObjectExist(bucketName, key)) {
-                throw new IntegrationException("Файл с ключом " + key + " не найден в хранилище");
-            }
             S3Object s3object = s3client.getObject(bucketName, key);
             return s3object.getObjectContent();
         } catch (AmazonServiceException e) {
+            if (e.getStatusCode() == 404) {
+                throw new IntegrationException("Файл с ключом " + key + " не найден в хранилище", e);
+            }
             log.error("Ошибка при загрузке файла из хранилища: {}", e.getMessage(), e);
             throw new IntegrationException("Ошибка при загрузке файла из хранилища", e);
         }

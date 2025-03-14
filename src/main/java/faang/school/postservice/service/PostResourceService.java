@@ -2,6 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.dto.ResourceDto;
 import faang.school.postservice.exception.FileProcessingException;
+import faang.school.postservice.model.ImageType;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.properties.S3Properties;
 import faang.school.postservice.repository.PostRepository;
@@ -103,7 +104,17 @@ public class PostResourceService {
         return post;
     }
 
-    public MultipartFile resizeOrThrow(MultipartFile image) {
+    private ImageType getImageType(int width, int height) {
+        if (width > height) {
+            return ImageType.HORIZONTAL;
+        } else if (width == height) {
+            return ImageType.SQUARE;
+        } else {
+            return ImageType.VERTICAL;
+        }
+    }
+
+    private MultipartFile resizeOrThrow(MultipartFile image) {
         MultipartFile resultImage = image;
         try {
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
@@ -112,30 +123,32 @@ public class PostResourceService {
             }
             int width = bufferedImage.getWidth();
             int height = bufferedImage.getHeight();
+            S3Properties.ImageProperties imageProperties = s3Properties.getImage();
+            ImageType imageType = getImageType(width, height);
 
-            if (width > height) {
-                if (width > s3Properties.getImage().getMaxWidthHorizontal() ||
-                        height > s3Properties.getImage().getMaxHeightHorizontal()) {
-                    resultImage = imageResizer.resizeImage(image, s3Properties.getImage().getMaxWidthHorizontal(),
-                            s3Properties.getImage().getMaxHeightHorizontal());
-                }
-            }
-            else if (width == height) {
-                if (width > s3Properties.getImage().getMaxSideSquare()) {
-                    resultImage = imageResizer.resizeImage(image, s3Properties.getImage().getMaxSideSquare(),
-                            s3Properties.getImage().getMaxSideSquare());
-                }
-            }
-            else {
-                throw new IllegalArgumentException("Вертикальные изображения не поддерживаются.");
+            switch (imageType) {
+                case HORIZONTAL:
+                    if (width > imageProperties.getMaxWidthHorizontal() || height > imageProperties.getMaxHeightHorizontal()) {
+                        resultImage = imageResizer.resizeImage(image, imageProperties.getMaxWidthHorizontal(),
+                                imageProperties.getMaxHeightHorizontal());
+                    }
+                    break;
+                case SQUARE:
+                    if (width > imageProperties.getMaxSideSquare()) {
+                        resultImage = imageResizer.resizeImage(image, imageProperties.getMaxSideSquare(),
+                                imageProperties.getMaxSideSquare());
+                    }
+                    break;
+                case VERTICAL:
+                    throw new IllegalArgumentException("Вертикальные изображения не поддерживаются.");
             }
         } catch (IOException e) {
             throw new IllegalArgumentException("Ошибка обработки изображения", e);
         }
 
         if (resultImage.getSize() > s3Properties.getMaxImageSizeMb() * 1024 * 1024) {
-            throw new IllegalArgumentException("Размер изображения не должен превышать "
-                    + s3Properties.getMaxImageSizeMb() + " МБ.");
+            throw new IllegalArgumentException("Размер изображения не должен превышать " +
+                    s3Properties.getMaxImageSizeMb() + " МБ.");
         }
         return resultImage;
     }
