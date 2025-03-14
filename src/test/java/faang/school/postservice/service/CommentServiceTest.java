@@ -4,7 +4,6 @@ import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.exception.BusinessException;
-import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.mapper.comment.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;

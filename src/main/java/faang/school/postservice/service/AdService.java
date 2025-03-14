@@ -19,9 +19,8 @@ public class AdService {
 
     @Transactional
     public void removeExpiredAds(int batchSize) {
-        List<Ad> expiredAds = adRepository.findAll().stream()
-                .filter(ad -> ad.getEndDate().isBefore(LocalDateTime.now()) || ad.getAppearancesLeft() == 0)
-                .toList();
+        LocalDateTime now = LocalDateTime.now();
+        List<Ad> expiredAds = adRepository.findExpiredAds(now);
 
         ListUtils.partition(expiredAds, batchSize)
                 .forEach(asyncDeleteService::deleteExpiredBatch);
