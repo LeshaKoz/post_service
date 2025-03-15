@@ -10,8 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
@@ -51,7 +53,8 @@ public class AdServiceTest {
     void testRemoveExpiredAds_noExpiredAds() {
         Ad ad1 = createAd(future, 5);
         Ad ad2 = createAd(future, 3);
-        when(adRepository.findAll()).thenReturn(List.of(ad1, ad2));
+        when(adRepository.findExpiredAds(any(LocalDateTime.class))).thenReturn(Collections.emptyList());
+
 
         adService.removeExpiredAds(2);
 
@@ -59,10 +62,11 @@ public class AdServiceTest {
     }
 
     @Test
-    void TestRemoveExpiredAds_expiredByEndDate() {
+    void testRemoveExpiredAds_expiredByEndDate() {
         Ad ad1 = createAd(past, 5);
         Ad ad2 = createAd(past, 3);
-        when(adRepository.findAll()).thenReturn(List.of(ad1, ad2));
+        when(adRepository.findExpiredAds(any(LocalDateTime.class))).thenReturn(List.of(ad1, ad2));
+
 
         adService.removeExpiredAds(2);
 
@@ -70,9 +74,9 @@ public class AdServiceTest {
     }
 
     @Test
-    void TestRemoveExpiredAds_expiredByAppearancesLeft() {
+    void testRemoveExpiredAds_expiredByAppearancesLeft() {
         Ad ad = createAd(future, 0);
-        when(adRepository.findAll()).thenReturn(List.of(ad));
+        when(adRepository.findExpiredAds(any(LocalDateTime.class))).thenReturn(List.of(ad));
 
         adService.removeExpiredAds(1);
 
