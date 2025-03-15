@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.config.async.AsyncConfig;
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ReadPostDto;
@@ -9,6 +10,7 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.corrector.PostCorrector;
+import faang.school.postservice.service.moderate.ModerationService;
 import faang.school.postservice.validator.post.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -57,6 +61,14 @@ public class PostServiceTest {
 
     @Mock
     private PostCorrector postCorrector;
+
+    @Mock
+    private ModerationService moderationService;
+
+    @Mock
+    private AsyncConfig asyncConfig;
+
+    private final Executor executor = Executors.newSingleThreadExecutor();
 
     @InjectMocks
     private PostService postService;
@@ -97,6 +109,8 @@ public class PostServiceTest {
                 .id(ID)
                 .published(true)
                 .build();
+
+        when(asyncConfig.taskExecutor()).thenReturn(executor);
     }
 
     @Test

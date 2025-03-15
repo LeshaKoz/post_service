@@ -25,6 +25,12 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 50MB
+
 server:
   port: 8081
 
@@ -37,6 +43,19 @@ post:
     scheduler:
       cron: "0 0 0 * * ?"
     max-list-size: 50
+
+services:
+  s3:
+    endpoint: http://127.0.0.1:9000
+    accessKey: user
+    secretKey: password
+    bucketName: corpbucket
+    max-image-size-mb: 5
+    max-images-count-for-post: 10
+    image:
+      max-width-horizontal: 1080
+      max-height-horizontal: 566
+      max-side-square: 1080
 
 user-service:
   host: localhost
@@ -51,7 +70,7 @@ payment-service:
   port: 9080
 
 post-service:
-  thread-pool-size: 1
+  thread-pool-size: 5
 
 spell-service:
   url: https://speller.yandex.net/services/spellservice.json
@@ -60,3 +79,8 @@ spell-service:
     attempts: 3
     delay: 1
     multiplier: 1
+
+moderation:
+  cron: "0 0 0 * * ?"
+  batch-size: 100
+  bad-words-file-path: DirtyWords.json
