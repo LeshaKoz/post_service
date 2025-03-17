@@ -1,6 +1,6 @@
 package faang.school.postservice.dto.like;
 
-import jakarta.validation.constraints.Positive;
+import faang.school.postservice.validator.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
