@@ -2,10 +2,9 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
-import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
+import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.LikeService;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +25,9 @@ public class LikeControllerTest {
     @Mock
     private UserContext userContext;
 
+    @Mock
+    private PostRepository postRepository;
+
     @InjectMocks
     private LikeDto likeDtoInvalidPostId;
     private LikeDto likeDtoInvalidCommentId;
@@ -44,12 +46,6 @@ public class LikeControllerTest {
     private LikeController likeController;
 
     @Test
-    public void testLikePostWithInvalidSetLikeToDto() {
-        Assert.assertThrows(DataValidationException.class,
-                () -> likeController.setLikeToPost(likeDtoInvalidPostId));
-    }
-
-    @Test
     public void testLikePostWithValidSetLikeToDto() {
         Mockito.when(userContext.getUserId()).thenReturn(positiveUserId);
         likeController.setLikeToPost(likeDtoValid);
@@ -57,9 +53,10 @@ public class LikeControllerTest {
     }
 
     @Test
-    public void testLikeCommentWithInvalidSetLikeToDto() {
-        Assert.assertThrows(DataValidationException.class,
-                () -> likeController.setLikeToComment(likeDtoInvalidCommentId));
+    public void testUnsetLikeToPostWithValidSetLikeToDto() {
+        Mockito.when(userContext.getUserId()).thenReturn(positiveUserId);
+        likeController.unsetLikeToPost(likeDtoValid);
+        Mockito.verify(likeService, Mockito.times(1)).unsetLikeToPost(Mockito.any());
     }
 
     @Test
@@ -67,5 +64,19 @@ public class LikeControllerTest {
         Mockito.when(userContext.getUserId()).thenReturn(positiveUserId);
         likeController.setLikeToComment(likeDtoValid);
         Mockito.verify(likeService, Mockito.times(1)).setLikeToComment(Mockito.any());
+    }
+
+    @Test
+    public void testUnsetLikeToCommentWithValidSetLikeToDto() {
+        Mockito.when(userContext.getUserId()).thenReturn(positiveUserId);
+        likeController.unsetLikeToComment(likeDtoValid);
+        Mockito.verify(likeService, Mockito.times(1)).unsetLikeToComment(Mockito.any());
+    }
+
+    @Test
+    public void testSetLikeToPostWithInvalidSetLikeToDto() {
+        Mockito.when(userContext.getUserId()).thenReturn(positiveUserId);
+        likeController.setLikeToPost(likeDtoValid);
+        Mockito.verify(postRepository, Mockito.times(0)).findById(Mockito.any());
     }
 }

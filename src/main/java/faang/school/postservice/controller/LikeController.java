@@ -3,13 +3,14 @@ package faang.school.postservice.controller;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.post.PostDto;
-import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.service.LikeService;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,76 +29,42 @@ public class LikeController {
     private PostMapper postMapper;
     private UserContext userContext;
 
-    private static final String POST_NEGATIVE_ID = "postId is negative or 0";
-
     @PostMapping("/post/{postId}/set")
     @ResponseBody
-    public LikeDto setLikeToPost(@RequestBody LikeDto likeDto) {
-        if (likeDtoIsValidForPost(likeDto)) {
+    public LikeDto setLikeToPost(@Validated @RequestBody LikeDto likeDto) {
             likeDto.setUserId(userContext.getUserId());
             Like like = likeService.setLikeToPost(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
-        } else {
-            throw new DataValidationException(POST_NEGATIVE_ID);
-        }
     }
 
     @PostMapping("/post/{postId}/unset")
     @ResponseBody
-    public LikeDto unsetLikeToPost(@RequestBody LikeDto likeDto) {
-        if (likeDtoIsValidForPost(likeDto)) {
+    public LikeDto unsetLikeToPost(@Validated @RequestBody LikeDto likeDto) {
             likeDto.setUserId(userContext.getUserId());
             Like like = likeService.unsetLikeToPost(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
-        } else {
-            throw new DataValidationException(POST_NEGATIVE_ID);
-        }
     }
 
     @PostMapping("/post/{postId}/comment/{commentId}/set")
     @ResponseBody
-    public LikeDto setLikeToComment(@RequestBody LikeDto likeDto) {
-        if (likeDtoIsValidForComment(likeDto)) {
+    public LikeDto setLikeToComment(@Validated @RequestBody LikeDto likeDto) {
             likeDto.setUserId(userContext.getUserId());
             Like like = likeService.setLikeToComment(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
-        } else {
-            throw new DataValidationException(POST_NEGATIVE_ID);
-        }
     }
 
     @PostMapping("/post/{postId}/comment/{commentId}/unset")
     @ResponseBody
-    public LikeDto unsetLikeToComment(@RequestBody LikeDto likeDto) {
-        if (likeDtoIsValidForPost(likeDto)) {
+    public LikeDto unsetLikeToComment(@Validated @RequestBody LikeDto likeDto) {
             likeDto.setUserId(userContext.getUserId());
             Like like = likeService.unsetLikeToComment(likeMapper.toEntity(likeDto));
             return likeMapper.toDto(like);
-        } else {
-            throw new DataValidationException(POST_NEGATIVE_ID);
-        }
     }
 
     @GetMapping("/post/{postId}")
     @ResponseBody
-    public PostDto getNumberOfPostLikes(@PathVariable Long postId) {
-        if (idIsValid(postId)) {
+    public PostDto getNumberOfPostLikes(@PathVariable("postId")
+                                        @Min(value = 1, message = "postId must be greater than 0") Long postId) {
         return postMapper.toDto(likeService.getNumberOfPostLikes(postId));
-        } else {
-            throw new DataValidationException(POST_NEGATIVE_ID);
-        }
-    }
-
-    private boolean likeDtoIsValidForPost(LikeDto likeDto) {
-        return likeDto.getPostId() >= 0;
-    }
-
-    private boolean likeDtoIsValidForComment(LikeDto likeDto) {
-        return likeDtoIsValidForPost(likeDto)
-                && (likeDto.getCommentId() >= 0);
-    }
-
-    private boolean idIsValid(Long id) {
-        return id >= 0;
     }
 }
