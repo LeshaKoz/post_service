@@ -32,6 +32,7 @@ public class PostService {
     private final ExecutorService executorService;
     private final AsyncModerationService asyncModerationService;
     private final SpellCheckerService spellCheckerService;
+    private final HashtagService hashtagService;
     @Value("${moderation.threadSize}")
     private int threadSize;
 
@@ -39,12 +40,14 @@ public class PostService {
                        InternalServices internalServices,
                        ThreadPoolTaskExecutor publishingThreadPool,
                        AsyncModerationService asyncModerationService,
-                       SpellCheckerService spellCheckerService) {
+                       SpellCheckerService spellCheckerService,
+                       HashtagService hashtagService) {
         this.postRepository = postRepository;
         this.internalServices = internalServices;
         this.asyncModerationService = asyncModerationService;
         this.executorService = publishingThreadPool.getThreadPoolExecutor();
         this.spellCheckerService = spellCheckerService;
+        this.hashtagService = hashtagService;
     }
 
     @Transactional
@@ -67,7 +70,9 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        return postRepository.save(post);
+        Post result = postRepository.save(post);
+        hashtagService.handlePostUpdate(post.getContent(), post.getId());
+        return result;
     }
 
     @Transactional
@@ -79,7 +84,9 @@ public class PostService {
                 || !Objects.equals(originalPost.getProjectId(), post.getProjectId())) {
             throw new DataValidationException("Post author cannot be changed!");
         }
-        return postRepository.save(post);
+        Post result = postRepository.save(post);
+        hashtagService.handlePostUpdate(post.getContent(), post.getId());
+        return result;
     }
 
     @Transactional
@@ -88,6 +95,8 @@ public class PostService {
                 .orElseThrow(() -> new DataValidationException("Specified post not found. Id:" + postId));
         post.setDeleted(true);
         postRepository.save(post);
+
+        hashtagService.handlePostDelete(postId);
     }
 
     public Post get(Long postId) {
@@ -174,6 +183,7 @@ public class PostService {
             postsToPublish.forEach(post -> {
                 post.setPublished(true);
                 post.setPublishedAt(LocalDateTime.now());
+                hashtagService.handlePostUpdate(post.getContent(), post.getId());
             });
 
             postRepository.saveAll(postsToPublish);

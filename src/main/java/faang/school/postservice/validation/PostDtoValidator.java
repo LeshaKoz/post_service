@@ -3,6 +3,7 @@ package faang.school.postservice.validation;
 import faang.school.postservice.dto.post.PostDto;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,5 +30,15 @@ public class PostDtoValidator implements ConstraintValidator<ValidPostDto, PostD
         }
 
         return isValid;
+    }
+
+    public void validatePostDto(PostDto postDto) {
+        if (postDto.getAuthorId() == null && postDto.getProjectId() == null) {
+            throw new ValidationException("Author or Project should be specified for post");
+        }
+
+        if (postDto.getAuthorId() != null && postDto.getProjectId() != null) {
+            throw new ValidationException("Only one of Author or Project should be the owner of the post");
+        }
     }
 }

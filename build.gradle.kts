@@ -4,6 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.0"
 }
 
+
 group = "faang.school"
 version = "1.0"
 java.sourceCompatibility = JavaVersion.VERSION_17
@@ -35,21 +36,17 @@ dependencies {
     implementation ("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation ("org.springframework.retry:spring-retry:2.0.11")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-
     /**
      * Database
      */
     implementation("org.liquibase:liquibase-core")
-    implementation("redis.clients:jedis:4.3.2")
+    implementation("redis.clients:jedis:5.2.0")
     runtimeOnly("org.postgresql:postgresql")
-
     /**
      * Amazon s3
      */
     implementation("software.amazon.awssdk:s3:2.20.86")
     implementation("software.amazon.awssdk:url-connection-client:2.20.86")
-
-
     /**
      * Utils & Logging
      */
@@ -60,7 +57,6 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.26")
     implementation("org.mapstruct:mapstruct:1.5.3.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
-
     /**
      * Test containers
      */
@@ -69,7 +65,6 @@ dependencies {
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:kafka")
     testImplementation("com.redis.testcontainers:testcontainers-redis-junit-jupiter:1.4.6")
-
     /**
      * Tests
      */
@@ -78,7 +73,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     testImplementation("org.springframework.kafka:spring-kafka-test")
-    testImplementation ("uk.org.lidalia:slf4j-test:1.2.0")
+    /**
+     * elasticsearch
+     */
+    implementation("co.elastic.clients:elasticsearch-java:8.17.3")
 }
 
 tasks.test {

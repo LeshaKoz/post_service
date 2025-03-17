@@ -5,6 +5,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.AiModerationService;
 import faang.school.postservice.service.AsyncModerationService;
+import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.InternalServices;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.service.SpellCheckerService;
@@ -74,6 +75,9 @@ public class PostServiceTest {
 
     @Mock
     private SpellCheckerService spellCheckerService;
+
+    @Mock
+    private HashtagService hashtagService;
 
     @InjectMocks
     private PostService postService;
@@ -366,7 +370,8 @@ public class PostServiceTest {
                 internalServices,
                 publishingThreadPool,
                 asyncModerationService,
-                spellCheckerService);
+                spellCheckerService,
+                hashtagService);
 
         doAnswer(invocation -> {
             List<Callable<Void>> tasks = invocation.getArgument(0);

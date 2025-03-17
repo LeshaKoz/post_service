@@ -38,7 +38,7 @@ public class PostController {
     )
     @PostMapping("/draft")
     public PostDto createDraft(@RequestBody @Valid PostDto postDto) {
-        postDtoValidator.isValid(postDto, null);
+        postDtoValidator.validatePostDto(postDto);
         Post receivedDraft = postMapper.toEntity(postDto);
         Post createdDraft = postService.createDraft(receivedDraft);
         return postMapper.toDto(createdDraft);

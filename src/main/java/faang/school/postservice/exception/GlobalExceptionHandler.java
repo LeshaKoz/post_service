@@ -48,4 +48,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleFileFormatException(FileFormatException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
+
+    @ExceptionHandler(jakarta.validation.ValidationException.class)
+    public ResponseEntity<String> handleValidationException(jakarta.validation.ValidationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(faang.school.postservice.exception.ExternalServiceException.class)
+    public ResponseEntity<String> handleExternalServiceException(ExternalServiceException ex) {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Service temporarily unavailable: " + ex.getMessage());
+    }
 }
