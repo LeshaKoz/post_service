@@ -38,6 +38,12 @@ logging:
   level:
     root: info
 
+post:
+  ad-remover:
+    scheduler:
+      cron: "0 0 0 * * ?"
+    max-list-size: 50
+
 services:
   s3:
     endpoint: http://127.0.0.1:9000
