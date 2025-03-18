@@ -76,13 +76,10 @@ tasks.bootJar {
 /**
  * Jacoco settings
  */
-val jacocoExclude = listOf(
-    "**/client",
-    "**/config/context",
-    "**/dto",
-    "**/model",
-    "**/repository",
-    "**/PostServiceApp.class"
+val jacocoInclude = listOf(
+    "**/service/**",
+    "**/controller/**",
+    "**/validation/**"
 )
 
 tasks.test {
@@ -96,7 +93,7 @@ tasks.jacocoTestReport {
     }
     classDirectories.setFrom(
         sourceSets.main.get().output.asFileTree.matching {
-            exclude(jacocoExclude)
+            include(jacocoInclude)
         }
     )
 }
