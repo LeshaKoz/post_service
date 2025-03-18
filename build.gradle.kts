@@ -78,7 +78,7 @@ jacoco {
 }
 
 val jacocoInclude = listOf(
-    "**/client/**",
+    "**/mappers/**",
     "**/repository/**"
 )
 
