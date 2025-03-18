@@ -72,3 +72,42 @@ val test by tasks.getting(Test::class) { testLogging.showStandardStreams = true 
 tasks.bootJar {
     archiveFileName.set("service.jar")
 }
+
+/**
+ * Jacoco settings
+ */
+val jacocoExclude = listOf(
+    "**/client",
+    "**/config/context",
+    "**/dto",
+    "**/model",
+    "**/repository",
+    "**/PostServiceApp.class"
+)
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            exclude(jacocoExclude)
+        }
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = "CLASS"
+            limit {
+                minimum = "0.75".toBigDecimal()
+            }
+        }
+    }
+}
