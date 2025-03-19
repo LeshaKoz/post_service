@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.NotFoundException;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
@@ -17,8 +18,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -30,7 +38,7 @@ class PostServiceTest {
     private PostMapperImpl postMapper;
 
     @InjectMocks
-    private PostService postService;
+    private PostServiceImpl postService;
 
     private PostDto postDto;
     private Post post;
@@ -220,5 +228,33 @@ class PostServiceTest {
         assertEquals(postDto.getContent(), result.get(0).getContent());
         verify(postRepository).findByProjectId(1L);
         verify(postMapper).toDto(post);
+    }
+
+    @Test
+    void testGetPostEntryByIdSuccessfulFetch() {
+        long postId = 1L;
+        Post post = new Post();
+        post.setId(postId);
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+
+        Post result = postService.getPostEntryById(postId);
+
+        assertNotNull(result);
+        assertEquals(postId, result.getId());
+        verify(postRepository, times(1)).findById(postId);
+    }
+
+    @Test
+    void testGetPostEntryByIdPostNotFound() {
+        long postId = 2L;
+
+        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> postService.getPostEntryById(postId)
+        );
+        assertEquals("Post not found", exception.getMessage());
     }
 }
