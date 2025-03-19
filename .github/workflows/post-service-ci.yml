@@ -3,7 +3,7 @@ name: Post Service CI pipeline for titan
 on:
   pull_request:
     branches:
-      - feature/pipeline-BC-BJS2-65278
+      - titan-master-stream9
 
 jobs:
   build:
