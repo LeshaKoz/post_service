@@ -7,7 +7,6 @@ package faang.school.postservice.controller;
  */
 
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.model.Post;
 import faang.school.postservice.service.like.LikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/getlike")
+@RequestMapping("/likes")
 @RequiredArgsConstructor
 public class LikeController {
     private final LikeService likeService;
 
-    @GetMapping("/{postId}")
+    @GetMapping("/post/{postId}")
     public List<UserDto> getLikesByPostId(@PathVariable Long postId) {
         return likeService.getUserLikedPost(postId);
     }
