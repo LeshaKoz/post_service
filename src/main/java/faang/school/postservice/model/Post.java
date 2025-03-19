@@ -71,6 +71,7 @@ public class Post {
      */
     @Column(name = "author_id", nullable = false)
     private Long authorId;
+
     /**
      * Идентификатор проекта, к которому относится пост. Может быть пустым.
      */
