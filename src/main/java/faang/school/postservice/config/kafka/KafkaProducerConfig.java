@@ -16,7 +16,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Configuration
-public class LikeEventKafkaProducerConfig {
+public class KafkaProducerConfig {
 
     @Value("${spring.kafka.bootstrap.server.address}")
     private String bootstrapAddress;
@@ -24,25 +24,29 @@ public class LikeEventKafkaProducerConfig {
     private String addLikeEventTopicName;
 
     @Bean("addLikeProducerFactory")
-    public ProducerFactory<String, Object> addLikeProducerFactory() {
+    public ProducerFactory<String, Object> defaultProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
-            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-            bootstrapAddress);
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                bootstrapAddress);
         configProps.put(
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-            StringSerializer.class.getName());
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                StringSerializer.class.getName());
         configProps.put(
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-            JsonSerializer.class.getName());
-        configProps.put(JsonSerializer.TYPE_MAPPINGS, ("LikeEvent:faang.school.postservice.event.LikeEvent"));
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                JsonSerializer.class.getName());
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean("addLikeKafkaTemplate")
     public KafkaTemplate<String, Object> addLikeKafkaTemplate() {
-        return new KafkaTemplate<>(addLikeProducerFactory());
+        return new KafkaTemplate<>(defaultProducerFactory());
+    }
+
+    @Bean(name = "postViewEventTemplate")
+    public KafkaTemplate<String, Object> postViewKafkaTemplate() {
+        return new KafkaTemplate<>(defaultProducerFactory());
     }
 
     @Bean

@@ -78,8 +78,7 @@ public class PostController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-
-    @PostMapping("/post/{post-id}")
+    @GetMapping("/post/{post-id}")
     public ResponseEntity<ResponsePostDto> getPost(
             @PathVariable("post-id") final Long postId) {
 

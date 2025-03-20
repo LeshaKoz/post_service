@@ -8,6 +8,7 @@ import faang.school.postservice.exception.ProjectNotFoundException;
 import faang.school.postservice.exception.UserNotFoundException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.annotation.ViewPost;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +90,8 @@ public class PostService {
         postRepository.save(existingPost);
     }
 
+    @ViewPost
+    @Transactional(readOnly = true)
     public Post getPostById(Long postId) {
         Post post = getPost(postId);
 
@@ -99,6 +102,7 @@ public class PostService {
         return post;
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getNotPublishedPostsByUser(Long userId) {
         doesUserExist(userId);
         return postRepository
@@ -107,6 +111,7 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getNotPublishedPostsByProject(Long projectId) {
         doesProjectExist(projectId);
         return postRepository
@@ -116,6 +121,8 @@ public class PostService {
 
     }
 
+    @ViewPost
+    @Transactional(readOnly = true)
     public List<Post> getPublishedPostsByUser(Long userId) {
         doesUserExist(userId);
         return postRepository
@@ -124,6 +131,7 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPublishedPostsByProject(Long projectId) {
         doesProjectExist(projectId);
         return postRepository
