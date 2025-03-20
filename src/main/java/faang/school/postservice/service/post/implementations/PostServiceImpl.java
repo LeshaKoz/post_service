@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -73,22 +75,38 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostDto> getAuthorPostDrafts(PostDto postDto) {
-        return List.of();
+        Long authorId = postDto.getAuthorId();
+        return processPosts(postRepository.findByAuthorId(authorId),
+                post -> !post.isPublished() && !post.isDeleted());
     }
 
     @Override
     public List<PostDto> getProjectPostDrafts(PostDto postDto) {
-        return List.of();
+        Long projectId = postDto.getProjectId();
+        return processPosts(postRepository.findByProjectId(projectId),
+                post -> !post.isPublished() && !post.isDeleted());
     }
 
     @Override
     public List<PostDto> getAuthorPublishedPosts(PostDto postDto) {
-        return List.of();
+        Long authorId = postDto.getAuthorId();
+        return processPosts(postRepository.findByAuthorId(authorId),
+                post -> post.isPublished() && !post.isDeleted());
     }
 
     @Override
     public List<PostDto> getProjectPublishedPosts(PostDto postDto) {
-        return List.of();
+        Long projectId = postDto.getProjectId();
+        return processPosts(postRepository.findByProjectId(projectId),
+                post -> post.isPublished() && !post.isDeleted());
+    }
+
+    private List<PostDto> processPosts(List<Post> posts, Predicate<Post> filter) {
+        return posts.stream()
+                .filter(filter)
+                .sorted(Comparator.comparing(Post::getCreatedAt, Comparator.reverseOrder()))
+                .map(postMapper::toDto)
+                .toList();
     }
 
     /******************************************************************************************************************/
