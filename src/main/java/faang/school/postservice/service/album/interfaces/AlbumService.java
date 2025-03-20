@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface AlbumService {
 
-    AlbumDto createAlbum(long userId, AlbumCreateUpdateDto createDto);
+    AlbumDto createAlbum(AlbumCreateUpdateDto createDto);
 
     AlbumDto addPostToAlbum(long albumId, long postId);
 

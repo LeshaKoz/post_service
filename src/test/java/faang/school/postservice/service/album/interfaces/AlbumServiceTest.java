@@ -76,7 +76,7 @@ class AlbumServiceTest {
         when(userContext.getUserId()).thenReturn(userId);
         doThrow(new UnauthorizedException(userId, e)).when(albumValidator).validateUserExists(userId);
 
-        assertThrows(UnauthorizedException.class, () -> albumService.createAlbum(userId, createUpdateDto));
+        assertThrows(UnauthorizedException.class, () -> albumService.createAlbum(createUpdateDto));
 
         verify(userContext, times(1)).getUserId();
         verify(albumValidator, times(1)).validateUserExists(userId);
@@ -94,7 +94,7 @@ class AlbumServiceTest {
         doThrow(new DataValidationException("Album with this title already exist for this user"))
                 .when(albumValidator).validateTitle(title, userId);
 
-        assertThrows(DataValidationException.class, () -> albumService.createAlbum(userId, createUpdateDto));
+        assertThrows(DataValidationException.class, () -> albumService.createAlbum(createUpdateDto));
 
         verify(userContext, times(1)).getUserId();
         verify(albumValidator, times(1)).validateTitle(title, userId);
@@ -113,7 +113,7 @@ class AlbumServiceTest {
         when(userContext.getUserId()).thenReturn(userId);
         when(albumRepository.save(album)).thenReturn(album);
 
-        AlbumDto albumDto = assertDoesNotThrow(() -> albumService.createAlbum(userId, createUpdateDto));
+        AlbumDto albumDto = assertDoesNotThrow(() -> albumService.createAlbum(createUpdateDto));
         assertEquals(title, albumDto.getTitle());
         assertEquals(description, albumDto.getDescription());
 

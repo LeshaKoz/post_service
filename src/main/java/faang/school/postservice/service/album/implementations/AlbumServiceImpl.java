@@ -33,8 +33,8 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     @Transactional
-    public AlbumDto createAlbum(long userId, AlbumCreateUpdateDto createUpdateDto) {
-        userId = userContext.getUserId();
+    public AlbumDto createAlbum(AlbumCreateUpdateDto createUpdateDto) {
+        long userId = userContext.getUserId();
         albumValidator.validateUserExists(userId);
         albumValidator.validateTitle(createUpdateDto.getTitle(), userId);
         Album albumToSave = albumMapper.toEntity(createUpdateDto);
