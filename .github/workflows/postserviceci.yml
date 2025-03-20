@@ -34,3 +34,15 @@ jobs:
 
     - name: Step 5 - Run tests with Gradle
       run: ./gradlew test
+
+    - name: Step 6 - Generate Jacoco report
+      run: ./gradlew jacocoTestReport
+
+    - name: Step 7 - Verify code coverage
+      run: ./gradlew jacocoTestCoverageVerification
+
+    - name: Step 8 - Upload Jacoco report as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: jacoco-report
+        path: build/reports/jacoco/test/html/
