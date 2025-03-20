@@ -33,6 +33,18 @@ public class CommentServiceImpl implements CommentService {
             throw new CommentValidationException("CommentDto cannot be null");
         }
 
+        if (postId == null) {
+            throw new CommentValidationException("Post ID cannot be null");
+        }
+
+        if (commentDto.authorId() == null) {
+            throw new CommentValidationException("Author ID cannot be null");
+        }
+
+        if (commentDto.content() == null) {
+            throw new CommentValidationException("Content cannot be null");
+        }
+
         Post post = postService.findById(postId);
 
         userServiceClient.getUser(commentDto.authorId());
@@ -88,13 +100,17 @@ public class CommentServiceImpl implements CommentService {
                 commentId, postId, comment.getAuthorId());
     }
 
-    private Comment validateCommentAndPost(Long postId, Long commentId) {
+    public Comment validateCommentAndPost(Long postId, Long commentId) {
         if (postId == null || commentId == null) {
             throw new CommentValidationException("Post ID and Comment ID cannot be null");
         }
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
+
+        if (comment.getPost() == null) {
+            throw new CommentValidationException("Comment does not have a post assigned");
+        }
 
         if (!comment.getPost().getId().equals(postId)) {
             throw new CommentValidationException("Comment does not belong to the specified post");
