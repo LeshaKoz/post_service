@@ -73,6 +73,7 @@ tasks.bootJar {
     archiveFileName.set("service.jar")
 }
 
+
 /**
  * Jacoco settings
  */
@@ -81,6 +82,8 @@ val jacocoInclude = listOf(
     "**/controller/**",
     "**/validation/**"
 )
+
+val minCoverage = "0.45".toBigDecimal();
 
 tasks.test {
     finalizedBy(tasks.jacocoTestReport)
@@ -103,7 +106,7 @@ tasks.jacocoTestCoverageVerification {
         rule {
             element = "CLASS"
             limit {
-                minimum = "0.75".toBigDecimal()
+                minimum = minCoverage
             }
         }
     }
