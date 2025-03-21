@@ -73,7 +73,7 @@ public class LikeServiceTest {
     }
 
     @Test
-    public void testGetAllUsersEmptyList() {
+    public void testGetAllUsersWhoLikedPostEmptyList() {
         when(postValidator.getPostById(anyLong())).thenReturn(post);
         when(userServiceClient.getUsersByIds(anyList())).thenReturn(Collections.emptyList());
 
@@ -101,6 +101,18 @@ public class LikeServiceTest {
         assertEquals(userDto.id(), resultDto.get(0).id());
         assertEquals(userDto.username(), resultDto.get(0).username());
         assertEquals(userDto.email(), resultDto.get(0).email());
+    }
+
+    @Test
+    public void testGetAllUsersWhoLikedCommentEmptyList() {
+        when(commentValidator.getCommentById(anyLong())).thenReturn(comment);
+        when(userServiceClient.getUsersByIds(anyList())).thenReturn(Collections.emptyList());
+
+        List<UserDto> result = likeService.getAllUsersWhoLikedComment(COMMENT_ID);
+
+        verify(commentValidator, times(1)).getCommentById(COMMENT_ID);
+        verify(userServiceClient, times(1)).getUsersByIds(anyList());
+        assertEquals(0, result.size());
     }
 
     @Test

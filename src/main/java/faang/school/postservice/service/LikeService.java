@@ -5,10 +5,8 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,10 +24,8 @@ public class LikeService {
 
     private final UserServiceClient userServiceClient;
     private final PostValidator postValidator;
-    private final CommentRepository commentRepository;
     private final CommentValidator commentValidator;
 
-    @Transactional
     public List<UserDto> getAllUsersWhoLikedPost(Long postId) {
         Post post = postValidator.getPostById(postId);
         List<Long> userIds = post.getLikes().stream()

@@ -22,14 +22,14 @@ public class LikeController {
     @GetMapping("/posts/{postId}")
     public ResponseEntity<List<UserDto>> getAllUsersWhoLikedPost(
             @PathVariable Long postId,
-            @RequestHeader("X-User-Id") String header) {
+            @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(likeService.getAllUsersWhoLikedPost(postId));
     }
 
     @GetMapping("/comments/{commentsId}")
     public ResponseEntity<List<UserDto>> getAllUsersWhoLikedComment(
             @PathVariable Long commentsId,
-            @RequestHeader("X-User-Id") String header) {
+            @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(likeService.getAllUsersWhoLikedComment(commentsId));
     }
 }
