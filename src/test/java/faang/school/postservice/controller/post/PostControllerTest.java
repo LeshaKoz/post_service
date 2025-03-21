@@ -134,7 +134,7 @@ class PostControllerTest {
 
         mockMvc.perform(put("/post-service/posts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\": 1}"))
+                        .content("{\"id\": 1, \"content\": \"Updated content\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1L))
