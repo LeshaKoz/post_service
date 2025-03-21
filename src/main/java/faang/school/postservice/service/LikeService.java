@@ -49,11 +49,9 @@ public class LikeService {
 
         for (int i = 0; i < userIds.size(); i += BATCH_SIZE) {
             List<Long> batch = userIds.subList(i, Math.min(i + BATCH_SIZE, userIds.size()));
-            try {
-                userDtos.addAll(userServiceClient.getUsersByIds(batch));
-            } catch (Exception e) {
-                throw e;
-            }
+
+            userDtos.addAll(userServiceClient.getUsersByIds(batch));
+
         }
         return userDtos;
     }
