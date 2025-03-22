@@ -3,10 +3,13 @@ package faang.school.postservice.controller;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.mapper.CommentMapper;
+import faang.school.postservice.model.Comment;
 import faang.school.postservice.service.CommentService;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,44 +27,53 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommentController {
 
-    CommentService commentService;
-    CommentMapper commentMapper;
-    UserContext userContext;
+    private static final String ID_ERROR_MESSAGE = "ID must be positive";
+
+    private final CommentService commentService;
+    private final CommentMapper commentMapper;
+    private final UserContext userContext;
 
 
-    @GetMapping("s/{postId}")
+    @GetMapping(value = "/post/{postId}")
     @ResponseStatus(HttpStatus.OK)
-    public List<CommentDto> getComments(@PathVariable Long postId) {
+    public List<CommentDto> getComments(@Positive(message = ID_ERROR_MESSAGE) @PathVariable Long postId) {
 
-        return List.of(
-                CommentDto.builder().content("1").build(),
-                CommentDto.builder().content("2").build());
+        return commentService.getComments(postId).stream()
+                .map(commentMapper::toDto)
+                .toList();
     }
 
     @GetMapping("/{commentId}")
     @ResponseStatus(HttpStatus.OK)
-    public CommentDto getComment(@PathVariable Long commentId) {
+    public CommentDto getComment(@Positive(message = ID_ERROR_MESSAGE)
+                                     @PathVariable Long commentId) {
 
-        return CommentDto.builder().content("3").build();
+        return commentMapper.toDto(
+                commentService.getComment(commentId));
     }
 
-    @PostMapping("/{postId}")
+    @PostMapping("/post/{postId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentDto createComment(@PathVariable Long postId, @NotNull @RequestBody CommentDto commentDto) {
+    public CommentDto createComment(@Positive(message = ID_ERROR_MESSAGE) @PathVariable Long postId
+            , @NotNull @RequestBody CommentDto commentDto) {
 
-        return null;
+        Comment comment = Comment.builder().content(commentDto.getContent()).build();
+//        Comment comment = commentMapper.toEntity(commentDto);
+        return commentMapper.toDto(
+                commentService.createComment(postId, comment));
     }
 
     @PutMapping("/{commentId}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public CommentDto updateComment(@PathVariable Long commentId, @NotNull @RequestBody CommentDto commentDto) {
+    public CommentDto updateComment(@Positive(message = ID_ERROR_MESSAGE) @PathVariable Long commentId
+            , @NotNull @RequestBody CommentDto commentDto) {
 
         return null;
     }
 
     @DeleteMapping("/{commentId}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public boolean deleteComment(@PathVariable Long commentId) {
+    public boolean deleteComment(@Positive(message = ID_ERROR_MESSAGE) @PathVariable Long commentId) {
 
         return false;
     }

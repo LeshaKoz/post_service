@@ -1,5 +1,6 @@
 package faang.school.postservice.dto.comment;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+
 
 import java.time.LocalDateTime;
 
@@ -18,6 +20,7 @@ public class CommentDto {
 
     private Long id;
 
+    @NotNull
     @Size(max = 4096, message = "Comment can be maximal 4096 characters")
     private String content;
 

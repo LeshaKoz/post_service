@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostDto {
     Long id;
+    String content;
     Long authorId;
     Long projectId;
     Long likesNumber;
