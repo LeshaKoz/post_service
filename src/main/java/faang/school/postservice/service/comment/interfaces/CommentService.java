@@ -1,11 +1,9 @@
 package faang.school.postservice.service.comment.interfaces;
 
 import faang.school.postservice.dto.comment.CommentDto;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface CommentService {
     CommentDto createComment(Long postId, CommentDto commentDto);
 

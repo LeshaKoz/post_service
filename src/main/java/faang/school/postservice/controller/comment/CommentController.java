@@ -24,14 +24,15 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping("/{postId}/comments")
-    public ResponseEntity<CommentDto> createComment(@PathVariable Long postId, @RequestBody @Valid CommentDto commentDto) {
+    public ResponseEntity<CommentDto> createComment(@PathVariable("postId") Long postId,
+                                                    @RequestBody @Valid CommentDto commentDto) {
         CommentDto created = commentService.createComment(postId, commentDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{postId}/comments/{commentId}")
-    public ResponseEntity<CommentDto> updateComment(@PathVariable Long postId,
-                                                    @PathVariable Long commentId,
+    public ResponseEntity<CommentDto> updateComment(@PathVariable("postId") Long postId,
+                                                    @PathVariable("commentId") Long commentId,
                                                     @RequestBody @Valid CommentDto commentDto) {
         CommentDto updated = commentService.updateComment(postId, commentId, commentDto);
         return ResponseEntity.ok(updated);
@@ -44,7 +45,8 @@ public class CommentController {
     }
 
     @DeleteMapping("/{postId}/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long postId, @PathVariable Long commentId) {
+    public ResponseEntity<Void> deleteComment(@PathVariable("postId") Long postId,
+                                              @PathVariable("commentId") Long commentId) {
         commentService.deleteComment(postId, commentId);
         return ResponseEntity.noContent().build();
     }
