@@ -9,6 +9,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class PostService {
      * @param postCreateDto DTO с данными для создания поста.
      * @return {@link PostViewDto} - DTO с данными созданного поста.
      */
-    public PostViewDto createDraft(PostCreateDto postCreateDto) {
+    public PostViewDto createDraft(@NotNull PostCreateDto postCreateDto) {
         Post post = postMapper.createDtoToEntity(postCreateDto);
         post = postRepository.save(post);
 
@@ -92,7 +93,7 @@ public class PostService {
      * @throws EntityNotFoundException если пост с указанным ID не найден.
      */
     @Transactional
-    public PostViewDto updatePost(PostUpdateDto postUpdateDto, long postId) {
+    public PostViewDto updatePost(@NotNull PostUpdateDto postUpdateDto, long postId) {
         Post oldPost = postRepository.findById(postId).orElseThrow(() -> {
             log.error("Post with ID {} not found", postId);
             return new EntityNotFoundException("Post not found with id: " + postId);
@@ -133,7 +134,7 @@ public class PostService {
      * @return {@link PostViewDto} - DTO с данными поста.
      * @throws EntityNotFoundException если пост с указанным ID не найден.
      */
-    public PostViewDto getPost( long postId) {
+    public PostViewDto getPost(long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> {
             log.error("Post with ID {} not found", postId);
             return new EntityNotFoundException("Post not found with id: " + postId);
@@ -152,7 +153,7 @@ public class PostService {
         return postRepository.findByAuthorId(userId).stream()
                 .filter(post-> !(post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
-                .map(postMapper:: toViewDto)
+                .map(postMapper::toViewDto)
                 .toList();
     }
 
@@ -166,7 +167,7 @@ public class PostService {
         return postRepository.findByProjectId(projectId).stream()
                 .filter(post-> !(post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
-                .map(postMapper:: toViewDto)
+                .map(postMapper::toViewDto)
                 .toList();
 
     }
@@ -181,7 +182,7 @@ public class PostService {
         return postRepository.findByAuthorId(userId).stream()
                 .filter(post-> !(post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
-                .map(postMapper:: toViewDto)
+                .map(postMapper::toViewDto)
                 .toList();
     }
 
@@ -195,7 +196,7 @@ public class PostService {
         return postRepository.findByProjectId(projectId).stream()
                 .filter(post-> !(post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
-                .map(postMapper:: toViewDto)
+                .map(postMapper::toViewDto)
                 .toList();
     }
 }

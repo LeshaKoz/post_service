@@ -5,8 +5,12 @@ import faang.school.postservice.exception.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Глобальный обработчик исключений для контроллеров.
@@ -56,5 +60,27 @@ public class GlobalExceptionHandler {
         log.error("Internal server error: {}", exception.getMessage(), exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Произошла внутренняя ошибка: " + exception.getMessage());
+    }
+
+/**
+ * Обрабатывает исключение {@link MethodArgumentNotValidException}, которое возникает при валидации данных,
+ * переданных в метод контроллера. Этот метод собирает все ошибки валидации и возвращает их в виде
+ * JSON-объекта, где ключ — это имя поля, а значение — сообщение об ошибке.
+ *
+ * @param exception Исключение {@link MethodArgumentNotValidException}, содержащее информацию об ошибках валидации.
+ * @return Объект {@link ResponseEntity}, содержащий:
+ *         <ul>
+ *             <li>Тело ответа в виде {@link Map}, где ключ — это имя поля, а значение — сообщение об ошибке.</li>
+ *             <li>HTTP-статус {@link HttpStatus#BAD_REQUEST} (400), указывающий на некорректный запрос
+ */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException exception) {
+        Map<String, String> errors = new HashMap<>();
+
+        exception.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 }
