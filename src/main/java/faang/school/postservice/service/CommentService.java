@@ -29,7 +29,7 @@ public class CommentService {
     }
 
     public List<Comment> getComments(Long postId) {
-        List<Comment> comments = commentRepository.findAllByPostId(postId);
+        List<Comment> comments = new ArrayList<>(commentRepository.findAllByPostId(postId));
         comments.sort((l, r) -> (int) (r.getId() - l.getId()));
 
         return comments;
