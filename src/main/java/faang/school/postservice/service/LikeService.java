@@ -57,6 +57,8 @@ public class LikeService {
                 .toList();
 
         return getUsers(userIds);
+    }
+
     @Transactional
     public LikeDto likePost(Long postId) {
         Long userId = userContext.getUserId();
@@ -77,6 +79,10 @@ public class LikeService {
             List<Long> batch = userIds.subList(i, Math.min(i + BATCH_SIZE, userIds.size()));
 
             userDtos.addAll(userServiceClient.getUsersByIds(batch));
+        }
+        return userDtos;
+    }
+
     @Transactional
     public LikeDto removeLikeOnPost(Long postId) {
         Long userId = userContext.getUserId();
@@ -98,7 +104,6 @@ public class LikeService {
             likeRepository.save(like);
             return likeMapper.toLikeDto(like);
         }
-        return userDtos;
     }
 
     private List<UserDto> getUsers(List<Long> userIds) {
@@ -106,6 +111,8 @@ public class LikeService {
             return Collections.emptyList();
         }
         return fetchUsersInBatches(userIds);
+    }
+
     @Transactional
     public LikeDto removeLikeOnComment(Long commentId) {
         Long userId = userContext.getUserId();
