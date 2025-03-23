@@ -1,9 +1,7 @@
 package faang.school.postservice.controller;
 
-import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.mapper.PostMapper;
-import faang.school.postservice.model.Post;
 import faang.school.postservice.service.PostService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +24,7 @@ public class PostController {
 
     @GetMapping("/{postId}")
     @ResponseStatus(HttpStatus.OK)
-    public PostDto getComment(@Positive(message = ID_ERROR_MESSAGE)
+    public PostDto getPost(@Positive(message = ID_ERROR_MESSAGE)
                                  @PathVariable Long postId) {
 
         return postMapper.toDto(
