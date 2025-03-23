@@ -32,5 +32,10 @@ public class GlobalExceptionHandler {
         log.warn("Comment error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
-}
 
+    @ExceptionHandler(CommentIdMismatchException.class)
+    public ResponseEntity<String> handleCommentIdMismatchException(CommentIdMismatchException e) {
+        log.warn("Validation error: {}", e.getMessage());
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
