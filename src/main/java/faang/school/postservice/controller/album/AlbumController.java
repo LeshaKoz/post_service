@@ -3,6 +3,7 @@ package faang.school.postservice.controller.album;
 import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.album.AlbumFilterDto;
 import faang.school.postservice.service.album.AlbumService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,28 +29,32 @@ public class AlbumController {
 
     @PostMapping("/new")
     public ResponseEntity<AlbumDto> createAlbum(
-            @RequestHeader("userId") long userId,
-            @RequestBody AlbumDto albumDto) {
+            @RequestHeader(value = "x-user-id") Long userId,
+            @Valid @RequestBody AlbumDto albumDto) {
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(null);
+            }
         AlbumDto savedDto = albumService.createAlbum(userId, albumDto);
         return new ResponseEntity<>(savedDto, HttpStatus.CREATED);
     }
 
-    @PostMapping("/{albumId}")
+    @PostMapping("/{albumId}/{postId}")
     public ResponseEntity<AlbumDto> addPostToAlbum(
-            @RequestHeader("userId") Long userId,
-            @RequestParam("postId") Long postId,
+            @RequestHeader("x-user-id") Long userId,
+            @PathVariable Long postId,
             @PathVariable Long albumId) {
         AlbumDto savedDto = albumService.addPostToAlbum(userId, postId, albumId);
         return new ResponseEntity<>(savedDto, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{albumId}/{postId}")
-    public ResponseEntity<AlbumDto> deletePostFromAlbum(
-            @RequestHeader("userId") Long userId,
+    @DeleteMapping("/{albumId}/delete-post/{postId}")
+    public ResponseEntity<HttpStatus> deletePostFromAlbum(
+            @RequestHeader("x-user-id") Long userId,
             @PathVariable Long postId,
             @PathVariable Long albumId) {
-        AlbumDto updatedAlbum = albumService.deletePostFromAlbum(userId, postId, albumId);
-        return new ResponseEntity<>(updatedAlbum, HttpStatus.OK);
+        albumService.deletePostFromAlbum(userId, postId, albumId);
+        return ResponseEntity.ok(HttpStatus.OK);
     }
 
     @GetMapping("/{albumId}")
@@ -61,7 +66,7 @@ public class AlbumController {
 
     @PutMapping("/{albumId}")
     public ResponseEntity<AlbumDto> updateAlbum(
-            @RequestHeader("userId") Long userId,
+            @RequestHeader("x-user-id") Long userId,
             @RequestBody AlbumDto albumDto) {
         AlbumDto updatedAlbum = albumService.updateAlbum(userId, albumDto);
         return new ResponseEntity<>(updatedAlbum, HttpStatus.OK);
@@ -69,7 +74,7 @@ public class AlbumController {
 
     @DeleteMapping("/{albumId}")
     public ResponseEntity<AlbumDto> deleteAlbum(
-            @RequestHeader("userId") Long userId,
+            @RequestHeader("x-user-id") Long userId,
             @PathVariable Long albumId) {
         albumService.deleteAlbum(userId, albumId);
         return new ResponseEntity<>(HttpStatus.OK);

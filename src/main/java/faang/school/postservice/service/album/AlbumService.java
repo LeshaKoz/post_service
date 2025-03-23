@@ -11,6 +11,7 @@ import faang.school.postservice.repository.AlbumRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.album.AlbumValidator;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,7 @@ public class AlbumService {
     private final AlbumRepository albumRepository;
     private final PostRepository postRepository;
 
+    @Transactional
     public AlbumDto createAlbum(long userId, AlbumDto albumDto) {
         AlbumValidator.checkAlbumDtoTitleAndDescriptionExist(albumDto);
         UserDto userDto = userServiceClient.getUser(userId);
@@ -55,16 +57,14 @@ public class AlbumService {
         return albumMapper.toAlbumDto(savedAlbum);
     }
 
-    public AlbumDto deletePostFromAlbum(long userId, long postId, long albumId) {
+    public void deletePostFromAlbum(long userId, long postId, long albumId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException(POST_NOT_FOUND_MESSAGE));
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
-        AlbumValidator.checkPostInAlbum(post, album);
         album.removePost(postId);
-        Album savedAlbum = albumRepository.save(album);
-        return albumMapper.toAlbumDto(savedAlbum);
+        albumRepository.save(album);
     }
 
     public AlbumDto getAlbumById(long albumId) {
