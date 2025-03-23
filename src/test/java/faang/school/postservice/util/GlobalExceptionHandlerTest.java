@@ -1,81 +1,75 @@
 package faang.school.postservice.util;
 
-import faang.school.postservice.config.context.UserContext;
-
+import faang.school.postservice.controller.GlobalExceptionHandler;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.Collections;
+import java.util.Map;
 
-@WebMvcTest(TestController.class)
+@ExtendWith(MockitoExtension.class)
 public class GlobalExceptionHandlerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @InjectMocks
+    private GlobalExceptionHandler globalExceptionHandler;
 
-    @MockBean
-    private UserContext userContext;
-
-    @Test
-    @DisplayName("Проверка обработки исключения DataValidationException: возврат статуса 400 и сообщения об ошибке")
-    public void givenDataValidationHandlerWhenHandleDataValidationExceptionThenReturnDataValidationException() throws Exception {
-        mockMvc.perform(get("/test/data-validation"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Ошибка валидации данных: Invalid data"));
-    }
+    private ResponseEntity<String> response;
 
     @Test
-    @DisplayName("Проверка обработки исключения EntityNotFoundException: возврат статуса 404 и сообщения об ошибке")
-    public void givenEntityNotFoundHandlerWhenHandleEntityNotFoundExceptionThenReturnEntityNotFoundException() throws Exception {
-        mockMvc.perform(get("/test/entity-not-found"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("Сущность не найдена: Entity not found"));
+    public void givenDataValidationExceptionThrowGlobalExceptionHandelThrowBadRequest() {
+        DataValidationException exception = new DataValidationException("Invalid data");
+
+        response = globalExceptionHandler.handleDataValidationException(exception);
+
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertEquals("Ошибка валидации данных: Invalid data", response.getBody());
     }
 
     @Test
-    @DisplayName("Проверка обработки общего исключения: возврат статуса 500 и сообщения об ошибке")
-    public void givenExceptionHandlerWhenHandleExceptionThenException() throws Exception {
-        mockMvc.perform(get("/test/exception"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string("Произошла внутренняя ошибка: Internal error"));
-    }
-}
+    public void givenEntityNotFoundExceptionThrowGlobalExceptionHandelThrowNotFound() {
+        EntityNotFoundException exception = new EntityNotFoundException("Entity not found");
 
-/**
- * Тестовый контроллер для проверки GlobalExceptionHandler
- */
-@RestController
-@RequestMapping("/test")
-class TestController {
+        response = globalExceptionHandler.handleEntityNotFoundException(exception);
 
-    @GetMapping("/data-validation")
-    public void throwDataValidationException() {
-        throw new DataValidationException("Invalid data");
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        Assertions.assertEquals("Сущность не найдена: Entity not found", response.getBody());
     }
 
-    @GetMapping("/entity-not-found")
-    public void throwEntityNotFoundException() {
-        throw new EntityNotFoundException("Entity not found");
+    @Test
+    public void givenExceptionThrowGlobalExceptionHandelThrowInternalServerError() {
+        Exception exception = new Exception("Internal server error");
+
+        response = globalExceptionHandler.handleException(exception);
+
+        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        Assertions.assertEquals("Произошла внутренняя ошибка: Internal server error", response.getBody());
     }
 
-    @GetMapping("/exception")
-    public void throwException() {
-        throw new RuntimeException("Internal error");
-    }
+    @Test
+    public void givenMethodArgumentNotValidExceptionThrowGlobalExceptionHandelThrowBadRequest() {
+        MethodArgumentNotValidException exception = Mockito.mock(MethodArgumentNotValidException.class);
+        BindingResult bindingResult = Mockito.mock(BindingResult.class);
 
-    @GetMapping("/method-argument-not-valid")
-    public void throwMethodArgumentNotValidException() {
-        throw new RuntimeException("Method argument not valid");
+        FieldError fieldError = new FieldError("objectName", "fieldName", "defaultMessage");
+        Mockito.when(exception.getBindingResult())
+                .thenReturn(bindingResult);
+        Mockito.when(bindingResult.getFieldErrors())
+                .thenReturn(Collections.singletonList(fieldError));
+
+        ResponseEntity<Map<String, String>> response = globalExceptionHandler.handleValidationExceptions(exception);
+
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertEquals(Collections.singletonMap("fieldName", "defaultMessage"), response.getBody());
     }
 }
