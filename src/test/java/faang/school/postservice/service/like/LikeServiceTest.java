@@ -37,20 +37,16 @@ class LikeServiceTest {
     void testGetUsersByPostId() {
         long postId = 1L;
 
-        // Мокируем лайки, которые принадлежат посту
         Like like1 = Like.builder().userId(1L).post(new Post()).build();
         Like like2 = Like.builder().userId(2L).post(new Post()).build();
         when(likeRepository.findByPostId(postId)).thenReturn(List.of(like1, like2));
 
-        // Мокируем возвращаемые пользователи
         UserDto user1 = new UserDto(1L, "user1", "user1@example.com");
         UserDto user2 = new UserDto(2L, "user2", "user2@example.com");
         when(userServiceClient.getUsersByIds(List.of(1L, 2L))).thenReturn(List.of(user1, user2));
 
-        // Вызываем метод из сервиса
         List<UserDto> users = likeService.getUserLikedPost(postId);
 
-        // Проверяем, что возвращены правильные пользователи
         assertNotNull(users);
         assertEquals(2, users.size());
         assertEquals("user1", users.get(0).username());
@@ -61,20 +57,16 @@ class LikeServiceTest {
     void testGetUsersByCommentId() {
         long commentId = 1L;
 
-        // Мокируем лайки, которые принадлежат комментарию
         Like like1 = Like.builder().userId(1L).comment(new Comment()).build();
         Like like2 = Like.builder().userId(2L).comment(new Comment()).build();
         when(likeRepository.findByCommentId(commentId)).thenReturn(List.of(like1, like2));
 
-        // Мокируем возвращаемые пользователи
         UserDto user1 = new UserDto(1L, "user1", "user1@example.com");
         UserDto user2 = new UserDto(2L, "user2", "user2@example.com");
         when(userServiceClient.getUsersByIds(List.of(1L, 2L))).thenReturn(List.of(user1, user2));
 
-        // Вызываем метод из сервиса
         List<UserDto> users = likeService.getUserLikedComment(commentId);
 
-        // Проверяем, что возвращены правильные пользователи
         assertNotNull(users);
         assertEquals(2, users.size());
         assertEquals("user1", users.get(0).username());

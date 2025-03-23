@@ -31,9 +31,7 @@ class LikeRepositoryTest {
 
     @Test
     void testFindByPostId() {
-        // Подготавливаем тестовые данные с помощью Builder
         long postId = 1L;
-
         Post post = Post.builder()
                 .id(postId)
                 .content("Sample Post")
@@ -42,26 +40,20 @@ class LikeRepositoryTest {
                 .deleted(false)
                 .build();
 
-        // Создаем объект Like для поста с помощью Builder
         Like like = Like.builder()
                 .userId(1L)
-                .post(post)  // Пост не null
-                .build();  // Закрываем билд
+                .post(post)
+                .build();
 
-        // Мокируем поведение репозитория
         when(likeRepository.findByPostId(postId)).thenReturn(List.of(like));
 
-        // Вызываем метод репозитория
         List<Like> likes = likeRepository.findByPostId(postId);
-
-        // Проверяем, что результат правильный
         assertNotNull(likes);
         assertEquals(1, likes.size());
     }
 
     @Test
     void testFindByCommentId() {
-        // Подготавливаем тестовые данные с помощью Builder
         long commentId = 1L;
 
         Comment comment = Comment.builder()
@@ -70,19 +62,14 @@ class LikeRepositoryTest {
                 .authorId(1L)
                 .build();
 
-        // Создаем объект Like для комментария с помощью Builder
         Like like = Like.builder()
                 .userId(1L)
-                .comment(comment)  // Комментарий не null
-                .build();  // Закрываем билд
+                .comment(comment)
+                .build();
 
-        // Мокируем поведение репозитория
         when(likeRepository.findByCommentId(commentId)).thenReturn(List.of(like));
 
-        // Вызываем метод репозитория
         List<Like> likes = likeRepository.findByCommentId(commentId);
-
-        // Проверяем, что результат правильный
         assertNotNull(likes);
         assertEquals(1, likes.size());
     }
