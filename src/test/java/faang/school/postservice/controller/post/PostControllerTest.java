@@ -2,7 +2,7 @@ package faang.school.postservice.controller.post;
 
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
-import faang.school.postservice.service.post.implementations.PostServiceImpl;
+import faang.school.postservice.service.post.interfaces.PostService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,7 +18,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -32,7 +31,7 @@ class PostControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private PostServiceImpl postService;
+    private PostService postService;
 
     @MockBean
     private UserContext userContext;
@@ -94,7 +93,7 @@ class PostControllerTest {
 
         when(postService.publishPost(any(PostDto.class))).thenReturn(outputDto);
 
-        mockMvc.perform(put("/post-service/posts/publish")
+        mockMvc.perform(post("/post-service/posts/publish")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\": 1}"))
                 .andExpect(status().isOk())
@@ -110,7 +109,7 @@ class PostControllerTest {
 
     @Test
     public void testPublishPost_InvalidId_ThrowsException() throws Exception {
-        mockMvc.perform(put("/post-service/posts/publish")
+        mockMvc.perform(post("/post-service/posts/publish")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\": 0}"))
                 .andExpect(status().isBadRequest())
@@ -190,7 +189,7 @@ class PostControllerTest {
 
         when(postService.deletePost(any(PostDto.class))).thenReturn(outputDto);
 
-        mockMvc.perform(delete("/post-service/posts")
+        mockMvc.perform(post("/post-service/posts/delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\": 1}"))
                 .andExpect(status().isOk())
@@ -206,7 +205,7 @@ class PostControllerTest {
 
     @Test
     public void testDeletePost_InvalidId_ThrowsException() throws Exception {
-        mockMvc.perform(delete("/post-service/posts")
+        mockMvc.perform(post("/post-service/posts/delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\": 0}"))
                 .andExpect(status().isBadRequest())

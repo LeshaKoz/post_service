@@ -2,15 +2,14 @@ package faang.school.postservice.controller.post;
 
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.PostDtoValidationException;
-import faang.school.postservice.service.post.implementations.PostServiceImpl;
+import faang.school.postservice.service.post.interfaces.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -20,69 +19,68 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostController {
 
-    private final PostServiceImpl postService;
+    private final PostService postService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public PostDto createPostDraft(@RequestBody PostDto postDto) {
+    public ResponseEntity<PostDto> createPostDraft(@RequestBody PostDto postDto) {
         if (postDto.getContent() == null || postDto.getContent().isBlank()) {
             throw new PostDtoValidationException(
                     "The content of the post must not be empty");
         }
-
-        return postService.createPostDraft(postDto);
+        PostDto responseBody = postService.createPostDraft(postDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
     }
 
-    @PutMapping("/publish")
-    public PostDto publishPost(@RequestBody PostDto postDto) {
+    @PostMapping("/publish")
+    public ResponseEntity<PostDto> publishPost(@RequestBody PostDto postDto) {
         validateId(postDto.getId());
-        return postService.publishPost(postDto);
+        return ResponseEntity.ok().body(postService.publishPost(postDto));
     }
 
     @PutMapping
-    public PostDto updatePost(@RequestBody PostDto postDto) {
+    public ResponseEntity<PostDto> updatePost(@RequestBody PostDto postDto) {
         validateId(postDto.getId());
         if (postDto.getContent() == null || postDto.getContent().isBlank()) {
             throw new PostDtoValidationException(
                     "The content of the post must not be empty");
         }
-        return postService.updatePost(postDto);
+        return ResponseEntity.ok().body(postService.updatePost(postDto));
     }
 
-    @DeleteMapping
-    public PostDto deletePost(@RequestBody PostDto postDto) {
+    @PostMapping("/delete")
+    public ResponseEntity<PostDto> deletePost(@RequestBody PostDto postDto) {
         validateId(postDto.getId());
-        return postService.deletePost(postDto);
+        return ResponseEntity.ok().body(postService.deletePost(postDto));
     }
 
     @PostMapping("/get")
-    public PostDto getPost(@RequestBody PostDto postDto) {
+    public ResponseEntity<PostDto> getPost(@RequestBody PostDto postDto) {
         validateId(postDto.getId());
-        return postService.getPost(postDto);
+        return ResponseEntity.ok().body(postService.getPost(postDto));
     }
 
     @PostMapping("/author/drafts")
-    public List<PostDto> getAuthorPostDrafts(@RequestBody PostDto postDto) {
+    public ResponseEntity<List<PostDto>> getAuthorPostDrafts(@RequestBody PostDto postDto) {
         validateId(postDto.getAuthorId());
-        return postService.getAuthorPostDrafts(postDto);
+        return ResponseEntity.ok().body(postService.getAuthorPostDrafts(postDto));
     }
 
     @PostMapping("/project/drafts")
-    public List<PostDto> getProjectPostDrafts(@RequestBody PostDto postDto) {
+    public ResponseEntity<List<PostDto>> getProjectPostDrafts(@RequestBody PostDto postDto) {
         validateId(postDto.getProjectId());
-        return postService.getProjectPostDrafts(postDto);
+        return ResponseEntity.ok().body(postService.getProjectPostDrafts(postDto));
     }
 
     @PostMapping("/author/published")
-    public List<PostDto> getAuthorPosts(@RequestBody PostDto postDto) {
+    public ResponseEntity<List<PostDto>> getAuthorPosts(@RequestBody PostDto postDto) {
         validateId(postDto.getAuthorId());
-        return postService.getAuthorPublishedPosts(postDto);
+        return ResponseEntity.ok().body(postService.getAuthorPublishedPosts(postDto));
     }
 
     @PostMapping("/project/published")
-    public List<PostDto> getProjectPosts(@RequestBody PostDto postDto) {
+    public ResponseEntity<List<PostDto>> getProjectPosts(@RequestBody PostDto postDto) {
         validateId(postDto.getProjectId());
-        return postService.getProjectPublishedPosts(postDto);
+        return ResponseEntity.ok().body(postService.getProjectPublishedPosts(postDto));
     }
 
     private void validateId(long id) {
