@@ -4,6 +4,7 @@ import faang.school.postservice.dto.album.AlbumCreateUpdateDto;
 import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.album.AlbumFilterDto;
 import faang.school.postservice.service.album.implementations.AlbumServiceImpl;
+import faang.school.postservice.service.album.interfaces.AlbumService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ import java.util.List;
 @RequestMapping("/albums")
 @RequiredArgsConstructor
 public class AlbumController {
-    private final AlbumServiceImpl albumService;
+    private final AlbumService albumService;
 
     @PostMapping
     public ResponseEntity<AlbumDto> createAlbum(@RequestHeader("x-user-id") long userId,
@@ -58,7 +59,7 @@ public class AlbumController {
     public ResponseEntity<Void> addAlbumToFavorites(@RequestHeader("x-user-id") long userId,
                                                     @PathVariable("albumId") long albumId) {
         albumService.addAlbumToFavorites(albumId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{albumId}/favorite")

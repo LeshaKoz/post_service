@@ -111,7 +111,7 @@ class AlbumControllerTest {
     void testAddAlbumToFavorites() throws Exception {
         mockMvc.perform(post("/albums/1/favorite")
                         .header(USER_ID_HEADER, USER_ID))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(albumService).addAlbumToFavorites(1L);
     }
