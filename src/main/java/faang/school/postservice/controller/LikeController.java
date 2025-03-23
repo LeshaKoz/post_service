@@ -1,11 +1,5 @@
 package faang.school.postservice.controller;
 
-/*
-создать два метода:
-один для получения всех лайкнувших пользователей по id поста,
-а второй — для получения всех лайкнувших пользователей по id коммента.
- */
-
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.service.like.LikeService;
 import lombok.RequiredArgsConstructor;
