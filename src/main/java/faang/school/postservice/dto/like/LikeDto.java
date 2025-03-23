@@ -11,5 +11,4 @@ public record LikeDto(Long userId,
                       Long commentId,
                       @JsonInclude(JsonInclude.Include.NON_NULL)
                       LocalDateTime timestamp) {
-
 }
