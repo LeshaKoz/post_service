@@ -36,7 +36,7 @@ public class AlbumService {
         AlbumValidator.checkAlbumDtoTitleAndDescriptionExist(albumDto);
         UserDto userDto = userServiceClient.getUser(userId);
         AlbumValidator.checkUserExist(userId, userDto);
-        List<Album> albums = albumRepository.findAllAlbumsByAuthorId(userId);
+        List<Album> albums = albumRepository.findByAuthorId(userId);
         AlbumValidator.checkAlbumNotExist(albumDto.getTitle(), albums);
         albumDto.setAuthorId(userId);
         Album album = albumMapper.toAlbum(albumDto);
@@ -45,10 +45,11 @@ public class AlbumService {
         return albumMapper.toAlbumDto(savedAlbum);
     }
 
+    @Transactional
     public AlbumDto addPostToAlbum(long userId, long postId, long albumId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException(POST_NOT_FOUND_MESSAGE));
-        Album album = albumRepository.findById(albumId)
+        Album album = albumRepository.findByIdWithPosts(albumId)
                 .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
         AlbumValidator.checkPostInAlbum(post, album);
@@ -57,10 +58,11 @@ public class AlbumService {
         return albumMapper.toAlbumDto(savedAlbum);
     }
 
+    @Transactional
     public void deletePostFromAlbum(long userId, long postId, long albumId) {
-        Post post = postRepository.findById(postId)
+        postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException(POST_NOT_FOUND_MESSAGE));
-        Album album = albumRepository.findById(albumId)
+        Album album = albumRepository.findByIdWithPosts(albumId)
                 .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
         album.removePost(postId);
@@ -68,16 +70,17 @@ public class AlbumService {
     }
 
     public AlbumDto getAlbumById(long albumId) {
-        Album album = albumRepository.findById(albumId)
+        Album album = albumRepository.findByIdWithPosts(albumId)
                 .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
         return albumMapper.toAlbumDto(album);
     }
 
+    @Transactional
     public AlbumDto updateAlbum(long userId, AlbumDto albumDto) {
         AlbumValidator.checkAlbumDtoTitleAndDescriptionExist(albumDto);
         UserDto userDto = userServiceClient.getUser(userId);
         AlbumValidator.checkUserExist(userId, userDto);
-        Album album = albumRepository.findById(albumDto.getId())
+        Album album = albumRepository.findByIdWithPosts(albumDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
         Album updatedAlbum = albumMapper.toAlbum(albumDto);
@@ -86,6 +89,7 @@ public class AlbumService {
         return albumMapper.toAlbumDto(albumRepository.save(updatedAlbum));
     }
 
+    @Transactional
     public void deleteAlbum(long userId, long albumId) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
@@ -94,8 +98,7 @@ public class AlbumService {
     }
 
     public List<AlbumDto> getAllAlbumsByAuthorIdWithFilters(long userId, AlbumFilterDto filters) {
-        return albumRepository.findAll().stream()
-                .filter(album -> album.getAuthorId() == userId)
+        return albumRepository.findByAuthorId(userId).stream()
                 .filter(album -> filters.getTitle() == null || album.getTitle().contains(filters.getTitle()))
                 .filter(album -> {
                     if (filters.getCreatedAt() == null) {
@@ -111,7 +114,37 @@ public class AlbumService {
     }
 
     public List<AlbumDto> getAllAlbumsWithFilters(AlbumFilterDto filters) {
-        return albumRepository.findAll().stream()
+        return albumRepository.findAllAlbums().stream()
+                .filter(album -> filters.getTitle() == null || album.getTitle().contains(filters.getTitle()))
+                .filter(album -> {
+                    if (filters.getCreatedAt() == null) {
+                        return true;
+                    } else if(filters.getCreatedBefore() != null && filters.getCreatedBefore()) {
+                        return album.getCreatedAt().isBefore(filters.getCreatedAt());
+                    } else {
+                        return album.getCreatedAt().isAfter(filters.getCreatedAt());
+                    }
+                })
+                .map(albumMapper::toAlbumDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void addFavouriteAlbum(long userId, long albumId) {
+        albumRepository.findById(albumId)
+                .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
+        UserDto userDto = userServiceClient.getUser(userId);
+        AlbumValidator.checkUserExist(userId, userDto);
+        albumRepository.addAlbumToFavorites(albumId, userId);
+    }
+
+    @Transactional
+    public void deleteFavouriteAlbum(long userId, long albumId) {
+        albumRepository.deleteAlbumFromFavorites(albumId, userId );
+    }
+
+    public List<AlbumDto> getFavouriteAlbumsByUserId(long userId, AlbumFilterDto filters) {
+        return albumRepository.findFavoriteAlbumsByUserId(userId).stream()
                 .filter(album -> filters.getTitle() == null || album.getTitle().contains(filters.getTitle()))
                 .filter(album -> {
                     if (filters.getCreatedAt() == null) {

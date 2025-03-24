@@ -79,7 +79,7 @@ public class AlbumController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping("/{userId}")
+    @PostMapping("/albums-by-author/{userId}")
     public ResponseEntity<List<AlbumDto>> getAllAlbumsByAuthorIdWithFilters(
             @PathVariable Long userId,
             @RequestBody AlbumFilterDto albumFilterDto) {
@@ -91,6 +91,30 @@ public class AlbumController {
     public ResponseEntity<List<AlbumDto>> getAllAlbumsWithFilters(
             @RequestBody AlbumFilterDto albumFilterDto) {
         List<AlbumDto> albums = albumService.getAllAlbumsWithFilters(albumFilterDto);
+        return ResponseEntity.ok(albums);
+    }
+
+    @PostMapping("/add-favourite/{albumId}")
+    public ResponseEntity<HttpStatus> addFavouriteAlbum(
+            @RequestHeader("x-user-id") Long userId,
+            @PathVariable Long albumId) {
+        albumService.addFavouriteAlbum(userId, albumId);
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete-favourite/{albumId}")
+    public ResponseEntity<HttpStatus> deleteFavouriteAlbum(
+            @RequestHeader("x-user-id") Long userId,
+            @PathVariable Long albumId) {
+        albumService.deleteFavouriteAlbum(userId, albumId);
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @PostMapping("/favourite-albums-by-user")
+    public ResponseEntity<List<AlbumDto>> getFavouriteAlbumsByUserId(
+            @RequestHeader("x-user-id") Long userId,
+            @RequestBody AlbumFilterDto albumFilterDto) {
+        List<AlbumDto> albums = albumService.getFavouriteAlbumsByUserId(userId, albumFilterDto);
         return ResponseEntity.ok(albums);
     }
 
