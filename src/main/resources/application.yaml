@@ -52,6 +52,9 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+      properties:
+        post-collection:
+          hours-to-expire: 24
 
 springdoc:
   packages-to-scan: faang.school.postservice.controller

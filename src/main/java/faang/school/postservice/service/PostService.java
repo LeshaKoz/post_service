@@ -1,11 +1,13 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.RedisPostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +27,11 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class PostService {
+    @Value("${spring.data.redis.properties.post-collection.hours-to-expire}")
+    public long postHoursToExpire;
 
     private final PostRepository postRepository;
+    private final RedisPostRepository postCacheRepository;
     private final KafkaTemplate<String, Long> kafkaTemplate;
     private final PostMapper postMapper;
     private final PostValidator postValidator;
@@ -53,6 +58,11 @@ public class PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         Post savedPost = postRepository.save(post);
+
+        PostCacheDto postCacheDto = postMapper.toCacheDto(savedPost);
+        postCacheDto.setHoursToExpire(postHoursToExpire);
+        postCacheRepository.save(postCacheDto);
+
         return postMapper.toResponseDto(savedPost);
     }
 

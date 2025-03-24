@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
@@ -8,6 +9,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.RedisPostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
@@ -31,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -42,6 +45,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
     private PostRepository postRepository;
+    private RedisPostRepository cacheRepository;
     private PostMapper postMapper;
     private PostValidator postValidator;
     private PostService postService;
@@ -53,11 +57,12 @@ public class PostServiceTest {
     @BeforeEach
     public void setUp() {
         postRepository = mock(PostRepository.class);
+        cacheRepository = mock(RedisPostRepository.class);
         kafkaTemplate = mock(KafkaTemplate.class);
         postMapper = Mappers.getMapper(PostMapper.class);
         postValidator = mock(PostValidator.class);
         resourseService = mock(ResourseService.class);
-        postService = new PostService(postRepository, kafkaTemplate, postMapper, postValidator, resourseService);
+        postService = new PostService(postRepository, cacheRepository, kafkaTemplate, postMapper, postValidator, resourseService);
     }
 
     @Test
@@ -115,6 +120,7 @@ public class PostServiceTest {
         assertTrue(actualResponse.isPublished());
         assertNotNull(actualResponse.getPublishedAt());
         verify(postRepository, times(1)).save(post);
+        verify(cacheRepository, times(1)).save(any(PostCacheDto.class));
     }
 
     @Test

@@ -1,9 +1,12 @@
 package faang.school.postservice.mapper;
 
+import faang.school.postservice.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
+import faang.school.postservice.dto.comment.CommentForListDto;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.Resource;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -14,7 +17,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        imports = {ArrayList.class, CommentForListDto.class})
 public interface PostMapper {
     @Mapping(
             target = "adId",
@@ -38,10 +43,22 @@ public interface PostMapper {
 
     Post fromCreateDto(CreatePostDraftDto postDto);
 
+    @Mapping(target = "likeCount", expression = "java(Long.valueOf(0))")
+    @Mapping(target = "resourceKeys", expression = "java(mapResources(post.getResources()))")
+    PostCacheDto toCacheDto(Post post);
+
     default <T> List<Long> mapEntitiesToIds(List<T> entities, Function<T, Long> toId) {
+
         return entities == null ? new ArrayList<>() :
                 entities.stream()
                         .map(toId)
                         .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    default List<String> mapResources(List<Resource> resources) {
+        return resources == null ? new ArrayList<>(3) :
+                resources.stream()
+                        .map(Resource::getKey)
+                        .collect(Collectors.toList());
     }
 }
