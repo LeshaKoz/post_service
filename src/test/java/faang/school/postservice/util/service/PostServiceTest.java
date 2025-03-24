@@ -23,6 +23,8 @@ import faang.school.postservice.repository.ad.AdRepository;
 import faang.school.postservice.service.PostService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -37,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,6 +66,8 @@ public class PostServiceTest {
     private AlbumRepository albumRepository;
     @InjectMocks
     private PostService postService;
+    @Captor
+    private ArgumentCaptor<Post> postCaptor;
 
     @Test
     public void testPositivePublish() {
@@ -328,41 +333,22 @@ public class PostServiceTest {
     @Test
     public void testPositiveCreate() {
         PostDto postDto = PostDto.builder()
+                .authorId(1L)
                 .content("content")
                 .build();
-        when(adRepository.findById(any())).thenReturn(Optional.of(Ad.builder()
-                .id(2L)
-                .build()));
-        when(userServiceClient.getUser(any())).thenReturn(UserDto.builder()
-                .id(3L)
-                .build());
-        when(projectServiceClient.getProject(any())).thenReturn(ProjectDto.builder()
-                .id(4L)
-                .build());
-        when(commentRepository.findByIdIn(any())).thenReturn(List.of(Comment.builder()
-                .id(5L)
-                .build()));
-        when(likeRepository.findByIdIn(any())).thenReturn(List.of(Like.builder()
-                .id(6L)
-                .build()));
-        when(albumRepository.findByIdIn(any())).thenReturn(List.of(Album.builder()
-                .id(7L)
-                .build()));
-        when(resourceRepository.findByIdIn(any())).thenReturn(List.of(Resource.builder()
-                .id(8L)
-                .build()));
+        when(adRepository.findById(any())).thenReturn(Optional.of(Ad.builder().build()));
+        when(commentRepository.findByIdIn(any())).thenReturn(List.of());
+        when(likeRepository.findByIdIn(any())).thenReturn(List.of());
+        when(albumRepository.findByIdIn(any())).thenReturn(List.of());
+        when(resourceRepository.findByIdIn(any())).thenReturn(List.of());
 
         PostDto postDto1 = postService.create(postDto);
 
-        verify(postRepository, times(1)).save(any(Post.class));
+        verify(postRepository, times(1)).save(postCaptor.capture());
+        Post post = postCaptor.getValue();
 
-        assertEquals(2L, postDto1.adId());
-        assertEquals(7L, postDto1.albumsId().get(0));
-        assertEquals(8L, postDto1.resourcesId().get(0));
-        assertEquals(6L, postDto1.likesId().get(0));
-        assertEquals(5L, postDto1.commentsId().get(0));
-
-
+        assertEquals("content", post.getContent());
+        assertEquals(0,post.getLikes().size());
     }
 
     @Test

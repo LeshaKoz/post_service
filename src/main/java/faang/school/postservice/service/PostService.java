@@ -48,10 +48,14 @@ public class PostService {
         Post post = postMapper.toEntity(postDto);
         Ad ad = adRepository.findById(postDto.adId()).orElseThrow(
                 () -> new RuntimeException("ad not found"));
-        List<Comment> comments = commentRepository.findByIdIn(postDto.commentsId());
-        List<Like> likes = likeRepository.findByIdIn(postDto.likesId());
-        List<Resource> resources = resourceRepository.findByIdIn(postDto.resourcesId());
-        List<Album> albums = albumRepository.findByIdIn(postDto.albumsId());
+        List<Comment> comments = commentRepository.findByIdIn(postDto
+                .commentsId() != null ? postDto.commentsId() : List.of());
+        List<Like> likes = likeRepository.findByIdIn(postDto
+                .likesId() != null ? postDto.likesId() : List.of());
+        List<Resource> resources = resourceRepository.findByIdIn(postDto
+                .resourcesId() != null ? postDto.resourcesId() : List.of());
+        List<Album> albums = albumRepository.findByIdIn(postDto
+                .albumsId() != null ? postDto.albumsId() : List.of());
 
         post.setAd(ad);
         post.setComments(comments);
