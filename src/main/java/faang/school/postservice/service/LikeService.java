@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.exception.ConcurrentLikeException;
 import faang.school.postservice.exception.DuplicateEntityException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -27,7 +27,6 @@ public class LikeService {
     private static final String LIKE_ENTITY_NAME = "like";
     private static final String POST_ENTITY_NAME = "post";
     private static final String COMMENT_ENTITY_NAME = "comment";
-    private static final String USER_ENTITY_NAME = "user";
     private static final String NOT_FOUND_ENTITY_MESSAGE = "%s with id: %d not found";
     private static final String NOT_FOUND_SUB_ENTITY_MESSAGE = "%s on %s with id: %d not found";
 
@@ -35,16 +34,16 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-    private final UserServiceClient userServiceClient;
+    private final UserContext userContext;
 
-    public void putLikeOnPost(Long postId, Long userId) {
+    public void putLikeOnPost(Long postId) {
+        Long userId = getContextUser();
         ReentrantLock userLock = getUserLock(userId);
         userLock.lock();
         try {
             validateEntityId(postId);
             Post post = postRepository.findById(postId).orElseThrow(() ->
                     new EntityNotFoundException(NOT_FOUND_ENTITY_MESSAGE, POST_ENTITY_NAME, postId));
-            checkUserExists(userId);
 
             if (likeRepository.findByPostIdAndUserId(postId, userId).isPresent()) {
                 throw new DuplicateEntityException("%s already exists on %s with id %d",
@@ -62,12 +61,12 @@ public class LikeService {
         }
     }
 
-    public void removeLikeAtPost(Long postId, Long userId) {
+    public void removeLikeAtPost(Long postId) {
+        long userId = getContextUser();
         ReentrantLock userLock = getUserLock(userId);
         userLock.lock();
         try {
             validateEntityId(postId);
-            checkUserExists(userId);
 
             if (likeRepository.findByPostIdAndUserId(postId, userId).isEmpty()) {
                 throw new EntityNotFoundException(NOT_FOUND_SUB_ENTITY_MESSAGE,
@@ -80,14 +79,14 @@ public class LikeService {
         }
     }
 
-    public void putLikeOnComment(Long commentId, Long userId) {
+    public void putLikeOnComment(Long commentId) {
+        Long userId = getContextUser();
         ReentrantLock userLock = getUserLock(userId);
         userLock.lock();
         try {
             validateEntityId(commentId);
             Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                     new EntityNotFoundException(NOT_FOUND_ENTITY_MESSAGE, COMMENT_ENTITY_NAME, commentId));
-            checkUserExists(userId);
 
             if (likeRepository.findByCommentIdAndUserId(commentId, userId).isPresent()) {
                 throw new DuplicateEntityException("%s already exists on %s with id %d",
@@ -104,12 +103,12 @@ public class LikeService {
         }
     }
 
-    public void removeLikeAtComment(Long commentId, Long userId) {
+    public void removeLikeAtComment(Long commentId) {
+        long userId = getContextUser();
         ReentrantLock userLock = getUserLock(userId);
         userLock.lock();
         try {
             validateEntityId(commentId);
-            checkUserExists(userId);
 
             if (likeRepository.findByCommentIdAndUserId(commentId, userId).isEmpty()) {
                 throw new EntityNotFoundException(NOT_FOUND_SUB_ENTITY_MESSAGE,
@@ -134,12 +133,6 @@ public class LikeService {
         log.debug("Removed like on {} with id: {}", COMMENT_ENTITY_NAME, commentId);
     }
 
-    private void checkUserExists(Long userId) {
-        if (userServiceClient.getUser(userId) == null) {
-            throw new EntityNotFoundException("%s with id: %d not found", USER_ENTITY_NAME, userId);
-        }
-    }
-
     private void checkUserPuttingLike(boolean isUserNotPutLike, String subEntityName,
                                       String entityName, Long entityId) {
         if (!isUserNotPutLike) {
@@ -158,5 +151,9 @@ public class LikeService {
 
     private ReentrantLock getUserLock(Long userId) {
         return locksUsers.computeIfAbsent(userId, key -> new ReentrantLock());
+    }
+
+    private Long getContextUser() {
+        return userContext.getUserId();
     }
 }

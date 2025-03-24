@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -17,22 +16,22 @@ public class LikeController {
     private final LikeService likeService;
 
     @PostMapping("/post-{postId}")
-    public void putLikeOnPost(@PathVariable Long postId, @RequestParam Long userId) {
-        likeService.putLikeOnPost(postId, userId);
+    public void putLikeOnPost(@PathVariable Long postId) {
+        likeService.putLikeOnPost(postId);
     }
 
     @DeleteMapping("/post-{postId}")
-    public void removeLikeAtPost(@PathVariable Long postId, @RequestParam Long userId) {
-        likeService.removeLikeAtPost(postId, userId);
+    public void removeLikeAtPost(@PathVariable Long postId) {
+        likeService.removeLikeAtPost(postId);
     }
 
     @PostMapping("/comment-{commentId}")
-    public void putLikeOnComment(@PathVariable Long commentId, @RequestParam Long userId) {
-        likeService.putLikeOnComment(commentId, userId);
+    public void putLikeOnComment(@PathVariable Long commentId) {
+        likeService.putLikeOnComment(commentId);
     }
 
     @DeleteMapping("/comment-{commentId}")
-    public void removeLikeAtComment(@PathVariable Long commentId, @RequestParam Long userId) {
-        likeService.removeLikeAtComment(commentId, userId);
+    public void removeLikeAtComment(@PathVariable Long commentId) {
+        likeService.removeLikeAtComment(commentId);
     }
 }
