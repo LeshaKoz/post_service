@@ -1,4 +1,4 @@
-package faang.school.postservice;
+package faang.school.postservice.dto.Post;
 
 import faang.school.postservice.dto.comment.CommentForListDto;
 import lombok.AllArgsConstructor;

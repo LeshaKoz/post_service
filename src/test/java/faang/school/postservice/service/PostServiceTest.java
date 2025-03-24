@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.PostCacheDto;
+import faang.school.postservice.dto.Post.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
