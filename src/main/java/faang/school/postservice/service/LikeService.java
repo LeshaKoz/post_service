@@ -10,6 +10,4 @@ public interface LikeService {
     PostDto removeLikeFromPost(LikeDto likeDto);
     CommentDto addLikeToComment(LikeDto likeDto);
     CommentDto removeLikeFromComment(LikeDto likeDto);
-    boolean isLikedPost(Long postId, Long userId);
-    boolean isLikedComment(Long commentId, Long userId);
 }

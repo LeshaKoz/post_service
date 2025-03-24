@@ -77,13 +77,11 @@ public class LikeServiceImpl implements LikeService {
         return commentMapper.toDto(comment);
     }
 
-    @Override
-    public boolean isLikedPost(Long postId, Long userId) {
+    private boolean isLikedPost(Long postId, Long userId) {
         return likeRepository.findByPostIdAndUserId(postId, userId).isPresent();
     }
 
-    @Override
-    public boolean isLikedComment(Long commentId, Long userId) {
+    private boolean isLikedComment(Long commentId, Long userId) {
         return likeRepository.findByCommentIdAndUserId(commentId,userId).isPresent();
     }
 
