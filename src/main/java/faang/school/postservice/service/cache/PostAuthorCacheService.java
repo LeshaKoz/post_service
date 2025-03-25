@@ -1,5 +1,6 @@
 package faang.school.postservice.service.cache;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
+@Slf4j
 @Service
 public class PostAuthorCacheService {
 
@@ -28,9 +30,15 @@ public class PostAuthorCacheService {
 
     @Async("postAuthorCacheExecutor")
     public void cachePostAuthor(Long authorId) {
-        if (authorId == null) return;
+        if (authorId == null) {
+            log.warn("AuthorId is null. Skipping caching operation.");
+            return;
+        }
 
-        redisTemplate.execute(new SessionCallback<Object>() {
+        log.info("Starting caching operation for authorId {} in key '{}' with TTL {} seconds",
+                authorId, authorsKey, ttl.getSeconds());
+
+        Object result = redisTemplate.execute(new SessionCallback<Object>() {
             @SuppressWarnings("unchecked")
             @Override
             public Object execute(@NotNull RedisOperations operations) throws DataAccessException {
@@ -41,5 +49,7 @@ public class PostAuthorCacheService {
                 return ops.exec();
             }
         });
+
+        log.info("Completed caching operation for authorId {}. Transaction result: {}", authorId, result);
     }
 }
