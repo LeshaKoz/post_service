@@ -28,6 +28,10 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+      cache:
+        post:
+          time-to-live: 86400
+
   kafka:
     topics:
       comment_create: comment-create

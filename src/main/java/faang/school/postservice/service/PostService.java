@@ -7,6 +7,7 @@ import faang.school.postservice.exceptions.PostWasNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.cache.RedisCache;
 import faang.school.postservice.service.moderation.ModerationDictionary;
 import faang.school.postservice.utils.PostUtil;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ import java.util.function.Predicate;
 public class PostService {
     private final PostMapper postMapper;
     private final PostRepository postRepository;
+    private final RedisCache redisCache;
     private final PostUtil postUtil;
     private final RewriterService rewriterService;
     private final ExecutorService scheduledPublishPostThreadPool;
@@ -53,18 +55,17 @@ public class PostService {
         log.info("Validating the post creator with id : {}", post.getId());
         int result = postUtil.validateCreator(postCreatingDto.authorId(), postCreatingDto.projectId());
         switch (result) {
-            case 0:
-                post.setAuthorId(postCreatingDto.authorId());
-                break;
-            case 1:
-                post.setProjectId(postCreatingDto.projectId());
-                break;
-            default:
+            case 0 -> post.setAuthorId(postCreatingDto.authorId());
+            case 1 -> post.setProjectId(postCreatingDto.projectId());
+            default -> {}
         }
         log.info("Success validation for post : {}", post.getId());
 
         post = postRepository.save(post);
-        log.info("Saved post with id : {}", post.getId());
+        log.info("Saved post in DB with id : {}", post.getId());
+
+        redisCache.cachePost(post);
+        log.info("Cached post with id : {}", post.getId());
 
         return postMapper.toDto(post);
     }
