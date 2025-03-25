@@ -13,7 +13,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import static java.util.Objects.requireNonNull;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor

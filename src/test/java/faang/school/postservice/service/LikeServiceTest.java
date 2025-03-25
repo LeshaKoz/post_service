@@ -32,9 +32,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class LikeServiceTest {
     @Mock
-    LikeEventPublisher likeEventPublisher;
+    private LikeEventPublisher likeEventPublisher;
     @Mock
-    PostService postService;
+    private PostService postService;
     @Mock
     private UserService userService;
     @Mock

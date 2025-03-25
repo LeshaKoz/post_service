@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AlbumTitleFilterTest {
 
     private final AlbumTitleFilter filter = new AlbumTitleFilter();
-    Stream<Album> stream;
+    private Stream<Album> stream;
     private AlbumFilterDto filterDto;
     private Album album1;
     private Album album2;

@@ -19,11 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class UserServiceTest {
     public static final long ID = 1L;
     @Mock
-    UserServiceClient userServiceClient;
-    @InjectMocks
-    UserService userService;
+    private UserServiceClient userServiceClient;
     @Mock
     private UserContext userContext;
+    @InjectMocks
+    private UserService userService;
 
     @Test
     public void testUserExist() {
