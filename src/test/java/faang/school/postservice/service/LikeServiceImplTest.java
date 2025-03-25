@@ -109,10 +109,10 @@ public class LikeServiceImplTest {
         verify(likeRepository, times(1))
                 .findByPostIdAndUserId(likeDto.postId(),likeDto.userId());
         verify(likeRepository, times(1)).save(likeCaptor.capture());
-        Like caturedLike = likeCaptor.getValue();
-        assertNotNull(caturedLike);
-        assertEquals(userId, caturedLike.getUserId());
-        assertEquals(postId, caturedLike.getPost().getId());
+        Like capturedLike = likeCaptor.getValue();
+        assertNotNull(capturedLike);
+        assertEquals(userId, capturedLike.getUserId());
+        assertEquals(postId, capturedLike.getPost().getId());
         assertNotNull(postDto);
     }
 
