@@ -1,5 +1,6 @@
 package faang.school.postservice.dto.post;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -24,10 +25,24 @@ import java.util.List;
  */
 @Data
 public class PostUpdateDto {
+    @Schema(description = "Содержимое поста",
+            example = "content", accessMode = Schema.AccessMode.WRITE_ONLY)
     @NotBlank(message = "Content is not blank")
     private String content;
+
+    @Schema(description = "Флаг публикации",
+            example = "true")
     private boolean published;
+
+    @Schema(description = "Флаг удаления поста",
+            example = "true")
     private boolean deleted;
+
+    @Schema(description = "Список идентификаторов ресурсов",
+            example = "[1,2,3]")
     private List<Long> resourceIds;
+
+    @Schema(description = "Дата запланированной публикации",
+            example = "2026-01-01T15:55:00")
     private LocalDateTime scheduledAt;
 }

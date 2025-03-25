@@ -5,6 +5,9 @@ import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.post.PostViewDto;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.validation.PostValidator;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +56,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/posts")
 @RequiredArgsConstructor
+@Tag(
+        name = "Post Controller",
+        description = "Контроллер для управления постами"
+)
 public class PostController {
     private final PostService postService;
 
@@ -62,6 +69,11 @@ public class PostController {
      * @param postCreateDto DTO с данными для создания поста.
      * @return ResponseEntity с созданным постом в формате PostViewDto.
      */
+    @Operation(
+            description = "Создает черновик поста." +
+                    "Параметры:postCreateDto DTO с данными для создания поста. " +
+                    "Возвращает ResponseEntity с созданным постом в формате PostViewDto."
+    )
     @PostMapping
     public ResponseEntity<PostViewDto> createDraft(@Valid @RequestBody PostCreateDto postCreateDto) {
         log.info("Received request to create a draft post: {}", postCreateDto);
@@ -78,8 +90,14 @@ public class PostController {
      * @param postId ID поста для публикации.
      * @return ResponseEntity с опубликованным постом в формате PostViewDto.
      */
+    @Operation(
+            description = "Публикует пост по его ID." +
+                    "Параметры: postId ID поста для публикации." +
+                    "Возвращает ResponseEntity с опубликованным постом в формате PostViewDto"
+    )
     @PutMapping("/{postId}/publish")
-    public ResponseEntity<PostViewDto> publishPost(@PathVariable long postId) {
+    public ResponseEntity<PostViewDto> publishPost(
+            @PathVariable @Parameter( description = "id поста",required = true, example = "1") long postId) {
         log.info("Received request to publish post with ID: {}", postId);
 
         PostViewDto postViewDto = postService.publishPost(postId);
@@ -95,9 +113,15 @@ public class PostController {
      * @param postId        ID поста для обновления.
      * @return ResponseEntity с обновленным постом в формате PostViewDto.
      */
+    @Operation(
+            description = "Обновляет пост по его ID." +
+                    "Параметры: postUpdateDto DTO с данными для обновления поста." +
+                    "postId ID поста для обновления." +
+                    "Возвращает: ResponseEntity с обновленным постом в формате PostViewDto."
+    )
     @PutMapping("/{postId}/update")
     public ResponseEntity<PostViewDto> updatePost(@Valid @RequestBody PostUpdateDto postUpdateDto,
-                                                  @PathVariable long postId) {
+             @PathVariable @Parameter( description = "id поста",required = true, example = "1") long postId) {
         log.info("Received request to update post with ID: {}", postId);
 
         PostViewDto postViewDto = postService.updatePost(postUpdateDto, postId);
@@ -112,8 +136,14 @@ public class PostController {
      * @param postId ID поста для мягкого удаления.
      * @return ResponseEntity с мягко удаленным постом в формате PostViewDto.
      */
+    @Operation(
+            description = "Выполняет мягкое удаление поста по его ID." +
+                    "Параметры: postId ID поста для мягкого удаления." +
+                    "Возвращает: ResponseEntity с мягко удаленным постом в формате PostViewDto."
+    )
     @PutMapping("/{postId}/soft-delete")
-    public ResponseEntity<PostViewDto> softDeletePost(@PathVariable long postId) {
+    public ResponseEntity<PostViewDto> softDeletePost(
+            @PathVariable @Parameter( description = "id поста",required = true, example = "1")long postId) {
         log.info("Received request to soft delete post with ID: {}", postId);
 
         PostViewDto postViewDto = postService.softDeletePost(postId);
@@ -128,8 +158,14 @@ public class PostController {
      * @param postId ID поста для получения.
      * @return ResponseEntity с найденным постом в формате PostViewDto.
      */
+    @Operation(
+            description = "Получает пост по его ID." +
+                    "Параметры: postId ID поста для получения." +
+                    "Возвращает: ResponseEntity с найденным постом в формате PostViewDto."
+    )
     @GetMapping("/{postId}")
-    public ResponseEntity<PostViewDto> getPost(@PathVariable long postId) {
+    public ResponseEntity<PostViewDto> getPost(
+            @PathVariable @Parameter( description = "id поста",required = true, example = "1") long postId) {
         log.info("Received request to get post with ID: {}", postId);
 
         PostViewDto postViewDto = postService.getPost(postId);
@@ -144,8 +180,14 @@ public class PostController {
      * @param userId ID пользователя, для которого запрашиваются черновики.
      * @return ResponseEntity со списком черновиков в формате PostViewDto.
      */
+    @Operation(
+            description = "Получает черновики постов для указанного пользователя." +
+                    "Параметры: userId ID пользователя, для которого запрашиваются черновики." +
+                    "Возвращает: ResponseEntity со списком черновиков в формате PostViewDto."
+    )
     @GetMapping("/user/{userId}/draft")
-    public ResponseEntity<List<PostViewDto>> getUserDrafts(@PathVariable long userId) {
+    public ResponseEntity<List<PostViewDto>> getUserDrafts(
+            @PathVariable @Parameter( description = "id пользователя",required = true, example = "1") long userId) {
         log.info("Received request to get user draft post with ID: {}", userId);
 
         List<PostViewDto> postsViewDto = postService.getUserDrafts(userId);
@@ -161,8 +203,14 @@ public class PostController {
      * @param projectId ID проекта, для которого запрашиваются черновики.
      * @return ResponseEntity со списком черновиков в формате PostViewDto.
      */
+    @Operation(
+            description = "Получает черновики постов для указанного проекта." +
+                    "Параметры: projectId ID проекта, для которого запрашиваются черновики." +
+                    "Возвращает: ResponseEntity со списком черновиков в формате PostViewDto."
+    )
     @GetMapping("/project/{projectId}/draft")
-    public ResponseEntity<List<PostViewDto>> getProjectDrafts(@PathVariable long projectId) {
+    public ResponseEntity<List<PostViewDto>> getProjectDrafts(
+            @PathVariable @Parameter( description = "id проекта",required = true, example = "1") long projectId) {
         log.info("Received request to fetch draft posts for project with ID: {}", projectId);
 
         List<PostViewDto> postsViewDto = postService.getProjectDrafts(projectId);
@@ -178,8 +226,14 @@ public class PostController {
      * @param userId ID пользователя, для которого запрашиваются опубликованные посты.
      * @return ResponseEntity со списком опубликованных постов в формате PostViewDto.
      */
+    @Operation(
+            description = "Получает опубликованные посты для указанного пользователя." +
+                    "Параметры: userId ID пользователя, для которого запрашиваются опубликованные посты." +
+                    "Возвращает: ResponseEntity со списком опубликованных постов в формате PostViewDto."
+    )
     @GetMapping("/user/{userId}/published-post")
-    public ResponseEntity<List<PostViewDto>> getAuthorPublishedPosts(@PathVariable long userId) {
+    public ResponseEntity<List<PostViewDto>> getAuthorPublishedPosts(
+            @PathVariable @Parameter( description = "id пользователя",required = true, example = "1") long userId) {
         log.info("Received request to fetch published posts for user with ID: {}", userId);
 
         List<PostViewDto> postsViewDto = postService.getAuthorPublishedPosts(userId);
@@ -195,8 +249,14 @@ public class PostController {
      * @param projectId ID проекта, для которого запрашиваются опубликованные посты.
      * @return ResponseEntity со списком опубликованных постов в формате PostViewDto.
      */
+    @Operation(
+            description = "Получает опубликованные посты для указанного проекта." +
+                    "Параметры: projectId ID проекта, для которого запрашиваются опубликованные посты." +
+                    "Возвращает: ResponseEntity со списком опубликованных постов в формате PostViewDto."
+    )
     @GetMapping("/project/{projectId}/published-post")
-    public ResponseEntity<List<PostViewDto>> getProjectPublishedPosts(@PathVariable long projectId) {
+    public ResponseEntity<List<PostViewDto>> getProjectPublishedPosts(
+            @PathVariable  @Parameter( description = "id проекта",required = true, example = "1") long projectId) {
         log.info("Received request to fetch published posts for project with ID: {}", projectId);
 
         List<PostViewDto> postsViewDto = postService.getProjectPublishedPosts(projectId);
