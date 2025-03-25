@@ -57,6 +57,8 @@ public class PostService {
         switch (result) {
             case 0 -> post.setAuthorId(postCreatingDto.authorId());
             case 1 -> post.setProjectId(postCreatingDto.projectId());
+            default -> {
+            }
         }
         log.info("Success validation for post : {}", post.getId());
 
