@@ -7,7 +7,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Data
 @ConfigurationProperties(prefix = "redis.cache")
-public class RedisProperties {
+public class RedisCacheProperties {
 
-    private int ttlMinutes;
+    private int hashtagTtl;
+
+    private int postTtl;
+
+    private int authorsTtl;
 }

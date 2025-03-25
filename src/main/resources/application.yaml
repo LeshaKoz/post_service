@@ -49,7 +49,9 @@ domain:
 
 redis:
   cache:
-    ttl-minutes: 1
+    hashtag-ttl: 1 #minutes
+    post-ttl: 1 # days
+    authors-ttl: 1 # days
 
 hashtags:
   limit: 5
@@ -87,3 +89,6 @@ kafka:
 
   comment:
     topic: comment_event
+
+  post:
+    topic: posts

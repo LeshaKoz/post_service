@@ -3,7 +3,7 @@ package faang.school.postservice.config.redis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import faang.school.postservice.properties.RedisProperties;
+import faang.school.postservice.properties.RedisCacheProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +19,7 @@ import java.time.Duration;
 @Configuration
 @RequiredArgsConstructor
 public class RedisConfig {
-    private final RedisProperties redisProperties;
+    private final RedisCacheProperties redisCacheProperties;
 
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
@@ -28,7 +28,7 @@ public class RedisConfig {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(redisProperties.getTtlMinutes()))
+                .entryTtl(Duration.ofMinutes(redisCacheProperties.getHashtagTtl()))
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper)));
