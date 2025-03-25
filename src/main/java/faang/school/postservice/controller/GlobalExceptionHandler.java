@@ -1,13 +1,14 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.exception.DataValidationException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import faang.school.postservice.exception.DataValidationException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,13 +17,18 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataValidationException.class)
-    public ResponseEntity<Object> handleDataValidationException(DataValidationException ex) {
+    public ResponseEntity<String> handleDataValidationException(DataValidationException ex) {
         return BadRequest(ex);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex) {
+    public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException ex) {
         return NotFound(ex);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
+        return BadRequest(ex);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -37,23 +43,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         return InternalServerError(ex);
     }
 
-    private ResponseEntity<Object> InternalServerError(Exception ex) {
+    private ResponseEntity<String> InternalServerError(Exception ex) {
         return getResponse(ex, 500);
     }
 
-    private ResponseEntity<Object> BadRequest(Exception ex) {
+    private ResponseEntity<String> BadRequest(Exception ex) {
         return getResponse(ex, 400);
     }
 
-    private ResponseEntity<Object> NotFound(Exception ex) {
+    private ResponseEntity<String> NotFound(Exception ex) {
         return getResponse(ex, 404);
     }
 
-    private ResponseEntity<Object> getResponse(Exception ex, int code) {
+    private ResponseEntity<String> getResponse(Exception ex, int code) {
         return ResponseEntity
                 .status(HttpStatus.valueOf(code))
                 .body(ex.getMessage());
