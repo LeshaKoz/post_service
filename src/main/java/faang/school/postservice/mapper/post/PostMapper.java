@@ -12,8 +12,6 @@ public interface PostMapper {
     PostDto toDto(Post post);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "authorId", ignore = true)
-    @Mapping(target = "projectId", ignore = true)
     @Mapping(target = "likes", ignore = true)
     @Mapping(target = "comments", ignore = true)
     @Mapping(target = "albums", ignore = true)

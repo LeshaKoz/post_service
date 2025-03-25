@@ -28,7 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-
 class PostServiceTest {
 
     @InjectMocks
@@ -315,14 +314,12 @@ class PostServiceTest {
 
     @Test
     public void testGetAllAuthorPosts() {
-
         when(postRepository.findByAuthorId(authorId)).thenReturn(foundList);
         assertEquals(posts, postService.getAllAuthorPosts(authorId));
     }
 
     @Test
     public void testNotGetAllPostsWhenAuthorNotExists() {
-
         when(userServiceClient.getUser(authorId)).thenThrow(FeignException.class);
         assertThrows(EntityNotFoundException.class, () -> postService.getAllAuthorPosts(authorId));
     }

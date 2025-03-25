@@ -38,6 +38,8 @@ class PostControllerTest {
     @MockBean
     private PostService postService;
 
+    private final String invalidIdMsg = "cannot be less than 1";
+    private final String invalidContentMsg = "{\"content\":\"Content can not be blank or null\"}";
     private final long postId = 1;
     private final long authorId = 2;
     private final long projectId = 3;
@@ -64,13 +66,13 @@ class PostControllerTest {
     @Test
     public void testNotCreatingDraftPostWhenNullContent() throws Exception {
         postDto.setContent(null);
-        expectedBedRequest(MockMvcRequestBuilders::post, "/post", "invalid content: null");
+        expectedBadRequest(MockMvcRequestBuilders::post, "/post", invalidContentMsg);
     }
 
     @Test
     public void testNotCreatingDraftPostWhenBlankContent() throws Exception {
         postDto.setContent("  ");
-        expectedBedRequest(MockMvcRequestBuilders::post, "/post", "invalid content:   ");
+        expectedBadRequest(MockMvcRequestBuilders::post, "/post", invalidContentMsg);
     }
 
     @Test
@@ -81,7 +83,8 @@ class PostControllerTest {
 
     @Test
     public void testNotPublishPostWhenInvalidId() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::put, "/post/public/" + -1, "invalid post id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::put, "/post/public/" + -postId,
+                "publishPost.postId: " + invalidIdMsg);
     }
 
     @Test
@@ -92,7 +95,8 @@ class PostControllerTest {
 
     @Test
     public void testNotUpdatePostWhenInvalidId() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::put, "/post/" + -1, "invalid post id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::put, "/post/" + -postId,
+                "updatePost.postId: " + invalidIdMsg);
     }
 
     @Test
@@ -102,7 +106,8 @@ class PostControllerTest {
 
     @Test
     public void testNotDeletePostWhenInvalidId() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::delete, "/post/" + -1, "invalid post id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::delete, "/post/" + -postId,
+                "deletePost.postId: " + invalidIdMsg);
     }
 
     @Test
@@ -113,7 +118,8 @@ class PostControllerTest {
 
     @Test
     public void testNotGetPost() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::get, "/post/" + -1, "invalid post id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/" + -postId,
+                "getPost.postId: " + invalidIdMsg);
     }
 
     @Test
@@ -124,18 +130,20 @@ class PostControllerTest {
 
     @Test
     public void testNotGetAllAuthorDraftPosts() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::get, "/post/authors/-1/drafts", "invalid author id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/authors/-1/drafts",
+                "getAllAuthorDraftPosts.authorId: " + invalidIdMsg);
     }
 
     @Test
     public void testGetAllAuthorPosts() throws Exception {
         when(postService.getAllAuthorPosts(authorId)).thenReturn(resultDtos);
-        expectedOkAndReturnDtos("/post/authors/" + authorId + "/posts");
+        expectedOkAndReturnDtos("/post/authors/" + authorId + "/public");
     }
 
     @Test
     public void testNotGetAllAuthorPosts() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::get, "/post/authors/-1/posts", "invalid author id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/authors/-1/public",
+                "getAllAuthorPosts.authorId: " + invalidIdMsg);
     }
 
     @Test
@@ -146,18 +154,20 @@ class PostControllerTest {
 
     @Test
     public void testNotGetAllProjectDraftPosts() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::get, "/post/projects/-1/drafts", "invalid project id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/projects/-1/drafts",
+                "getAllProjectDraftPosts.projectId: " + invalidIdMsg);
     }
 
     @Test
     public void testGetAllProjectPosts() throws Exception {
         when(postService.getAllProjectPosts(projectId)).thenReturn(resultDtos);
-        expectedOkAndReturnDtos("/post/projects/" + projectId + "/posts");
+        expectedOkAndReturnDtos("/post/projects/" + projectId + "/public");
     }
 
     @Test
     public void testNotGetAllProjectPosts() throws Exception {
-        expectedBedRequest(MockMvcRequestBuilders::get, "/post/projects/-1/posts", "invalid project id: -1");
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/projects/-1/public",
+                "getAllProjectPosts.projectId: " + invalidIdMsg);
     }
 
     private void expectedOkAndReturnDtos(String path) throws Exception {
@@ -180,7 +190,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.content", is("content")));
     }
 
-    private void expectedBedRequest(
+    private void expectedBadRequest(
             Function<String, MockHttpServletRequestBuilder> method, String path, String msg) throws Exception {
 
         mockMvc.perform(method.apply(path)
