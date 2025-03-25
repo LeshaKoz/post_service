@@ -1,7 +1,11 @@
 package faang.school.postservice.service.cache;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +26,20 @@ public class PostAuthorCacheService {
         this.ttl = Duration.ofSeconds(ttlSeconds);
     }
 
-    @Async
+    @Async("postAuthorCacheExecutor")
     public void cachePostAuthor(Long authorId) {
-        redisTemplate.opsForSet().add(authorsKey, authorId);
-        redisTemplate.expire(authorsKey, ttl);
+        if (authorId == null) return;
+
+        redisTemplate.execute(new SessionCallback<Object>() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public Object execute(@NotNull RedisOperations operations) throws DataAccessException {
+                RedisOperations<String, Long> ops = (RedisOperations<String, Long>) operations;
+                ops.multi();
+                ops.opsForSet().add(authorsKey, authorId);
+                ops.expire(authorsKey, ttl);
+                return ops.exec();
+            }
+        });
     }
 }
