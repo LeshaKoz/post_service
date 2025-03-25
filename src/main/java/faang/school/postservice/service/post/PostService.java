@@ -15,9 +15,12 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.model.cache.UserCache;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
+import faang.school.postservice.repository.redis.RedisUserRepository;
 import faang.school.postservice.service.HashtagService;
+import faang.school.postservice.service.UserService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +49,8 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
+    private final RedisUserRepository redisUserRepository;
+    private final UserService userService;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -79,6 +84,7 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+        addAuthorToCacheByPost(post);
         return postMapper.toDto(postRepository.save(post));
     }
 
@@ -255,5 +261,12 @@ public class PostService {
         postSchedulerService.publishScheduledPosts(
                 postProperties.getSchedule().getBatchSize()
         );
+    }
+
+    private void addAuthorToCacheByPost(Post post) {
+        long authorId = post.getAuthorId();
+        String username = userService.getUserDtoById(authorId).username();
+        UserCache userCache = new UserCache(authorId, username);
+        redisUserRepository.save(userCache);
     }
 }
