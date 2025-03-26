@@ -27,9 +27,6 @@ import java.util.List;
 @ExtendWith(MockitoExtension.class)
 public class LikeServiceImplTest {
 
-//    @Mock
-//    private Integer maxNumberUsersInRequest = 2;
-
     @Mock
     private LikeRepository likeRepository;
 
