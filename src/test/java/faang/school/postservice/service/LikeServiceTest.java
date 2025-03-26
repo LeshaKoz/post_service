@@ -271,7 +271,7 @@ public class LikeServiceTest {
         when(likeRepository.findAllByCommentId(1L)).thenReturn(likeStream);
         when(userServiceClient.getUsersByIds(List.of(1L, 2L, 3L))).thenThrow(new RuntimeException());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        UserServiceConnectException exception = assertThrows(UserServiceConnectException.class, () ->
                 likeService.getLikedUsersToComment(1L)
         );
 

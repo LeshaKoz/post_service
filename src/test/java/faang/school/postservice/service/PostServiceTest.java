@@ -6,7 +6,7 @@ import faang.school.postservice.dto.posts.PostUpdatingDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.cache.RedisCacheTest;
+import faang.school.postservice.service.cache.RedisCache;
 import faang.school.postservice.utils.PostUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ public class PostServiceTest {
     @Mock
     private PostRepository postRepository;
     @Mock
-    private RedisCacheTest redisCache;
+    private RedisCache redisCache;
     @Mock
     private PostUtil postUtil;
     @Mock
