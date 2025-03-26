@@ -10,8 +10,8 @@ import faang.school.postservice.model.AlbumVisibility;
 import faang.school.postservice.repository.AlbumRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,6 @@ import static java.util.stream.Collectors.toMap;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Qualifier("albumServiceImpl")
 public class AlbumServiceImpl implements AlbumService {
 
@@ -31,6 +30,7 @@ public class AlbumServiceImpl implements AlbumService {
     private final UserContext userContext;
     private final Map<AlbumVisibility, AlbumVisibilityFilter> albumVisibilities;
 
+    @Autowired
     public AlbumServiceImpl(AlbumRepository albumRepository, UserContext userContext, List<AlbumVisibilityFilter> filters) {
         this.albumRepository = albumRepository;
         this.userContext = userContext;
