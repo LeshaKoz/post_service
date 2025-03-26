@@ -2,6 +2,7 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataValidationException.class)
     public ResponseEntity<String> handleDataValidationException(DataValidationException dataValidationException) {
-        log.warn("Data validation error: {}", dataValidationException.getMessage(), dataValidationException);
+        log.error("Data validation error: {}", dataValidationException.getMessage());
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(String.format("Ошибка валидации данных: %s", dataValidationException.getMessage()));
     }
@@ -43,7 +45,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException entityNotFoundException) {
-        log.error("Entity not found: {}", entityNotFoundException.getMessage(), entityNotFoundException);
+        log.error("Entity not found: {}", entityNotFoundException.getMessage());
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(String.format("Сущность не найдена: %s", entityNotFoundException.getMessage()));
     }
@@ -58,6 +61,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception exception) {
         log.error("Internal server error: {}", exception.getMessage(), exception);
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(String.format("Произошла внутренняя ошибка: %s", exception.getMessage()));
     }
@@ -76,11 +80,47 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException exception) {
         Map<String, String> errors = new HashMap<>();
+        log.error("Validation exception: {}", exception.getMessage());
 
         exception.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
 
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    /**
+     * Обрабатывает NullPointerException, включая ошибки валидации @NotNull.
+     * <p>
+     * Логирует предупреждение и возвращает ответ со статусом 400 (Bad Request).
+     *
+     * @param exception исключение типа NullPointerException
+     * @return ResponseEntity с HTTP-статусом 400 и сообщением об ошибке,
+     * указывающим на отсутствующее обязательное поле
+     */
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<String> handleNullPointerException(NullPointerException exception) {
+        log.error("Null pointer: {}", exception.getMessage(), exception);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(String.format("Не заполнено обязательное поле: %s", exception.getMessage()));
+    }
+
+    /**
+     * Обрабатывает исключения FeignClient при взаимодействии с внешними сервисами.
+     * <p>
+     * Пробрасывает оригинальный HTTP-статус из исключения и возвращает сообщение
+     * об ошибке внешнего сервиса.
+     *
+     * @param exception исключение типа FeignException
+     * @return ResponseEntity с оригинальным HTTP-статусом из исключения
+     * и сообщением об ошибке внешнего сервиса
+     */
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<String> handleFeignException(FeignException exception) {
+        log.error("Feign exception: {}", exception.getMessage(), exception);
+
+        return ResponseEntity.status(exception.status())
+                .body(String.format("Ошибка внешнего сервиса: %s", exception.getMessage()));
     }
 }

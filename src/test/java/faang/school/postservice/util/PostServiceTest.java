@@ -181,7 +181,7 @@ public class PostServiceTest {
         Exception exception = Assertions.assertThrows(DataValidationException.class,
                 () -> postService.softDeletePost(postId));
 
-        Assertions.assertEquals("Post is already deleted", exception.getMessage());
+        Assertions.assertEquals(String.format("Post with id %s is already deleted", postId), exception.getMessage());
 
         Mockito.verify(postRepository, Mockito.times(1)).findById(postId);
     }

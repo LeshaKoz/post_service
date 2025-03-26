@@ -75,7 +75,6 @@ public class PostService {
         Post publishPost = getPostEntity(postId);
 
         if (publishPost.isPublished()) {
-            log.warn("Post with ID {} is already published", postId);
             throw new DataValidationException("Post is already published");
         }
 
@@ -115,7 +114,7 @@ public class PostService {
         Post post = getPostEntity(postId);
 
         if (post.isDeleted()) {
-            throw new DataValidationException("Post is already deleted");
+            throw new DataValidationException(String.format("Post with id %s is already deleted", postId));
         }
         post.setDeleted(true);
 
@@ -203,9 +202,7 @@ public class PostService {
      * @throws EntityNotFoundException если пост с указанным ID не найден.
      */
     private Post getPostEntity(long postId) {
-        return postRepository.findById(postId).orElseThrow(() -> {
-            log.error("Post with ID {} not found", postId);
-            return new EntityNotFoundException(String.format("Post not found with id: %s", postId));
-        });
+        return postRepository.findById(postId).orElseThrow(() ->
+                new EntityNotFoundException(String.format("Post not found with id: %s", postId)));
     }
 }
