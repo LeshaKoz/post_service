@@ -73,6 +73,41 @@ tasks.bootJar {
     archiveFileName.set("service.jar")
 }
 
-tasks.named("jacocoTestCoverageVerification") {
-    enabled = false
+
+/**
+ * Jacoco settings
+ */
+val jacocoInclude = listOf(
+    "**/service/**",
+    "**/controller/**",
+    "**/validation/**"
+)
+
+val minCoverage = "0.45".toBigDecimal();
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            include(jacocoInclude)
+        }
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = "CLASS"
+            limit {
+                minimum = minCoverage
+            }
+        }
+    }
 }
