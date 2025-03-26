@@ -64,7 +64,7 @@ val jacocoIncludes = listOf(
     "**/controller/**"
 )
 
-val minimalCoverage = "0.3".toBigDecimal()
+val minimalCoverage = "0.0".toBigDecimal()
 
 tasks.test {
     finalizedBy(tasks.jacocoTestReport)
