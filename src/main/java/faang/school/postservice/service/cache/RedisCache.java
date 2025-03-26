@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class RedisCache {
     private final PostRedisRepository repository;
 
-    @Async
+    @Async("cachePostExecutor")
     public void cachePost(Post post) {
         log.info("caching post...");
         PostRedis postRedis = new PostRedis(post);
