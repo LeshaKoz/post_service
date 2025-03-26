@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS album_allowed_users (
-    id big serial PRIMARY KEY,
+    id bigserial PRIMARY KEY,
     album_id bigint not null,
     user_id bigint not null,
 

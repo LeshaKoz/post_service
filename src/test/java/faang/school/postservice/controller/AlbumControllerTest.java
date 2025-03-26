@@ -98,7 +98,6 @@ class AlbumControllerTest {
     }
 
     @Test
-    @DisplayName("Update visibility for non-existent album → 404")
     void testUpdateVisibilityForNonExistentAlbum() throws Exception {
         doThrow(new EntityNotFoundException("Album not found"))
                 .when(albumService).updateAlbumVisibility(eq(999L), eq(PUBLIC));
@@ -124,7 +123,6 @@ class AlbumControllerTest {
     }
 
     @Test
-    @DisplayName("Add users to non-existent album → 404")
     void testAddUsersToNonExistentAlbum() throws Exception {
         AlbumUsersDto dto = new AlbumUsersDto(List.of(1L, 2L));
         doThrow(new EntityNotFoundException("Album not found"))
@@ -138,7 +136,6 @@ class AlbumControllerTest {
     }
 
     @Test
-    @DisplayName("Invalid ID format in URL → 400")
     void testInvalidIdFormat() throws Exception {
         mockMvc.perform(get("/albums/{id}", "invalid_id"))
                 .andDo(print())
@@ -146,7 +143,6 @@ class AlbumControllerTest {
     }
 
     @Test
-    @DisplayName("Invalid visibility value → 400")
     void testInvalidVisibilityValue() throws Exception {
         mockMvc.perform(put("/albums/{id}/visibility/{visibility}", 1L, "INVALID_VISIBILITY"))
                 .andDo(print())
