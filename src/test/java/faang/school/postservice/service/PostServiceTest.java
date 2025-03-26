@@ -27,10 +27,12 @@ public class PostServiceTest {
 
     @Test
     @DisplayName("getPost: позитивный сценарий")
-    public void givenExistingPostIdWhenGetPostThenReturnPostEntity() {
+    public void givenExistingPostIdWhenGetPostEntityThenReturnPostEntity() {
         Mockito.when(postRepository.findById(postId))
                 .thenReturn(Optional.of(post));
+
         Post returnedPost = postService.getPostEntity(postId);
+
         Assertions.assertNotNull(returnedPost);
     }
 
@@ -39,8 +41,10 @@ public class PostServiceTest {
     public void givenNonExistingPostIdWhenGetPostEntityThenThrowEntityNotFoundException() {
         Mockito.when(postRepository.findById(postId))
                 .thenReturn(Optional.empty());
+
         Exception exception = Assertions.assertThrows(EntityNotFoundException.class, () ->
                 postService.getPostEntity(postId));
+
         Assertions.assertEquals("Post not found with id: 1", exception.getMessage());
     }
 }

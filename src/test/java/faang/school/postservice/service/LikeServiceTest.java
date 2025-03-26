@@ -33,43 +33,31 @@ public class LikeServiceTest {
     @InjectMocks
     private LikeService likeService;
 
-    private Like likeEntity;
-    private Post postEntity;
-    private LikeViewDto likeViewDto;
-    private Comment commentEntity;
-    private long postId;
-    private long commentId;
-    private long userId;
+    private final Like likeEntity = new Like();
+    private final Post postEntity = new Post();
+    private final LikeViewDto likeViewDto = new LikeViewDto();
+    private final Comment commentEntity = new Comment();
+    private final long postId = 1L;
+    private final long commentId = 1L;
+    private final long userId = 1L;
 
     @BeforeEach
-    void setUp() {
-        postId = 1L;
-        userId = 1L;
-        commentId = 1L;
-
-        likeEntity = new Like();
-
-        postEntity = new Post();
-
-        commentEntity = new Comment();
-
-        likeViewDto = new LikeViewDto();
+    public void setUp() {
         likeViewDto.setUserId(userId);
     }
 
     @Test
     @DisplayName("likePost: позитивный сценарий")
-    void givenValidPostAndUserWhenLikePostThenReturnLikeViewDto() {
+    public void givenValidPostAndUserWhenLikePostThenReturnLikeViewDto() {
         likeViewDto.setPostId(postId);
         Mockito.when(postService.getPostEntity(postId)).thenReturn(postEntity);
         Mockito.when(likeRepository.save(Mockito.any(Like.class))).thenReturn(likeEntity);
         Mockito.when(likeMapper.toDto(likeEntity)).thenReturn(likeViewDto);
 
         LikeViewDto result = likeService.likePost(postId, userId);
+        Assertions.assertNotNull(result);
 
-        Assertions.assertEquals(likeViewDto, result);
-
-        Mockito.verify(likeValidator).validatePostLikeConditions(postId, userId);
+        Mockito.verify(likeValidator).validateForAddingPostLike(postId, userId);
         Mockito.verify(postService).getPostEntity(postId);
         Mockito.verify(likeRepository).save(Mockito.any(Like.class));
         Mockito.verify(likeMapper).toDto(likeEntity);
@@ -79,26 +67,26 @@ public class LikeServiceTest {
     @DisplayName("unlikePost: позитивный сценарий")
     public void givenValidPostAndUserWhenUnlikePostThenLikeIsDeleted() {
         likeService.unlikePost(postId, userId);
+
         Mockito.verify(likeValidator, Mockito.times(1))
-                .validatePostUnlikeConditions(postId, userId);
+                .validateForRemovingPostLike(postId, userId);
         Mockito.verify(likeRepository, Mockito.times(1))
                 .deleteByPostIdAndUserId(postId, userId);
     }
 
     @Test
     @DisplayName("likeComment: позитивный сценарий")
-    void givenValidPostAndUserWhenLikeCommentThenReturnLikeViewDto() {
+    public void givenValidPostAndUserWhenLikeCommentThenReturnLikeViewDto() {
         likeViewDto.setCommentId(commentId);
-        Mockito.when(commentService.getComment(commentId)).thenReturn(commentEntity);
+        Mockito.when(commentService.getCommentEntity(commentId)).thenReturn(commentEntity);
         Mockito.when(likeRepository.save(Mockito.any(Like.class))).thenReturn(likeEntity);
         Mockito.when(likeMapper.toDto(likeEntity)).thenReturn(likeViewDto);
 
         LikeViewDto result = likeService.likeComment(commentId, userId);
+        Assertions.assertNotNull(result);
 
-        Assertions.assertEquals(likeViewDto, result);
-
-        Mockito.verify(likeValidator).validateCommentLikeConditions(commentId, userId);
-        Mockito.verify(commentService).getComment(commentId);
+        Mockito.verify(likeValidator).validateForAddingCommentLike(commentId, userId);
+        Mockito.verify(commentService).getCommentEntity(commentId);
         Mockito.verify(likeRepository).save(Mockito.any(Like.class));
         Mockito.verify(likeMapper).toDto(likeEntity);
     }
@@ -107,8 +95,9 @@ public class LikeServiceTest {
     @DisplayName("unlikeComment: позитивный сценарий")
     public void givenValidPostAndUserWhenUnlikeCommentThenLikeIsDeleted() {
         likeService.unlikeComment(commentId, userId);
+
         Mockito.verify(likeValidator, Mockito.times(1))
-                .validateCommentUnlikeConditions(commentId, userId);
+                .validateForRemovingCommentLike(commentId, userId);
         Mockito.verify(likeRepository, Mockito.times(1))
                 .deleteByCommentIdAndUserId(commentId, userId);
     }

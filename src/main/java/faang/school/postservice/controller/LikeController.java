@@ -3,7 +3,7 @@ package faang.school.postservice.controller;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.LikeViewDto;
 import faang.school.postservice.service.LikeService;
-import lombok.NonNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,14 +16,23 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Контроллер для обработки операций с лайками постов и комментариев.
- * Предоставляет API для добавления и удаления лайков.
+ * Контроллер для работы с лайками постов и комментариев.
+ * <p>
+ * Основные методы:
+ * <ul>
+ *   <li>{@link #likePost(Long)} - добавляет лайк к указанному посту</li>
+ *   <li>{@link #unlikePost(Long)} - удаляет лайк с указанного поста</li>
+ *   <li>{@link #likeComment(Long)} - добавляет лайк к указанному комментарию</li>
+ *   <li>{@link #unlikeComment(Long)} - удаляет лайк с указанного комментария</li>
+ * </ul>
+ * <p>
+ * Все методы требуют аутентификации пользователя.
  *
  * @author gulnaz21
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/likes")
 @RequiredArgsConstructor
 @Validated
 public class LikeController {
@@ -33,12 +42,12 @@ public class LikeController {
     /**
      * Добавляет лайк к посту.
      *
-     * @param postId Идентификатор поста, к которому добавляется лайк. Не может быть null и должен быть положительным числом.
+     * @param postId Идентификатор поста, к которому добавляется лайк.
      * @return Объект {@link LikeViewDto}, содержащий информацию о добавленном лайке.
      */
-    @PostMapping("/posts/{postId}/like")
+    @PostMapping("/posts/{postId}")
     public LikeViewDto likePost(@PathVariable
-                                @NonNull Long postId) {
+                                @NotNull Long postId) {
         long userId = userContext.getUserId();
         return likeService.likePost(postId, userId);
     }
@@ -46,12 +55,12 @@ public class LikeController {
     /**
      * Удаляет лайк с поста.
      *
-     * @param postId Идентификатор поста, с которого удаляется лайк. Не может быть null и должен быть положительным числом.
+     * @param postId Идентификатор поста, с которого удаляется лайк.
      */
-    @DeleteMapping("/posts/{postId}/like")
+    @DeleteMapping("/posts/{postId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void unlikePost(@PathVariable
-                           @NonNull Long postId) {
+                           @NotNull Long postId) {
         long userId = userContext.getUserId();
         likeService.unlikePost(postId, userId);
     }
@@ -59,12 +68,12 @@ public class LikeController {
     /**
      * Добавляет лайк к комментарию.
      *
-     * @param commentId Идентификатор комментария, к которому добавляется лайк. Не может быть null и должен быть положительным числом.
+     * @param commentId Идентификатор комментария, к которому добавляется лайк.
      * @return Объект {@link LikeViewDto}, содержащий информацию о добавленном лайке.
      */
-    @PostMapping("/comment/{commentId}/like")
+    @PostMapping("/comment/{commentId}")
     public LikeViewDto likeComment(@PathVariable
-                                   @NonNull Long commentId) {
+                                   @NotNull Long commentId) {
         long userId = userContext.getUserId();
         return likeService.likeComment(commentId, userId);
     }
@@ -72,12 +81,12 @@ public class LikeController {
     /**
      * Удаляет лайк с комментария.
      *
-     * @param commentId Идентификатор комментария, с которого удаляется лайк. Не может быть null и должен быть положительным числом.
+     * @param commentId Идентификатор комментария, с которого удаляется лайк.
      */
-    @DeleteMapping("/comment/{commentId}/like")
+    @DeleteMapping("/comment/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void unlikeComment(@PathVariable
-                              @NonNull Long commentId) {
+                              @NotNull Long commentId) {
         long userId = userContext.getUserId();
         likeService.unlikeComment(commentId, userId);
     }

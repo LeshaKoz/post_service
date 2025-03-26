@@ -10,8 +10,11 @@ import org.springframework.stereotype.Service;
 /**
  * Сервис для работы с комментариями.
  * <p>
- * Предоставляет методы для выполнения операций с комментариями.
- * </p>
+ * Основные методы:
+ * <ul>
+ *   <li>{@link #getCommentEntity(long)} - возвращает сущность комментария по ID</li>
+ * </ul>
+ *
  * @author gulnaz21
  */
 @Service
@@ -22,11 +25,12 @@ public class CommentService {
 
     /**
      * Возвращает комментарий по его идентификатору.
+     *
      * @param commentId Идентификатор комментария.
      * @return Найденный комментарий.
      * @throws EntityNotFoundException Если комментарий с указанным идентификатором не найден.
      */
-    public Comment getComment(long commentId) {
+    public Comment getCommentEntity(long commentId) {
         return commentRepository.findById(commentId).orElseThrow(() -> {
             log.error("Ошибка: Комментарий с id {} не найден", commentId);
             return new EntityNotFoundException(String.format("Comment not found with id: %d", commentId));

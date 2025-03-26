@@ -35,21 +35,14 @@ public class LikeValidatorTest {
     @InjectMocks
     private LikeValidator likeValidator;
 
-    private Long postId;
-    private Long commentId;
-    private Long userId;
-    private Post post;
-    private Comment comment;
+    private final Long postId = 1L;
+    private final Long commentId = 2L;
+    private final Long userId = 3L;
+    private final Post post = new Post();
+    private final Comment comment = new Comment();
 
     @BeforeEach
     public void setUp() {
-        post = new Post();
-        comment = new Comment();
-
-        postId = 1L;
-        commentId = 2L;
-        userId = 3L;
-
         post.setId(postId);
         comment.setId(commentId);
         comment.setPost(post);
@@ -58,10 +51,10 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validatePostLikeConditions: валидные postId и userId, не выбрасывает исключение")
-    public void givenValidPostAndUserWhenValidatePostLikeConditionsThenSuccess() {
+    public void givenValidPostAndUserWhenValidateForAddingPostLikeThenSuccess() {
         Mockito.when(postService.getPostEntity(postId)).thenReturn(post);
 
-        Assertions.assertDoesNotThrow(() -> likeValidator.validatePostLikeConditions(postId, userId));
+        Assertions.assertDoesNotThrow(() -> likeValidator.validateForAddingPostLike(postId, userId));
 
         Mockito.verify(userServiceClient, Mockito.times(1)).getUser(userId);
         Mockito.verify(likeRepository, Mockito.times(1)).findByPostIdAndUserId(postId, userId);
@@ -70,12 +63,12 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validatePostLikeConditions: пользователь уже ставил лайк на пост, выбрасывается DataValidationException")
-    public void givenUserAlreadyLikedPostWhenValidatePostLikeConditionsThenThrowDataValidationException() {
+    public void givenUserAlreadyLikedPostWhenValidateForAddingPostLikeThenThrowDataValidationException() {
         Mockito.when(likeRepository.findByPostIdAndUserId(postId, userId))
                 .thenReturn(Optional.of(new Like()));
 
         Exception exception = Assertions.assertThrows(DataValidationException.class, () ->
-                likeValidator.validatePostLikeConditions(postId, userId));
+                likeValidator.validateForAddingPostLike(postId, userId));
         Assertions.assertEquals(String.format("User with ID %d has already liked post with ID %d", userId, postId),
                 exception.getMessage());
 
@@ -85,13 +78,13 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validatePostLikeConditions: пользователь уже ставил лайк на комментарий, выбрасывается DataValidationException")
-    public void givenUserAlreadyLikedCommentWhenValidatePostLikeConditionsThenThrowDataValidationException() {
+    public void givenUserAlreadyLikedCommentWhenValidateForAddingPostLikeThenThrowDataValidationException() {
         Mockito.when(postService.getPostEntity(postId)).thenReturn(post);
         Mockito.when(likeRepository.findByCommentIdAndUserId(commentId, userId))
                 .thenReturn(Optional.of(new Like()));
 
         Exception exception = Assertions.assertThrows(DataValidationException.class, () ->
-                likeValidator.validatePostLikeConditions(postId, userId));
+                likeValidator.validateForAddingPostLike(postId, userId));
         Assertions.assertEquals(String.format("User with ID %d has already liked comment with ID %d", userId, commentId),
                 exception.getMessage());
 
@@ -102,11 +95,11 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validatePostUnlikeConditions: валидные postId и userId, не выбрасывает исключение")
-    public void givenValidPostAndUserWhenValidatePostUnlikeConditionsThenSuccess() {
+    public void givenValidPostAndUserWhenValidateForRemovingPostLikeThenSuccess() {
         Mockito.when(likeRepository.findByPostIdAndUserId(postId, userId))
                 .thenReturn(Optional.of(new Like()));
 
-        Assertions.assertDoesNotThrow(() -> likeValidator.validatePostUnlikeConditions(postId, userId));
+        Assertions.assertDoesNotThrow(() -> likeValidator.validateForRemovingPostLike(postId, userId));
 
         Mockito.verify(postService, Mockito.times(1)).getPostEntity(postId);
         Mockito.verify(userServiceClient, Mockito.times(1)).getUser(userId);
@@ -115,12 +108,12 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validatePostUnlikeConditions: пользователь не ставил лайк на пост, выбрасывается DataValidationException")
-    public void givenPostWithoutLikeWhenValidatePostUnlikeConditionsThenThrowDataValidationException() {
+    public void givenPostWithoutLikeWhenValidateForRemovingPostLikeThenThrowDataValidationException() {
         Mockito.when(likeRepository.findByPostIdAndUserId(postId, userId))
                 .thenReturn(Optional.empty());
 
         Exception exception = Assertions.assertThrows(DataValidationException.class, () ->
-                likeValidator.validatePostUnlikeConditions(postId, userId));
+                likeValidator.validateForRemovingPostLike(postId, userId));
         Assertions.assertEquals(String.format("User with ID %d has not liked post with ID %d", userId, postId),
                 exception.getMessage());
 
@@ -131,11 +124,11 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validateCommentLikeConditions: валидные данные, не выбрасывается исключение")
-    public void givenValidCommentAndUserWhenValidateCommentLikeConditionsThenSuccess() {
-        Mockito.when(commentService.getComment(commentId)).thenReturn(comment);
+    public void givenValidCommentAndUserWhenValidateForAddingCommentLikeThenSuccess() {
+        Mockito.when(commentService.getCommentEntity(commentId)).thenReturn(comment);
 
         Assertions.assertDoesNotThrow(() ->
-                likeValidator.validateCommentLikeConditions(commentId, userId));
+                likeValidator.validateForAddingCommentLike(commentId, userId));
 
         Mockito.verify(userServiceClient, Mockito.times(1)).getUser(userId);
         Mockito.verify(likeRepository, Mockito.times(1)).findByCommentIdAndUserId(commentId, userId);
@@ -144,12 +137,12 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validateCommentLikeConditions: пользователь уже ставил лайк на комментарий, выбрасывается DataValidationException")
-    public void givenUserAlreadyLikedCommentWhenValidateCommentLikeConditionsThenThrowDataValidationException() {
+    public void givenUserAlreadyLikedCommentWhenValidateForAddingCommentLikeThenThrowDataValidationException() {
         Mockito.when(likeRepository.findByCommentIdAndUserId(commentId, userId))
                 .thenReturn(Optional.of(new Like()));
 
         Exception exception = Assertions.assertThrows(DataValidationException.class, () ->
-                likeValidator.validateCommentLikeConditions(commentId, userId));
+                likeValidator.validateForAddingCommentLike(commentId, userId));
         Assertions.assertEquals(String.format("User with ID %d has already liked comment with ID %d", userId, commentId),
                 exception.getMessage());
 
@@ -159,13 +152,13 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validateCommentLikeConditions: пользователь уже ставил лайк на пост, выбрасывается DataValidationException")
-    public void givenUserAlreadyLikedPostOfCommentWhenValidateCommentLikeConditionsThenThrowDataValidationException() {
-        Mockito.when(commentService.getComment(commentId)).thenReturn(comment);
+    public void givenUserAlreadyLikedPostOfCommentWhenValidateForAddingCommentLikeThenThrowDataValidationException() {
+        Mockito.when(commentService.getCommentEntity(commentId)).thenReturn(comment);
         Mockito.when(likeRepository.findByPostIdAndUserId(postId, userId))
                 .thenReturn(Optional.of(new Like()));
 
         Exception exception = Assertions.assertThrows(DataValidationException.class, () ->
-                likeValidator.validateCommentLikeConditions(commentId, userId));
+                likeValidator.validateForAddingCommentLike(commentId, userId));
         Assertions.assertEquals(String.format("User with ID %d has already liked post with ID %d", userId, postId),
                 exception.getMessage());
 
@@ -176,30 +169,30 @@ public class LikeValidatorTest {
 
     @Test
     @DisplayName("validateCommentUnlikeConditions: валидные данные, не выбрасывается исключение")
-    public void givenValidCommentAndUserWithLikeWhenValidateCommentUnlikeConditionsThenSuccess() {
+    public void givenValidCommentAndUserWithLikeWhenValidateForRemovingCommentLikeThenSuccess() {
         Mockito.when(likeRepository.findByCommentIdAndUserId(commentId, userId))
                 .thenReturn(Optional.of(new Like()));
 
         Assertions.assertDoesNotThrow(() ->
-                likeValidator.validateCommentUnlikeConditions(commentId, userId));
+                likeValidator.validateForRemovingCommentLike(commentId, userId));
 
-        Mockito.verify(commentService, Mockito.times(1)).getComment(commentId);
+        Mockito.verify(commentService, Mockito.times(1)).getCommentEntity(commentId);
         Mockito.verify(userServiceClient, Mockito.times(1)).getUser(userId);
         Mockito.verify(likeRepository, Mockito.times(1)).findByCommentIdAndUserId(commentId, userId);
     }
 
     @Test
     @DisplayName("validateCommentUnlikeConditions: пользователь не ставил лайк на комментарий")
-    public void givenCommentWithoutUserLikeWhenValidateCommentUnlikeConditionsThenThrowException() {
+    public void givenCommentWithoutUserLikeWhenValidateForRemovingCommentLikeThenThrowException() {
         Mockito.when(likeRepository.findByCommentIdAndUserId(commentId, userId))
                 .thenReturn(Optional.empty());
 
         Exception exception = Assertions.assertThrows(DataValidationException.class, () ->
-                likeValidator.validateCommentUnlikeConditions(commentId, userId));
+                likeValidator.validateForRemovingCommentLike(commentId, userId));
         Assertions.assertEquals(String.format("User with ID %d has not liked comment with ID %d", userId, commentId),
                 exception.getMessage());
 
-        Mockito.verify(commentService, Mockito.times(1)).getComment(commentId);
+        Mockito.verify(commentService, Mockito.times(1)).getCommentEntity(commentId);
         Mockito.verify(userServiceClient, Mockito.times(1)).getUser(userId);
         Mockito.verify(likeRepository, Mockito.times(1)).findByCommentIdAndUserId(commentId, userId);
     }

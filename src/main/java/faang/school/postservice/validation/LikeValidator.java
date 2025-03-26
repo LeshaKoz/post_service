@@ -18,10 +18,19 @@ import java.util.Optional;
 /**
  * Компонент для валидации лайков на посты и комментарии.
  * <p>
- * Этот класс выполняет проверки, связанные с лайками, такие как:
+ * Основные проверки:
+ *  <ul>
+ *   <li>{@link #validateForAddingPostLike(long, long)} - проверка возможности поставить лайк посту</li>
+ *   <li>{@link #validateForRemovingPostLike(long, long)} - проверка возможности убрать лайк с поста</li>
+ *   <li>{@link #validateForAddingCommentLike(long, long)} - проверка возможности поставить лайк комментарию</li>
+ *   <li>{@link #validateForRemovingCommentLike(long, long)} - проверка возможности убрать лайк с комментария</li>
+ *  </ul>
+ * <p>
+ * Включает проверки:
  * <ul>
- *   <li>Проверка существования поста, комментария и пользователя.</li>
- *   <li>Проверка отсутствия дублирования лайков.</li>
+ *   <li>Существования сущностей (пост/комментарий/пользователь)</li>
+ *   <li>Отсутствия дублирования лайков</li>
+ *   <li>Наличия лайков перед удалением</li>
  * </ul>
  * </p>
  *
@@ -42,7 +51,7 @@ public class LikeValidator {
      * @param postId Идентификатор поста.
      * @param userId Идентификатор пользователя.
      */
-    public void validatePostLikeConditions(long postId, long userId) {
+    public void validateForAddingPostLike(long postId, long userId) {
         validateUserExistence(userId);
         validateUserDidNotLikePost(postId, userId);
         validateUserDidNotLikePostComments(postId, userId);
@@ -54,7 +63,7 @@ public class LikeValidator {
      * @param postId Идентификатор поста.
      * @param userId Идентификатор пользователя.
      */
-    public void validatePostUnlikeConditions(long postId, long userId) {
+    public void validateForRemovingPostLike(long postId, long userId) {
         validatePostExistence(postId);
         validateUserExistence(userId);
         validatePostLikeExists(postId, userId);
@@ -66,7 +75,7 @@ public class LikeValidator {
      * @param commentId Идентификатор комментария.
      * @param userId    Идентификатор пользователя.
      */
-    public void validateCommentLikeConditions(long commentId, long userId) {
+    public void validateForAddingCommentLike(long commentId, long userId) {
         validateUserExistence(userId);
         validateUserDidNotLikeComment(commentId, userId);
         validateUserDidNotLikePostOfComment(commentId, userId);
@@ -78,7 +87,7 @@ public class LikeValidator {
      * @param commentId Идентификатор комментария.
      * @param userId    Идентификатор пользователя.
      */
-    public void validateCommentUnlikeConditions(long commentId, long userId) {
+    public void validateForRemovingCommentLike(long commentId, long userId) {
         validateCommentExistence(commentId);
         validateUserExistence(userId);
         validateCommentLikeExists(commentId, userId);
@@ -108,7 +117,7 @@ public class LikeValidator {
      * @param commentId Идентификатор комментария.
      */
     private void validateCommentExistence(long commentId) {
-        commentService.getComment(commentId);
+        commentService.getCommentEntity(commentId);
     }
 
     /**
@@ -135,7 +144,7 @@ public class LikeValidator {
      * @throws DataValidationException Если лайк на пост уже существует.
      */
     private void validateUserDidNotLikePostOfComment(long commentId, long userId) {
-        Comment comment = commentService.getComment(commentId);
+        Comment comment = commentService.getCommentEntity(commentId);
         Long postId = comment.getPost().getId();
         validateUserDidNotLikePost(postId, userId);
     }

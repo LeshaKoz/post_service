@@ -14,7 +14,13 @@ import org.springframework.stereotype.Service;
 /**
  * Сервис для работы с лайками.
  * <p>
- * Предоставляет методы для добавления и удаления лайков на посты и комментарии.
+ * Основные методы:
+ * <ul>
+ *   <li>{@link #likePost(long, long)} - добавляет лайк на пост</li>
+ *   <li>{@link #unlikePost(long, long)} - удаляет лайк с поста</li>
+ *   <li>{@link #likeComment(long, long)} - добавляет лайк на комментарий</li>
+ *   <li>{@link #unlikeComment(long, long)} - удаляет лайк с комментария</li>
+ * </ul>
  *
  * @author gulnaz21
  */
@@ -38,7 +44,7 @@ public class LikeService {
     public LikeViewDto likePost(long postId, long userId) {
         log.info("Попытка добавить лайк на пост с ID {} от пользователя с ID {}", postId, userId);
 
-        likeValidator.validatePostLikeConditions(postId, userId);
+        likeValidator.validateForAddingPostLike(postId, userId);
         Post post = postService.getPostEntity(postId);
 
         Like like = new Like();
@@ -61,7 +67,7 @@ public class LikeService {
      */
     public void unlikePost(long postId, long userId) {
         log.info("Попытка удалить лайк с поста с ID {} от пользователя с ID {}", postId, userId);
-        likeValidator.validatePostUnlikeConditions(postId, userId);
+        likeValidator.validateForRemovingPostLike(postId, userId);
 
         likeRepository.deleteByPostIdAndUserId(postId, userId);
         log.info("Лайк с поста с ID {} от пользователя с ID {} успешно удален", postId, userId);
@@ -77,8 +83,8 @@ public class LikeService {
     public LikeViewDto likeComment(long commentId, long userId) {
         log.info("Попытка добавить лайк на комментарий с ID {} от пользователя с ID {}",
                 commentId, userId);
-        likeValidator.validateCommentLikeConditions(commentId, userId);
-        Comment comment = commentService.getComment(commentId);
+        likeValidator.validateForAddingCommentLike(commentId, userId);
+        Comment comment = commentService.getCommentEntity(commentId);
 
         Like like = new Like();
         like.setUserId(userId);
@@ -99,7 +105,7 @@ public class LikeService {
     public void unlikeComment(long commentId, long userId) {
         log.info("Попытка удалить лайк с комментария с ID {} от пользователя с ID {}",
                 commentId, userId);
-        likeValidator.validateCommentUnlikeConditions(commentId, userId);
+        likeValidator.validateForRemovingCommentLike(commentId, userId);
 
         likeRepository.deleteByCommentIdAndUserId(commentId, userId);
         log.info("Лайк с комментария с ID {} от пользователя с ID {} успешно удален",

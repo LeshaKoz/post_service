@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 /**
  * Сервис для работы с постами.
  * <p>
- * Предоставляет методы для выполнения операций с постами.
+ * Основные методы:
+ * <ul>
+ *   <li>{@link #getPostEntity(long)} - возвращает сущность поста по указанному ID</li>
+ * </ul>
  *
  * @author gulnaz21
  * <p>

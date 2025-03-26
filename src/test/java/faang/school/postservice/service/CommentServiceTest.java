@@ -27,20 +27,24 @@ public class CommentServiceTest {
 
     @Test
     @DisplayName("getComment: позитивный сценарий")
-    public void givenExistingCommentIdWhenGetCommentThenReturnComment() {
+    public void givenExistingCommentIdWhenGetCommentEntityThenReturnCommentEntity() {
         Mockito.when(commentRepository.findById(commentId))
                 .thenReturn(Optional.of(comment));
-        Comment returnedComment = commentService.getComment(commentId);
+
+        Comment returnedComment = commentService.getCommentEntity(commentId);
+
         Assertions.assertNotNull(returnedComment);
     }
 
     @Test
     @DisplayName("getComment: комментарий не найден")
-    public void givenNonExistingCommentIdWhenGetCommentThenThrowEntityNotFoundException() {
+    public void givenNonExistingCommentIdWhenGetCommentEntityThenThrowEntityNotFoundException() {
         Mockito.when(commentRepository.findById(commentId))
                 .thenReturn(Optional.empty());
+
         Exception exception = Assertions.assertThrows(EntityNotFoundException.class, () ->
-                commentService.getComment(commentId));
+                commentService.getCommentEntity(commentId));
+
         Assertions.assertEquals("Comment not found with id: 1", exception.getMessage());
     }
 }

@@ -27,20 +27,14 @@ public class LikeControllerTest {
     @MockBean
     private LikeService likeService;
 
-    private Long postId;
-    private Long userId;
-    private Long commentId;
-    private Long likeId;
-    private LikeViewDto likeViewDto;
+    private final Long postId = 1L;
+    private final Long userId = 1L;
+    private final Long commentId = 1L;
+    private final Long likeId = 1L;
+    private final LikeViewDto likeViewDto = new LikeViewDto();
 
     @BeforeEach
     public void setup() {
-        postId = 1L;
-        userId = 1L;
-        commentId = 1L;
-        likeId = 1L;
-
-        likeViewDto = new LikeViewDto();
         likeViewDto.setId(likeId);
         likeViewDto.setUserId(userId);
     }
@@ -53,7 +47,7 @@ public class LikeControllerTest {
         Mockito.when(userContext.getUserId()).thenReturn(userId);
         Mockito.when(likeService.likePost(postId, userId)).thenReturn(likeViewDto);
 
-        mockMvc.perform(post("/api/v1/posts/1/like", postId)
+        mockMvc.perform(post("/likes/posts/" + postId)
                         .header("x-user-id", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(likeId))
@@ -65,7 +59,7 @@ public class LikeControllerTest {
     @Test
     @DisplayName("likePost: id поста равен null")
     public void givenPostIdIsNullWhenLikePostThenReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/posts/null/like")
+        mockMvc.perform(post("/likes/posts/" + null)
                         .header("x-user-id", userId))
                 .andExpect(status().isBadRequest());
         Mockito.verifyNoInteractions(likeService);
@@ -73,10 +67,10 @@ public class LikeControllerTest {
 
     @Test
     @DisplayName("unlikePost: валидные postId и userId, возвращает статус NoContent")
-    void givenValidPostAndUserWhenUnlikePostThenReturnNoContent() throws Exception {
+    public void givenValidPostAndUserWhenUnlikePostThenReturnNoContent() throws Exception {
         Mockito.when(userContext.getUserId()).thenReturn(userId);
 
-        mockMvc.perform(delete("/api/v1/posts/1/like", postId)
+        mockMvc.perform(delete("/likes/posts/" + postId)
                         .header("x-user-id", userId))
                 .andExpect(status().isNoContent());
 
@@ -85,8 +79,8 @@ public class LikeControllerTest {
 
     @Test
     @DisplayName("unlikePost: postId равен null возвращает BadRequest")
-    void unlikePost_GivenPostIdIsNullWhenUnlikePostThenReturnBadRequest() throws Exception {
-        mockMvc.perform(delete("/api/v1/posts/null/like")
+    public void unlikePost_GivenPostIdIsNullWhenUnlikePostThenReturnBadRequest() throws Exception {
+        mockMvc.perform(delete("/likes/posts/" + null)
                         .header("x-user-id", userId))
                 .andExpect(status().isBadRequest());
 
@@ -95,12 +89,12 @@ public class LikeControllerTest {
 
     @Test
     @DisplayName("likeComment: валидные commentId и userId, возвращает LikeViewDto")
-    void givenValidCommentAndUserWhenLikeCommentThenReturnLikeViewDto() throws Exception {
+    public void givenValidCommentAndUserWhenLikeCommentThenReturnLikeViewDto() throws Exception {
         likeViewDto.setCommentId(commentId);
         Mockito.when(userContext.getUserId()).thenReturn(userId);
         Mockito.when(likeService.likeComment(commentId, userId)).thenReturn(likeViewDto);
 
-        mockMvc.perform(post("/api/v1/comment/1/like", commentId)
+        mockMvc.perform(post("/likes/comment/" + commentId)
                         .header("x-user-id", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(likeViewDto.getId()))
@@ -112,8 +106,8 @@ public class LikeControllerTest {
 
     @Test
     @DisplayName("likeComment: commentId равен null, возвращает BadRequest")
-    void givenCommentIdIsNullWhenLikeCommentThenReturnBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/comment/null/like")
+    public void givenCommentIdIsNullWhenLikeCommentThenReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/likes/comment/" + null)
                         .header("x-user-id", userId))
                 .andExpect(status().isBadRequest());
 
@@ -122,10 +116,10 @@ public class LikeControllerTest {
 
     @Test
     @DisplayName("unlikeComment: валидные commentId и userId, возвращает статус NoContent")
-    void givenValidCommentAndUserWhenUnlikeCommentThenReturnNoContent() throws Exception {
+    public void givenValidCommentAndUserWhenUnlikeCommentThenReturnNoContent() throws Exception {
         Mockito.when(userContext.getUserId()).thenReturn(userId);
 
-        mockMvc.perform(delete("/api/v1/comment/1/like", commentId)
+        mockMvc.perform(delete("/likes/comment/" + commentId)
                         .header("x-user-id", userId))
                 .andExpect(status().isNoContent());
 
@@ -134,8 +128,8 @@ public class LikeControllerTest {
 
     @Test
     @DisplayName("unlikeComment: commentId равен null, возвращает BadRequest")
-    void givenCommentIdIsNullWhenUnlikeCommentThenReturnBadRequest() throws Exception {
-        mockMvc.perform(delete("/api/v1/comment/null/like")
+    public void givenCommentIdIsNullWhenUnlikeCommentThenReturnBadRequest() throws Exception {
+        mockMvc.perform(delete("/likes/comment/" + null)
                         .header("x-user-id", userId))
                 .andExpect(status().isBadRequest());
 
