@@ -111,3 +111,9 @@ kafka:
   bootstrap-servers: localhost:9092
   topic:
     comment: user-comment-post
+
+news-feed:
+  keys:
+    user: user
+    feed: feed
+    post: posts
