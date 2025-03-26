@@ -10,14 +10,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AccessDeniedException.class)
+    @ExceptionHandler(AlbumAccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAlbumAccessDeniedException(AlbumAccessDeniedException ex) {
         return createErrorResponse(HttpStatus.FORBIDDEN, ex);
     }

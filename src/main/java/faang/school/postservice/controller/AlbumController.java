@@ -33,25 +33,33 @@ public class AlbumController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AlbumResponseDto> findAlbumById(@PathVariable @NotNull @Min(1) long id) {
+    public ResponseEntity<AlbumResponseDto> findAlbumById(
+            @PathVariable @NotNull @Min(1) long id
+    ) {
         return ResponseEntity.ok(albumService.getAlbumById(id));
     }
 
     @GetMapping("/author/{authorId}")
-    public ResponseEntity<List<AlbumResponseDto>> findAlbumsByAuthorId(@PathVariable @NotNull @Min(1) long authorId) {
+    public ResponseEntity<List<AlbumResponseDto>> findAlbumsByAuthorId(
+            @PathVariable @NotNull @Min(1) long authorId
+    ) {
         return ResponseEntity.ok(albumService.getAlbumsByAuthorId(authorId));
     }
 
     @PutMapping("/{id}/visibility/{visibility}")
-    public ResponseEntity<AlbumResponseDto> updateAlbumVisibility(@PathVariable @NotNull @Min(1) long id,
-                                      @PathVariable("visibility") @NotNull AlbumVisibility visibility) {
+    public ResponseEntity<AlbumResponseDto> updateAlbumVisibility(
+            @PathVariable @NotNull @Min(1) long id,
+            @PathVariable("visibility") @NotNull AlbumVisibility visibility
+    ) {
         AlbumResponseDto updatedAlbum = albumService.updateAlbumVisibility(id, visibility);
         return ResponseEntity.ok(updatedAlbum);
     }
 
     @PutMapping("/{id}/add-users-for-access")
-    public ResponseEntity<List<Long>> addUsersForAccessAlbum(@PathVariable @NotNull @Min(1) long id,
-                                                             @RequestBody @Valid AlbumUsersDto albumUsersDto) {
+    public ResponseEntity<List<Long>> addUsersForAccessAlbum(
+            @PathVariable @NotNull @Min(1) long id,
+            @RequestBody @Valid AlbumUsersDto albumUsersDto
+    ) {
         List<Long> updatedUsers = albumService.addUsersForAccessAlbum(id, albumUsersDto);
         return ResponseEntity.ok(updatedUsers);
     }
