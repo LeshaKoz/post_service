@@ -6,6 +6,7 @@ import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.PostWasDeletedException;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.AsyncPostPublishPerformer;
 import faang.school.postservice.service.post.PostService;
@@ -53,6 +54,8 @@ public class PostServiceTest {
 
     @Mock
     private AsyncPostPublishPerformer publishPerformer;
+    @Mock
+    private PostCacheRepository postCacheRepository;
 
     @InjectMocks
     private PostService postService;
@@ -106,6 +109,7 @@ public class PostServiceTest {
         postService.createPostByUserId(userId, firstPost);
 
         verify(postRepository, times(1)).save(any(Post.class));
+        verify(postCacheRepository, times(1)).save(any(Post.class));
         assertEquals(userId, firstPost.getAuthorId());
         assertNotNull(firstPost.getCreatedAt());
         assertNotNull(firstPost.getUpdatedAt());
@@ -222,7 +226,8 @@ public class PostServiceTest {
 
     @Test
     public void testPublishScheduledPosts_Success() {
-        postService = new PostService(postRepository, userServiceClient, projectServiceClient, publishPerformer);
+        postService = new PostService(postRepository, userServiceClient, projectServiceClient, publishPerformer,
+                postCacheRepository);
         int testBatchSize = 2;
         ReflectionTestUtils.setField(postService, "batchSize", testBatchSize);
         List<Post> posts = List.of(new Post(), new Post(), new Post(), new Post(), new Post());
@@ -254,5 +259,14 @@ public class PostServiceTest {
         postService.publishScheduledPosts();
 
         verify(postRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    public void testGetPostFromCache() {
+        when(postCacheRepository.findById(2L)).thenReturn(secondPost);
+        Post actual = postService.getPostById(2L);
+        assertSame(secondPost, actual);
+        verify(postCacheRepository, times(1)).findById(2L);
+        verify(postRepository, never()).save(any(Post.class));
     }
 }

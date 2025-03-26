@@ -1,6 +1,7 @@
 package faang.school.postservice.service.post;
 
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import java.util.List;
 @Service
 public class AsyncPostPublishPerformer {
     private final PostRepository postRepository;
+    private final PostCacheRepository postCacheRepository;
 
     @Async("publishExecutor")
     public void publishBatch(List<Post> posts) {
@@ -23,6 +25,7 @@ public class AsyncPostPublishPerformer {
             post.setPublishedAt(LocalDateTime.now());
         });
         postRepository.saveAll(posts);
+        postCacheRepository.saveAll(posts);
         log.info("Scheduled task #Publish post# completed");
     }
 }
