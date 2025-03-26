@@ -111,7 +111,7 @@ public class CommentServiceTest {
         comment.setPost(post);
         comment.setContent("Title");
         UserDto userDto = new UserDto(1L, "John", "John@mail.com");
-        AuthorCacheDto authorCacheDto = userMapper.toPostAuthorCacheDto(userDto);
+        AuthorCacheDto authorCacheDto = userMapper.toAuthorCacheDto(userDto);
         when(postService.getPost(request.getPostId())).thenReturn(post);
         when(commentRepository.save(any(Comment.class))).thenReturn(comment);
         when(userServiceClient.getUser(request.getAuthorId())).thenReturn(userDto);

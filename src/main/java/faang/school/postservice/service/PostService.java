@@ -77,7 +77,7 @@ public class PostService {
         postCacheRepository.save(postCacheDto);
 
         UserDto userDto = userServiceClient.getUser(post.getAuthorId());
-        AuthorCacheDto authorCacheDto = userMapper.toPostAuthorCacheDto(userDto);
+        AuthorCacheDto authorCacheDto = userMapper.toAuthorCacheDto(userDto);
         authorCacheDto.setHoursToExpire(postAuthorHoursToExpire);
         postAuthorCacheRepository.save(authorCacheDto);
 

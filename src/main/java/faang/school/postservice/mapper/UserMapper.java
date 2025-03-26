@@ -8,5 +8,5 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
-    AuthorCacheDto toPostAuthorCacheDto(UserDto userDto);
+    AuthorCacheDto toAuthorCacheDto(UserDto userDto);
 }

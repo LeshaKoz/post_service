@@ -49,7 +49,7 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         UserDto authorDto = userServiceClient.getUser(savedComment.getAuthorId());
-        AuthorCacheDto authorCacheDto = userMapper.toPostAuthorCacheDto(authorDto);
+        AuthorCacheDto authorCacheDto = userMapper.toAuthorCacheDto(authorDto);
         authorCacheDto.setHoursToExpire(timeToLive);
         redisAuthorRepository.save(authorCacheDto);
 

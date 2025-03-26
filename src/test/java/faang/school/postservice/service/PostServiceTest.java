@@ -139,7 +139,7 @@ public class PostServiceTest {
         verify(postRepository, times(1)).save(post);
         verify(cacheRepository, times(1)).save(any(PostCacheDto.class));
         verify(postAuthorCacheRepository, times(1))
-                .save(userMapper.toPostAuthorCacheDto(userDto));
+                .save(userMapper.toAuthorCacheDto(userDto));
     }
 
     @Test
