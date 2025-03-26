@@ -1,5 +1,6 @@
 package faang.school.postservice.dto.comment;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,45 +20,62 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "DTO representing a comment view")
 public class CommentViewDto {
 
-    /**
-     * Идентификатор комментария.
-     */
+    @Schema(
+            description = "Unique identifier of the comment",
+            example = "1",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private Long id;
 
-    /**
-     * Текст комментария.
-     */
+    @Schema(
+            description = "Content text of the comment",
+            example = "This post was really helpful!",
+            maxLength = 4096
+    )
     private String content;
 
-    /**
-     * Идентификатор автора комментария.
-     */
+    @Schema(
+            description = "ID of the comment author",
+            example = "42",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private Long authorId;
 
-    /**
-     * Идентификатор поста, к которому относится комментарий.
-     */
+    @Schema(
+            description = "ID of the post this comment belongs to",
+            example = "123",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private Long postId;
 
-    /**
-     * Дата и время создания комментария.
-     */
+    @Schema(
+            description = "Timestamp when the comment was created",
+            example = "2023-05-15T10:30:00",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private LocalDateTime createdAt;
 
-    /**
-     * Дата и время последнего обновления комментария.
-     */
+    @Schema(
+            description = "Timestamp when the comment was last updated",
+            example = "2023-05-16T14:45:30",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private LocalDateTime updatedAt;
 
-    /**
-     * Ключ файла большого изображения, если оно прикреплено к комментарию.
-     */
+    @Schema(
+            description = "File key for large attached image (if any)",
+            example = "comments/1/large-image.jpg",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String largeImageFileKey;
 
-    /**
-     * Ключ файла маленького изображения, если оно прикреплено к комментарию.
-     */
+    @Schema(
+            description = "File key for small attached image (if any)",
+            example = "comments/1/small-image.jpg",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private String smallImageFileKey;
 }

@@ -87,7 +87,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should successfully create comment with valid data")
-        void createComment_WithValidData_ShouldReturnCommentViewDto() {
+        void givenValidCommentData_whenCreateComment_thenReturnCreatedComment() {
             when(postRepository.findById(1L)).thenReturn(Optional.of(post));
             when(userServiceClient.getUser(1L)).thenReturn(userDto);
             when(commentMapper.toEntity(commentCreateDto)).thenReturn(comment);
@@ -104,7 +104,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should throw EntityNotFoundException when post doesn't exist")
-        void createComment_WithNonExistingPost_ShouldThrowException() {
+        void givenNonExistentPost_whenCreateComment_thenThrowEntityNotFoundException() {
             when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class,
@@ -113,7 +113,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should throw EntityNotFoundException when author doesn't exist")
-        void createComment_WithNonExistingAuthor_ShouldThrowException() {
+        void givenNonExistentAuthor_whenCreateComment_thenThrowEntityNotFoundException() {
             when(postRepository.findById(1L)).thenReturn(Optional.of(post));
             when(userServiceClient.getUser(1L)).thenReturn(null);
 
@@ -128,7 +128,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should successfully update comment with valid data")
-        void updateComment_WithValidData_ShouldReturnUpdatedComment() {
+        void givenValidCommentData_whenUpdateComment_thenReturnUpdatedComment() {
             when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
             when(commentRepository.save(any(Comment.class))).thenReturn(comment);
             when(commentMapper.toViewDto(comment)).thenReturn(commentViewDto);
@@ -143,7 +143,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should throw EntityNotFoundException when comment doesn't exist")
-        void updateComment_WithNonExistingComment_ShouldThrowException() {
+        void givenNonExistentComment_whenUpdateComment_thenThrowEntityNotFoundException() {
             when(commentRepository.findById(1L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class,
@@ -152,7 +152,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should throw DataValidationException when postId doesn't match")
-        void updateComment_WithMismatchedPostId_ShouldThrowException() {
+        void givenMismatchedPostId_whenUpdateComment_thenThrowDataValidationException() {
             comment.getPost().setId(2L);
             when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
 
@@ -167,7 +167,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should return list of comments for existing post")
-        void getCommentsByPostId_WithExistingPost_ShouldReturnCommentList() {
+        void givenExistingPostWithComments_whenGetComments_thenReturnCommentList() {
             when(commentRepository.findAllByPostId(1L)).thenReturn(List.of(comment));
             when(commentMapper.toViewDto(comment)).thenReturn(commentViewDto);
 
@@ -180,7 +180,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should return empty list when post has no comments")
-        void getCommentsByPostId_WithNoComments_ShouldReturnEmptyList() {
+        void givenExistingPostWithoutComments_whenGetComments_thenReturnEmptyList() {
             when(commentRepository.findAllByPostId(1L)).thenReturn(List.of());
 
             List<CommentViewDto> result = commentService.getCommentsByPostId(1L);
@@ -196,7 +196,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should successfully delete comment with valid ids")
-        void deleteComment_WithValidIds_ShouldDeleteComment() {
+        void givenValidCommentId_whenDeleteComment_thenDeleteSuccessfully() {
             when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
 
             commentService.deleteComment(1L, 1L);
@@ -206,7 +206,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should throw EntityNotFoundException when comment doesn't exist")
-        void deleteComment_WithNonExistingComment_ShouldThrowException() {
+        void givenNonExistentComment_whenDeleteComment_thenThrowEntityNotFoundException() {
             when(commentRepository.findById(1L)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class,
@@ -215,7 +215,7 @@ public class CommentServiceTest {
 
         @Test
         @DisplayName("Should throw DataValidationException when postId doesn't match")
-        void deleteComment_WithMismatchedPostId_ShouldThrowException() {
+        void givenMismatchedPostId_whenDeleteComment_thenThrowDataValidationException() {
             comment.getPost().setId(2L);
             when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
 

@@ -1,5 +1,6 @@
 package faang.school.postservice.dto.comment;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -20,25 +21,34 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "DTO for creating a new comment")
 public class CommentCreateDto {
 
-    /**
-     * Текст комментария. Не может быть пустым и должен содержать не более 4096 символов.
-     */
-    @NotBlank(message = "Текст комментария не может быть пустым")
+    @Schema(
+            description = "Comment text content",
+            example = "This is an insightful comment about the post",
+            minLength = 1,
+            maxLength = 4096,
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    @NotBlank(message = "Comment text cannot be blank")
     @Size(min = 1, max = 4096,
-            message = "Текст комментария не может превышать 4096 символов или быть меньше 1 символа")
+            message = "Comment text must be between 1 and 4096 characters long")
     private String content;
 
-    /**
-     * Идентификатор автора комментария. Должен соответствовать существующему пользователю.
-     */
-    @NotNull(message = "Идентификатор автора не может быть null")
+    @Schema(
+            description = "ID of the comment author",
+            example = "42",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    @NotNull(message = "Author ID cannot be null")
     private Long authorId;
 
-    /**
-     * Идентификатор поста, к которому относится комментарий. Должен соответствовать существующему посту.
-     */
-    @NotNull(message = "Идентификатор поста не может быть null")
+    @Schema(
+            description = "ID of the post this comment belongs to",
+            example = "123",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    @NotNull(message = "Post ID cannot be null")
     private Long postId;
 }

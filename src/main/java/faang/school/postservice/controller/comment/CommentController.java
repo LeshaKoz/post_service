@@ -3,6 +3,9 @@ package faang.school.postservice.controller.comment;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentViewDto;
 import faang.school.postservice.service.comment.CommentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,71 +32,71 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/posts/{postId}/comments")
+@Tag(name = "Comment Management", description = "Endpoints for managing post comments")
 public class CommentController {
     private final CommentService commentService;
 
-    /**
-     * Создает новый комментарий для указанного поста.
-     *
-     * @param postId           Идентификатор поста, к которому относится комментарий.
-     * @param commentCreateDto DTO с данными для создания комментария.
-     * @return Ответ с созданным комментарием в формате CommentViewDto и статусом HTTP 201 (Created).
-     */
+    @Operation(
+            summary = "Create a new comment",
+            description = "Creates a new comment for the specified post"
+    )
     @PostMapping
-    public ResponseEntity<CommentViewDto> createComment(@PathVariable long postId,
-                                                        @RequestBody @Valid CommentCreateDto commentCreateDto) {
-        log.info("Запрос на создание комментария для поста с ID: {}", postId);
+    public ResponseEntity<CommentViewDto> createComment(
+            @Parameter(description = "ID of the post to comment on", required = true, example = "1")
+            @PathVariable long postId,
+            @Parameter(description = "Comment data to create", required = true)
+            @RequestBody @Valid CommentCreateDto commentCreateDto) {
+        log.info("Request to create comment for post with ID: {}", postId);
         CommentViewDto createdComment = commentService.createComment(postId, commentCreateDto);
-        log.info("Комментарий успешно создан с ID: {}", createdComment.getId());
+        log.info("Comment successfully created with ID: {}", createdComment.getId());
         return ResponseEntity.ok(createdComment);
     }
 
-    /**
-     * Обновляет текст существующего комментария.
-     *
-     * @param postId           Идентификатор поста, к которому относится комментарий.
-     * @param commentId        Идентификатор комментария, который нужно обновить.
-     * @param commentCreateDto DTO с новым текстом комментария.
-     * @return Ответ с обновленным комментарием в формате CommentViewDto и статусом HTTP 200 (OK).
-     */
+    @Operation(
+            summary = "Update a comment",
+            description = "Updates the text of an existing comment"
+    )
     @PutMapping("/{commentId}")
-    public ResponseEntity<CommentViewDto> updateComment(@PathVariable long postId,
-                                                        @PathVariable long commentId,
-                                                        @RequestBody @Valid CommentCreateDto commentCreateDto) {
-        log.info("Запрос на обновление комментария с ID: {} для поста с ID: {}", commentId, postId);
+    public ResponseEntity<CommentViewDto> updateComment(
+            @Parameter(description = "ID of the post containing the comment", required = true, example = "1")
+            @PathVariable long postId,
+            @Parameter(description = "ID of the comment to update", required = true, example = "1")
+            @PathVariable long commentId,
+            @Parameter(description = "Updated comment data", required = true)
+            @RequestBody @Valid CommentCreateDto commentCreateDto) {
+        log.info("Request to update comment with ID: {} for post with ID: {}", commentId, postId);
         CommentViewDto updatedComment = commentService.updateComment(postId, commentId, commentCreateDto);
-        log.info("Комментарий с ID: {} успешно обновлен", commentId);
+        log.info("Comment with ID: {} successfully updated", commentId);
         return ResponseEntity.ok(updatedComment);
     }
 
-    /**
-     * Возвращает список всех комментариев для указанного поста.
-     * Комментарии сортируются по дате создания (от самого позднего к самому раннему).
-     *
-     * @param postId Идентификатор поста.
-     * @return Ответ со списком комментариев в формате CommentViewDto и статусом HTTP 200 (OK).
-     */
+    @Operation(
+            summary = "Get post comments",
+            description = "Returns all comments for the specified post, sorted by creation date (newest first)"
+    )
     @GetMapping
-    public ResponseEntity<List<CommentViewDto>> getCommentsByPostId(@PathVariable long postId) {
-        log.info("Запрос на получение комментариев для поста с ID: {}", postId);
+    public ResponseEntity<List<CommentViewDto>> getCommentsByPostId(
+            @Parameter(description = "ID of the post to get comments for", required = true, example = "1")
+            @PathVariable long postId) {
+        log.info("Request to get comments for post with ID: {}", postId);
         List<CommentViewDto> comments = commentService.getCommentsByPostId(postId);
-        log.info("Найдено {} комментариев для поста с ID: {}", comments.size(), postId);
+        log.info("Found {} comments for post with ID: {}", comments.size(), postId);
         return ResponseEntity.ok(comments);
     }
 
-    /**
-     * Удаляет комментарий по его идентификатору.
-     *
-     * @param postId    Идентификатор поста, к которому относится комментарий.
-     * @param commentId Идентификатор комментария, который нужно удалить.
-     * @return Ответ со статусом HTTP 204 (No Content), если удаление прошло успешно.
-     */
+    @Operation(
+            summary = "Delete a comment",
+            description = "Deletes the comment with the specified ID"
+    )
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable long postId,
-                                              @PathVariable long commentId) {
-        log.info("Запрос на удаление комментария с ID: {} для поста с ID: {}", commentId, postId);
+    public ResponseEntity<Void> deleteComment(
+            @Parameter(description = "ID of the post containing the comment", required = true, example = "1")
+            @PathVariable long postId,
+            @Parameter(description = "ID of the comment to delete", required = true, example = "1")
+            @PathVariable long commentId) {
+        log.info("Request to delete comment with ID: {} for post with ID: {}", commentId, postId);
         commentService.deleteComment(postId, commentId);
-        log.info("Комментарий с ID: {} успешно удален", commentId);
+        log.info("Comment with ID: {} successfully deleted", commentId);
         return ResponseEntity.noContent().build();
     }
 }

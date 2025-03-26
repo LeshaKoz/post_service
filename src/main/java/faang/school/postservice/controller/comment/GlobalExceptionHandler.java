@@ -2,6 +2,7 @@ package faang.school.postservice.controller.comment;
 
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -17,6 +18,7 @@ import java.util.Map;
  * @author Zhltsk-V
  * @version 1.0
  */
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -28,7 +30,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataValidationException.class)
     public ResponseEntity<String> handlerDataValidationException(DataValidationException e) {
-        return ResponseEntity.badRequest().body("Ошибка валидации данных: " + e.getMessage());
+        log.error("Data validation error: {}", e.getMessage());
+        return ResponseEntity.badRequest().body("Data validation error: " + e.getMessage());
     }
 
     /**
@@ -39,7 +42,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handlerEntityNotFoundException(EntityNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Сущность не найдена: " + e.getMessage());
+        log.error("Entity not found: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Entity not found: " + e.getMessage());
     }
 
     /**
@@ -55,7 +59,7 @@ public class GlobalExceptionHandler {
         exception.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
-
+        log.error("Data validation error: {}", errors);
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
@@ -67,7 +71,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handlerException(Exception e) {
+        log.error("Internal server error occurred: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Произошла внутренняя ошибка: " + e.getMessage());
+                .body("Internal server error occurred: " + e.getMessage());
     }
 }

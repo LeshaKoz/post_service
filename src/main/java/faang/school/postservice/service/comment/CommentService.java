@@ -45,7 +45,7 @@ public class CommentService {
      */
     @Transactional
     public CommentViewDto createComment(Long postId, CommentCreateDto commentCreateDto) {
-        log.debug("Создание комментария для поста с ID: {}", postId);
+        log.debug("Creating comment for post with ID: {}", postId);
         Post post = getPostById(postId);
         validateUserById(commentCreateDto.getAuthorId());
 
@@ -54,7 +54,7 @@ public class CommentService {
         comment.setCreatedAt(LocalDateTime.now());
 
         Comment savedComment = commentRepository.save(comment);
-        log.debug("Комментарий с ID: {} успешно создан", savedComment.getId());
+        log.debug("Comment with ID: {} successfully created", savedComment.getId());
 
         return commentMapper.toViewDto(savedComment);
     }
@@ -71,7 +71,7 @@ public class CommentService {
      */
     @Transactional
     public CommentViewDto updateComment(Long postId, Long commentId, CommentCreateDto commentCreateDto) {
-        log.debug("Обновление комментария с ID: {} для поста с ID: {}", commentId, postId);
+        log.debug("Updating comment with ID: {} for post with ID: {}", commentId, postId);
         Comment comment = getCommentById(commentId);
         validateCommentBelongsToPost(comment, postId, commentId);
 
@@ -79,7 +79,7 @@ public class CommentService {
         comment.setUpdatedAt(LocalDateTime.now());
 
         Comment updatedComment = commentRepository.save(comment);
-        log.debug("Комментарий с ID: {} успешно обновлен", updatedComment.getId());
+        log.debug("Comment with ID: {} successfully updated", updatedComment.getId());
 
         return commentMapper.toViewDto(updatedComment);
     }
@@ -92,9 +92,9 @@ public class CommentService {
      */
     @Transactional
     public List<CommentViewDto> getCommentsByPostId(Long postId) {
-        log.debug("Получение комментариев для поста с ID: {}", postId);
+        log.debug("Retrieving comments for post with ID: {}", postId);
         List<Comment> comments = commentRepository.findAllByPostId(postId);
-        log.info("Найдено {} комментариев для поста с ID: {}", comments.size(), postId);
+        log.info("Found {} comments for post with ID: {}", comments.size(), postId);
 
         return comments.stream()
                 .map(commentMapper::toViewDto)
@@ -111,12 +111,12 @@ public class CommentService {
      */
     @Transactional
     public void deleteComment(Long postId, Long commentId) {
-        log.debug("Удаление комментария с ID: {} для поста с ID: {}", commentId, postId);
+        log.debug("Deleting comment with ID: {} for post with ID: {}", commentId, postId);
         Comment comment = getCommentById(commentId);
         validateCommentBelongsToPost(comment, postId, commentId);
 
         commentRepository.delete(comment);
-        log.debug("Комментарий с ID: {} успешно удален", commentId);
+        log.debug("Comment with ID: {} successfully deleted", commentId);
     }
 
     /**
@@ -128,7 +128,7 @@ public class CommentService {
      */
     private Comment getCommentById(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Комментарий с ID " + commentId + " не найден"));
+                .orElseThrow(() -> new EntityNotFoundException("Comment with ID " + commentId + " not found"));
     }
 
     /**
@@ -141,8 +141,8 @@ public class CommentService {
      */
     private void validateCommentBelongsToPost(Comment comment, Long postId, Long commentId) {
         if (!comment.getPost().getId().equals(postId)) {
-            throw new DataValidationException("Комментарий с ID " + commentId
-                    + " не принадлежит посту с ID " + postId);
+            throw new DataValidationException("Comment with ID " + commentId
+                    + " doesn't belong to post with ID " + postId);
         }
     }
 
@@ -155,8 +155,7 @@ public class CommentService {
      */
     private Post getPostById(Long postId) {
         return postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + postId + " не найден"));
-
+                .orElseThrow(() -> new EntityNotFoundException("Post with ID " + postId + " not found"));
     }
 
     /**
@@ -168,8 +167,8 @@ public class CommentService {
     private void validateUserById(Long authorId) {
         UserDto userDto = userServiceClient.getUser(authorId);
         if (userDto == null) {
-            log.error("Пользователь с ID {} не найден", authorId);
-            throw new EntityNotFoundException("Пользователь с ID " + authorId + " не найден");
+            log.error("User with ID {} not found", authorId);
+            throw new EntityNotFoundException("User with ID " + authorId + " not found");
         }
     }
 }
