@@ -26,26 +26,27 @@ public class LikeServiceImpl implements LikeService {
     public List<UserDto> findAllUserWhoLikedPost(Long postId) {
         List<Like> likesToPost = likeRepository.findByPostId(postId);
         List<Long> userIds = likesToPost.stream().map(Like::getUserId).toList();
-        List<List<Long>> chunksIds = splitUserIds(userIds);
-        List<List<UserDto>> userDtos = new ArrayList<>();
-        for (List<Long> chunkIds : chunksIds) {
-            userDtos.add(userServiceClient.getUsersByIds(chunkIds));
-        }
-        return userDtos.stream().flatMap(List::stream).collect(Collectors.toList());
+        List<List<UserDto>> chunksUserDto = splitUsers(userIds);
+        return chunksUserDto.stream().flatMap(List::stream).collect(Collectors.toList());
     }
 
     @Override
     public List<UserDto> findAllUserWhoLikedComment(Long commentId) {
         List<Like> likesToPost = likeRepository.findByCommentId(commentId);
         List<Long> userIds = likesToPost.stream().map(Like::getUserId).toList();
-        return userServiceClient.getUsersByIds(userIds);
+        List<List<UserDto>> chunksUserDto = splitUsers(userIds);
+        return chunksUserDto.stream().flatMap(List::stream).collect(Collectors.toList());
     }
 
-    private List<List<Long>> splitUserIds(List<Long> ids) {
-        List<List<Long>> chunks = IntStream.range(0, (int) Math.ceil((double)ids.size() / maxNumberUsersInRequest))
+    private List<List<UserDto>> splitUsers(List<Long> ids) {
+        List<List<Long>> chunksIds = IntStream.range(0, (int) Math.ceil((double) ids.size() / maxNumberUsersInRequest))
                 .mapToObj(i -> ids.subList(i * maxNumberUsersInRequest,
                         Math.min(ids.size(), (i + 1) * maxNumberUsersInRequest)))
                 .toList();
-        return chunks;
+        List<List<UserDto>> chunksUserDto = new ArrayList<>();
+        for (List<Long> chunkIds : chunksIds) {
+            chunksUserDto.add(userServiceClient.getUsersByIds(chunkIds));
+        }
+        return chunksUserDto;
     }
 }
