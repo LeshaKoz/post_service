@@ -12,7 +12,7 @@ public interface AlbumService {
 
     List<AlbumResponseDto> getAlbumsByAuthorId(long authorId);
 
-    void updateAlbumVisibility(long id, AlbumVisibility albumVisibility);
+    AlbumResponseDto updateAlbumVisibility(long id, AlbumVisibility albumVisibility);
 
-    void addUsersForAccessAlbum(long id, AlbumUsersDto albumUsersDto);
+    List<Long> addUsersForAccessAlbum(long id, AlbumUsersDto albumUsersDto);
 }

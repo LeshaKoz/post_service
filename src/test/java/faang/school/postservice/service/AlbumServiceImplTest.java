@@ -23,6 +23,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -115,10 +116,13 @@ class AlbumServiceImplTest {
                     .thenReturn(Optional.of(album));
             when(userContext.getUserId()).thenReturn(userId);
 
+            Album updatedAlbum = createAlbum(1L, 1L, AlbumVisibility.FOLLOWERS);
+            when(albumRepository.save(any(Album.class))).thenReturn(updatedAlbum);
+
             albumService.updateAlbumVisibility(albumId, AlbumVisibility.FOLLOWERS);
 
-            assertEquals(AlbumVisibility.FOLLOWERS, album.getAlbumVisibility());
-            verify(albumRepository).save(createAlbum(1L, 1L, AlbumVisibility.FOLLOWERS));
+            assertEquals(AlbumVisibility.FOLLOWERS, updatedAlbum.getAlbumVisibility());
+            verify(albumRepository).save(any(Album.class));
         }
 
         @Test

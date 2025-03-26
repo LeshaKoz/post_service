@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -90,11 +92,17 @@ class AlbumControllerTest {
 
     @Test
     public void testUpdateAlbumVisibility() throws Exception {
-        doNothing().when(albumService).updateAlbumVisibility(eq(1L), eq(PUBLIC));
+        AlbumResponseDto expectedResponse = new AlbumResponseDto(1L, "Test Title", "Test Description", 100L);
+
+        when(albumService.updateAlbumVisibility(eq(1L), eq(PUBLIC))).thenReturn(expectedResponse);
 
         mockMvc.perform(put("/albums/{id}/visibility/{visibility}", 1L, PUBLIC.name()))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.title").value("Test Title"))
+                .andExpect(jsonPath("$.description").value("Test Description"))
+                .andExpect(jsonPath("$.authorId").value(100L));
     }
 
     @Test
@@ -112,8 +120,11 @@ class AlbumControllerTest {
     @Test
     public void testAddUsersForAccessAlbum() throws Exception {
         AlbumUsersDto dto = new AlbumUsersDto(Arrays.asList(1L, 2L));
-        doNothing().when(albumService).addUsersForAccessAlbum(eq(1L),
-                argThat(arg -> arg.usersIds().equals(dto.usersIds())));
+        List<Long> expectedResponse = dto.usersIds();
+
+        when(albumService.addUsersForAccessAlbum(eq(1L),
+                argThat(arg -> arg.usersIds().equals(dto.usersIds()))))
+                .thenReturn(expectedResponse);
 
         mockMvc.perform(put("/albums/{id}/add-users-for-access", 1L)
                         .contentType(MediaType.APPLICATION_JSON)

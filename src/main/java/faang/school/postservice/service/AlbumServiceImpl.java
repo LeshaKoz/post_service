@@ -10,7 +10,9 @@ import faang.school.postservice.model.AlbumVisibility;
 import faang.school.postservice.repository.AlbumRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,8 @@ import static java.util.stream.Collectors.toMap;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
+@Qualifier("albumServiceImpl")
 public class AlbumServiceImpl implements AlbumService {
 
     private final AlbumRepository albumRepository;
@@ -50,24 +54,26 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Transactional
     @Override
-    public void updateAlbumVisibility(long id, AlbumVisibility albumVisibility) {
+    public AlbumResponseDto updateAlbumVisibility(long id, AlbumVisibility albumVisibility) {
         Album album = albumRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Album with id = %d not found", id)));
         long userId = userContext.getUserId();
         validateAuthor(userId, album);
         album.setAlbumVisibility(albumVisibility);
-        albumRepository.save(album);
+        Album savedAlbum = albumRepository.save(album);
+        return albumVisibilities.get(savedAlbum.getAlbumVisibility()).apply(savedAlbum);
     }
 
     @Transactional
     @Override
-    public void addUsersForAccessAlbum(long albumId, AlbumUsersDto albumUsersDto) {
+    public List<Long> addUsersForAccessAlbum(long albumId, AlbumUsersDto albumUsersDto) {
         Album album = albumRepository.findById(albumId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Album with id = %d not found", albumId)));
         long userId = userContext.getUserId();
         validateAuthor(userId, album);
         checkVisibilityForAlbum(album);
         albumUsersDto.usersIds().forEach(id -> albumRepository.addUserForVisibilityAtAlbum(album.getId(), id));
+        return albumUsersDto.usersIds();
     }
 
     private void validateAuthor(long userId, Album album) {
