@@ -6,6 +6,8 @@ import java.util.List;
 import faang.school.postservice.model.Post;
 
 public interface PostService {
+    Post getPost(Long postId);
+    
     PostDto createPostDraft(PostDto postDto);
 
     PostDto publishPost(PostDto postDto);
@@ -23,6 +25,7 @@ public interface PostService {
     List<PostDto> getAuthorPublishedPosts(PostDto postDto);
 
     List<PostDto> getProjectPublishedPosts(PostDto postDto);
+
 
     Post getPostById(Long postId);
 }

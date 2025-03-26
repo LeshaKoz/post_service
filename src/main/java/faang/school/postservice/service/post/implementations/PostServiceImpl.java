@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post.implementations;
 
+import faang.school.postservice.exception.EntityNotFoundException
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostDto;
@@ -29,6 +30,10 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
 
+    @Override
+    public Post getPost(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException(postId));
     @Override
     public Post getPostById(Long postId) {
         return postRepository.findById(postId)
