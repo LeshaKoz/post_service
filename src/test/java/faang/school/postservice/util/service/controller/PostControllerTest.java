@@ -29,6 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest
 public class PostControllerTest {
     private final String REQUEST_URL = "/posts";
+    private final String PUBLISH_URL = REQUEST_URL + "/publish/{postId}";
+    private final String DRAFTS_BY_AUTHOR_URL = REQUEST_URL + "/drafts/author/{authorId}";
+    private final String DRAFTS_BY_PROJECT_URL = REQUEST_URL + "/drafts/project/{projectId}";
+    private final String PUBLISHED_BY_AUTHOR_URL = REQUEST_URL + "/published/author/{authorId}";
+    private final String PUBLISHED_BY_PROJECT_URL = REQUEST_URL + "/published/project/{projectId}";
+    private final String REQUEST_URL_POST_ID = REQUEST_URL + "/{postId}";
 
     private final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @MockBean
@@ -42,28 +48,17 @@ public class PostControllerTest {
         when(postService.create(any())).thenReturn(preparePostDto());
 
         mockMvc.perform(post(REQUEST_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void testPositivePublish()throws Exception {
+    void testPositivePublish() throws Exception {
         when(postService.publish(any())).thenReturn(preparePostDto());
 
-        mockMvc.perform(put(REQUEST_URL+"/publish/{postId}",1)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
-                .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void testPositiveUpdatePost()throws Exception {
-        when(postService.update(any(),any())).thenReturn(preparePostDto());
-
-        mockMvc.perform(put(REQUEST_URL+"/{postId}",1)
+        mockMvc.perform(put(PUBLISH_URL, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
@@ -71,29 +66,41 @@ public class PostControllerTest {
     }
 
     @Test
-    void testPositiveDeletePost()throws Exception {
+    void testPositiveUpdatePost() throws Exception {
+        when(postService.update(any(), any())).thenReturn(preparePostDto());
 
-        mockMvc.perform(delete(REQUEST_URL+"/{postId}",1)
+        mockMvc.perform(put(REQUEST_URL_POST_ID, 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
+                .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testPositiveDeletePost() throws Exception {
+
+        mockMvc.perform(delete(REQUEST_URL_POST_ID, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void testPositiveGetPost()throws Exception {
+    void testPositiveGetPost() throws Exception {
         when(postService.getPost(any())).thenReturn(preparePostDto());
 
-        mockMvc.perform(get(REQUEST_URL+"/{postId}",1)
+        mockMvc.perform(get(REQUEST_URL_POST_ID, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(preparePostDto())))
                 .andExpect(status().isOk());
     }
-@Test
-    void testPositiveGetDraftsByAuthor()throws Exception {
+
+    @Test
+    void testPositiveGetDraftsByAuthor() throws Exception {
         when(postService.findDraftsByAuthorId(any())).thenReturn(list());
 
-        mockMvc.perform(get(REQUEST_URL+"/drafts/author/{authorId}",1)
+        mockMvc.perform(get(DRAFTS_BY_AUTHOR_URL, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(OBJECT_MAPPER.writeValueAsString(list())))
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(list())))
@@ -101,10 +108,10 @@ public class PostControllerTest {
     }
 
     @Test
-    void testPositiveGetDraftsByProject()throws Exception {
+    void testPositiveGetDraftsByProject() throws Exception {
         when(postService.findDraftsByProjectId(any())).thenReturn(list());
 
-        mockMvc.perform(get(REQUEST_URL+"/drafts/project/{projectId}",1)
+        mockMvc.perform(get(DRAFTS_BY_PROJECT_URL, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(OBJECT_MAPPER.writeValueAsString(list())))
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(list())))
@@ -112,10 +119,10 @@ public class PostControllerTest {
     }
 
     @Test
-    void testPositiveGetPublishedByAuthor()throws Exception {
+    void testPositiveGetPublishedByAuthor() throws Exception {
         when(postService.findPublishedByAuthorId(any())).thenReturn(list());
 
-        mockMvc.perform(get(REQUEST_URL+"/published/author/{authorId}",1)
+        mockMvc.perform(get(PUBLISHED_BY_AUTHOR_URL, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(OBJECT_MAPPER.writeValueAsString(list())))
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(list())))
@@ -123,10 +130,10 @@ public class PostControllerTest {
     }
 
     @Test
-    void testPositiveGetPublishedByProject()throws Exception {
+    void testPositiveGetPublishedByProject() throws Exception {
         when(postService.findPublishedByProjectId(any())).thenReturn(list());
 
-        mockMvc.perform(get(REQUEST_URL+"/published/project/{projectId}",1)
+        mockMvc.perform(get(PUBLISHED_BY_PROJECT_URL, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(OBJECT_MAPPER.writeValueAsString(list())))
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(list())))
@@ -134,11 +141,11 @@ public class PostControllerTest {
     }
 
     private PostDto preparePostDto() {
-       return PostDto.builder()
-               .id(1L)
-               .authorId(1L)
-               .content("content")
-               .build();
+        return PostDto.builder()
+                .id(1L)
+                .authorId(1L)
+                .content("content")
+                .build();
     }
 
     private List<PostDto> list() {

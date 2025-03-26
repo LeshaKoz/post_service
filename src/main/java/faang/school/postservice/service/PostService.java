@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -69,10 +68,9 @@ public class PostService {
     }
 
     public PostDto publish(Long postId) {
-        Objects.requireNonNull(postId,"postId is null");
         Post post = takePost(postId);
         if (post.isPublished()) {
-            throw new PostAlreadyPublishedException("post is published");
+            throw new PostAlreadyPublishedException("Post with ID " + postId + " is already published.");
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
@@ -82,7 +80,6 @@ public class PostService {
     }
 
     public PostDto update(PostDto postDto, Long postId) {
-        Objects.requireNonNull(postId,"postId is null");
         validateContent(postDto);
         Post post = takePost(postId);
         post.setContent(postDto.content());
@@ -92,7 +89,6 @@ public class PostService {
     }
 
     public void deleteById(Long postId) {
-        Objects.requireNonNull(postId);
         Post post = takePost(postId);
         post.setDeleted(true);
         post.setPublished(false);
@@ -101,7 +97,6 @@ public class PostService {
     }
 
     public PostDto getPost(Long postId) {
-        Objects.requireNonNull(postId,"postId not null");
         Post post = takePost(postId);
         log.info("Post retrieved: {}", post);
         return postMapper.toDto(post);
@@ -140,9 +135,6 @@ public class PostService {
     }
 
     private void validateContent(PostDto postDto) {
-        if (postDto == null) {
-            throw new NullPointerException("postDto is null");
-        }
         if (postDto.content() == null || postDto.content().isBlank()) {
             throw new NullPointerException("Content is null or empty");
         }
