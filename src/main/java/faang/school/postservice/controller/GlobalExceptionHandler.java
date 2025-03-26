@@ -22,19 +22,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataValidationException.class)
     public ResponseEntity<String> handleDataValidationException(DataValidationException ex) {
         log.error(HANDLE_FORM, "валидации данных", ex.getMessage(), ex);
-        return BadRequest(ex);
+        return badRequest(ex);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException ex) {
         log.error(HANDLE_FORM, "отсутствия сущности", ex.getMessage(), ex);
-        return NotFound(ex);
+        return notFound(ex);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
         log.error(HANDLE_FORM, "нарушения ограничений", ex.getMessage(), ex);
-        return BadRequest(ex);
+        return badRequest(ex);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -52,18 +52,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         log.error(HANDLE_FORM, "в ходе работы программы", ex.getMessage(), ex);
-        return InternalServerError(ex);
+        return internalServerError(ex);
     }
 
-    private ResponseEntity<String> InternalServerError(Exception ex) {
+    private ResponseEntity<String> internalServerError(Exception ex) {
         return getResponse(ex, 500);
     }
 
-    private ResponseEntity<String> BadRequest(Exception ex) {
+    private ResponseEntity<String> badRequest(Exception ex) {
         return getResponse(ex, 400);
     }
 
-    private ResponseEntity<String> NotFound(Exception ex) {
+    private ResponseEntity<String> notFound(Exception ex) {
         return getResponse(ex, 404);
     }
 
