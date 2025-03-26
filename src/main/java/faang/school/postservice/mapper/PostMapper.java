@@ -5,6 +5,7 @@ import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.cache.PostCache;
 import faang.school.postservice.utils.StringUtils;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Condition;
@@ -55,4 +56,9 @@ public interface PostMapper {
     default boolean isNotNull(LocalDateTime value) {
         return value != null;
     }
+
+    @Mapping(target = "likesCount", expression = "java(post.getLikes().size())")
+    PostCache toCache (Post post);
+
+
 }

@@ -84,7 +84,10 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+
+        newsFeedService.addPostToCache(post);
         newsFeedService.addAuthorToCacheByPost(post);
+
         return postMapper.toDto(postRepository.save(post));
     }
 

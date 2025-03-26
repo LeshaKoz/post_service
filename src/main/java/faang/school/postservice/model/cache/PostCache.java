@@ -19,6 +19,6 @@ public class PostCache {
     private long id;
     private long authorId;
     private String content;
-    private int likesAmount;
+    private int likesCount;
     private LocalDateTime createdAt;
 }
