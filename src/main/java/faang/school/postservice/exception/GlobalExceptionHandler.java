@@ -32,5 +32,11 @@ public class GlobalExceptionHandler {
         log.warn("Comment error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
+    @ExceptionHandler(PostDtoValidationException.class)
+    public ResponseEntity<String> handleValidationException(PostDtoValidationException e) {
+        log.warn("Post dto validation exception: {}", e.getMessage());
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
 }
 
