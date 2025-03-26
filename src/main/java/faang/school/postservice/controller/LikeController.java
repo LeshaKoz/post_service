@@ -1,7 +1,7 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.service.like.LikeService;
+import faang.school.postservice.service.like.LikeServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +16,12 @@ import java.util.List;
 @RequestMapping("/likes")
 @RequiredArgsConstructor
 public class LikeController {
-    private final LikeService likeService;
+    private final LikeServiceImpl likeServiceImpl;
 
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<UserDto>> getLikesByPostId(@PathVariable Long postId) {
         try {
-            List<UserDto> users = likeService.getUserLikedPost(postId);
+            List<UserDto> users = likeServiceImpl.getUserLikedPost(postId);
             if (users.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(users);
@@ -37,7 +37,7 @@ public class LikeController {
     @GetMapping("/comment/{commentId}")
     public ResponseEntity<List<UserDto>> getLikesByCommentId(@PathVariable Long commentId) {
         try {
-            List<UserDto> users = likeService.getUserLikedComment(commentId);
+            List<UserDto> users = likeServiceImpl.getUserLikedComment(commentId);
             if (users.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(users);

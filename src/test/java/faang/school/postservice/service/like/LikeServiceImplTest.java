@@ -17,7 +17,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class LikeServiceTest {
+class LikeServiceImplTest {
 
     @Mock
     private LikeRepository likeRepository;
@@ -26,7 +26,7 @@ class LikeServiceTest {
     private UserServiceClient userServiceClient;
 
     @InjectMocks
-    private LikeService likeService;
+    private LikeServiceImpl likeServiceImpl;
 
     @BeforeEach
     void setUp() {
@@ -45,7 +45,7 @@ class LikeServiceTest {
         UserDto user2 = new UserDto(2L, "user2", "user2@example.com");
         when(userServiceClient.getUsersByIds(List.of(1L, 2L))).thenReturn(List.of(user1, user2));
 
-        List<UserDto> users = likeService.getUserLikedPost(postId);
+        List<UserDto> users = likeServiceImpl.getUserLikedPost(postId);
 
         assertNotNull(users);
         assertEquals(2, users.size());
@@ -65,7 +65,7 @@ class LikeServiceTest {
         UserDto user2 = new UserDto(2L, "user2", "user2@example.com");
         when(userServiceClient.getUsersByIds(List.of(1L, 2L))).thenReturn(List.of(user1, user2));
 
-        List<UserDto> users = likeService.getUserLikedComment(commentId);
+        List<UserDto> users = likeServiceImpl.getUserLikedComment(commentId);
 
         assertNotNull(users);
         assertEquals(2, users.size());
