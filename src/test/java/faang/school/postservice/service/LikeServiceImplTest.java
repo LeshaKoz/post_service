@@ -38,7 +38,7 @@ public class LikeServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(likeService, "maxNumberUsersInRequest", 2); // любое число
+        ReflectionTestUtils.setField(likeService, "maxNumberUsersInRequest", 2);
     }
 
     @Test
