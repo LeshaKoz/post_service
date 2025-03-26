@@ -6,6 +6,9 @@ import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.service.post.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -63,15 +66,11 @@ class PostControllerTest {
         expectedOkAndReturnDto(MockMvcRequestBuilders::post, "/post");
     }
 
-    @Test
-    public void testNotCreatingDraftPostWhenNullContent() throws Exception {
-        postDto.setContent(null);
-        expectedBadRequest(MockMvcRequestBuilders::post, "/post", invalidContentMsg);
-    }
-
-    @Test
-    public void testNotCreatingDraftPostWhenBlankContent() throws Exception {
-        postDto.setContent("  ");
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings={"  "})
+    public void testNotCreatingDraftPostWhenBlankContent(String content) throws Exception {
+        postDto.setContent(content);
         expectedBadRequest(MockMvcRequestBuilders::post, "/post", invalidContentMsg);
     }
 
@@ -130,7 +129,7 @@ class PostControllerTest {
 
     @Test
     public void testNotGetAllAuthorDraftPosts() throws Exception {
-        expectedBadRequest(MockMvcRequestBuilders::get, "/post/authors/-1/drafts",
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/authors/0/drafts",
                 "getAllAuthorDraftPosts.authorId: " + invalidIdMsg);
     }
 
@@ -142,7 +141,7 @@ class PostControllerTest {
 
     @Test
     public void testNotGetAllAuthorPosts() throws Exception {
-        expectedBadRequest(MockMvcRequestBuilders::get, "/post/authors/-1/public",
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/authors/0/public",
                 "getAllAuthorPosts.authorId: " + invalidIdMsg);
     }
 
@@ -154,7 +153,7 @@ class PostControllerTest {
 
     @Test
     public void testNotGetAllProjectDraftPosts() throws Exception {
-        expectedBadRequest(MockMvcRequestBuilders::get, "/post/projects/-1/drafts",
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/projects/0/drafts",
                 "getAllProjectDraftPosts.projectId: " + invalidIdMsg);
     }
 
@@ -166,7 +165,7 @@ class PostControllerTest {
 
     @Test
     public void testNotGetAllProjectPosts() throws Exception {
-        expectedBadRequest(MockMvcRequestBuilders::get, "/post/projects/-1/public",
+        expectedBadRequest(MockMvcRequestBuilders::get, "/post/projects/0/public",
                 "getAllProjectPosts.projectId: " + invalidIdMsg);
     }
 
