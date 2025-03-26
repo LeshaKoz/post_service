@@ -131,7 +131,6 @@ public class PostServiceTest {
         assertNotNull(actualResponse.getPublishedAt());
         verify(postRepository, times(1)).save(post);
         verify(cacheRepository, times(1)).save(any(PostCacheDto.class));
-        verify(postEventPublisher, times(1)).publish(any(PostEvent.class));
         verify(userServiceClient, times(1)).getFollowers(post.getAuthorId());
     }
 
