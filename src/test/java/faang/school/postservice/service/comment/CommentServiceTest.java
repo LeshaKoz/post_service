@@ -7,14 +7,15 @@ import faang.school.postservice.dto.comment.CommentFiltersDto;
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
-import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import faang.school.postservice.dto.user.UsersBanEvent;
 import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.UploadFileException;
-import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.mapper.comment.CommentMapperImpl;
 import faang.school.postservice.mapper.like.LikeMapperImpl;
+import faang.school.postservice.mapper.post.PostMapperImpl;
+import faang.school.postservice.mapper.user.UserDtoAdapter;
 import faang.school.postservice.message.event.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
@@ -39,24 +40,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static faang.school.postservice.service.comment.TestData.createComment;
-import static faang.school.postservice.service.comment.TestData.createCommentForBan;
-import static faang.school.postservice.service.comment.TestData.createCommentRequestDto;
-import static faang.school.postservice.service.comment.TestData.createLike;
-import static faang.school.postservice.service.comment.TestData.createPost;
-import static faang.school.postservice.service.comment.TestData.createUserDto;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static faang.school.postservice.service.comment.TestData.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
@@ -98,13 +85,16 @@ public class CommentServiceTest {
 
     @Mock
     private UsersBanPublisher usersBanPublisher;
+    @Spy
+    private UserDtoAdapter userDtoAdapterImpl;
 
     private long authorId;
     private long commentId;
     private long postId;
     private Post post;
     private Comment comment;
-    private UserDto userDto;
+    //private UserDto userDto;
+    private UserResponseDto userDto;
     private Like like1;
     private Like like2;
     private Like like3;
@@ -156,7 +146,8 @@ public class CommentServiceTest {
                 publisher,
                 null,
                 null,
-                usersBanPublisher);
+                usersBanPublisher,
+                userDtoAdapterImpl);
 
     }
 

@@ -13,6 +13,7 @@ import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.UploadFileException;
 import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.mapper.user.UserDtoAdapter;
 import faang.school.postservice.message.event.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -55,6 +56,7 @@ public class CommentServiceImpl implements CommentService {
     private final ExecutorService moderationExecutor;
     private final ModerationDictionary moderationDictionary;
     private final UsersBanPublisher usersBanPublisher;
+    private final UserDtoAdapter userDtoAdapter;
 
     @Value("${comment.batchSize}")
     private int batchSize;
@@ -178,7 +180,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private void validateUser(Long authorId) {
-        UserDto user = userServiceClient.getUser(authorId);
+        UserDto user = userDtoAdapter.toUserDto(userServiceClient.getUser(authorId));
         if (user == null) {
             throw new EntityNotFoundException(String.format("User with id %s not found", authorId));
         }

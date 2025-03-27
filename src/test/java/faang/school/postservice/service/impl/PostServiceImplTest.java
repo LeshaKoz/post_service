@@ -1,14 +1,16 @@
 package faang.school.postservice.service.impl;
 
+import faang.school.postservice.broker.producer.PostEventProducer;
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.filter.post.PostAuthorSpecification;
-import faang.school.postservice.filter.post.PostSpecificationFilter;
 import faang.school.postservice.filter.post.PostProjectSpecification;
 import faang.school.postservice.filter.post.PostPublishedSpecification;
-import faang.school.postservice.mapper.PostMapperImpl;
+import faang.school.postservice.filter.post.PostSpecificationFilter;
+import faang.school.postservice.mapper.post.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import org.junit.jupiter.api.Assertions;
@@ -37,12 +39,18 @@ class PostServiceImplTest {
     @Spy
     private PostMapperImpl postMapper;
     @Mock
-    ExecutorService executorService;
+    private ExecutorService executorService;
     @InjectMocks
     private PostServiceImpl postService;
+    @Mock
+    private PostEventProducer postEventProducer;
+    @Mock
+    private UserServiceClient userServiceClient;
+
     private PostCreateRequestDto postCreateRequestDto;
     private PostUpdateRequestDto postUpdateRequestDto;
     private final List<PostSpecificationFilter> postSpecificationFilters = new ArrayList<>();
+
 
     @BeforeEach
     void setUp() {
@@ -60,7 +68,9 @@ class PostServiceImplTest {
                 postServiceValidatorMock,
                 postMapper,
                 postSpecificationFilters,
-                executorService
+                executorService,
+                postEventProducer,
+                userServiceClient
         );
 
         postCreateRequestDto = PostCreateRequestDto.builder()

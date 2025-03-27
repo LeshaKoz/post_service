@@ -1,11 +1,14 @@
 package faang.school.postservice.service.impl;
 
+import faang.school.postservice.broker.producer.PostEventProducer;
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
+import faang.school.postservice.dto.user.subscription.SubscriptionUserDto;
 import faang.school.postservice.filter.post.PostSpecificationFilter;
-import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
@@ -15,6 +18,7 @@ import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,8 +38,11 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final List<PostSpecificationFilter> postSpecificationFilters;
     private final ExecutorService executorService;
+    private final PostEventProducer postEventProducer;
+    private final UserServiceClient userServiceClient;
 
     @Override
+    @Transactional
     public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
         postServiceValidator.validatePostDto(postCreateRequestDto);
         Post post = postMapper.toPostEntity(postCreateRequestDto);
@@ -45,17 +52,28 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponseDto publishPostDraft(Long postId) {
-        Post postToPublish = getPostById(postId);
-        postServiceValidator.validatePostBeforePublish(postToPublish);
-        postToPublish.setPublished(true);
-        postToPublish.setPublishedAt(LocalDateTime.now());
-        Post publishedPost = postRepository.save(postToPublish);
+        Post draftPostToPublish = getPostById(postId);
+        postServiceValidator.validatePostBeforePublish(draftPostToPublish);
+        draftPostToPublish.setPublished(true);
+        draftPostToPublish.setPublishedAt(LocalDateTime.now());
+        Post publishedPost = postRepository.save(draftPostToPublish);
         log.info("Draft post is published, id = {}", publishedPost.getId());
+
+        List<SubscriptionUserDto> followers = userServiceClient.getFollowers(publishedPost.getAuthorId());
+
+        List<Long> followersIds = followers.stream()
+                .map(SubscriptionUserDto::id)
+                .toList();
+
+        postEventProducer.producePublishPostEventAsync(publishedPost, followersIds);
+
         return postMapper.toPostResponseDto(publishedPost);
     }
 
     @Override
+    @Transactional
     public void publishScheduledPosts() {
         PostFilterDto postFilterDto = PostFilterDto.builder()
                 .isPublished(false)
@@ -102,6 +120,9 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> findAllByFilter(PostFilterDto filter) {
         return postMapper.toPostResponseDtos(findAllPostsByFilter(filter));
     }
+
+
+
 
     private List<Post> preparePostList(List<Post> posts) {
         return posts.stream()

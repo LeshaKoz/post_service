@@ -28,6 +28,27 @@ spring:
           name: user_ban
         comment-channel: comment_channel
         like-event-channel: like_event
+      cache:
+        ttl-minutes: 10
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: newsfeed
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "faang.school.postservice.dto.post"  # Пакет с DTO
+        spring.json.value.default.type: faang.school.postservice.dto.post.PostPublicationEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    topic:
+      posts-topic: posts
+      likes-topic: likes
+      comments-topic: comments
 
   mvc:
     servlet:
@@ -37,6 +58,12 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+
+  async:
+    core-pool-size: 5
+    max-pool-size: 20
+    queue-capacity: 30
+    thread-name-prefix: AsyncThread-
 
 server:
   port: 8081
@@ -85,8 +112,8 @@ comment:
   path-to-dictionary: /bad_words_list.txt
 
   schedule:
-    verify: "*/10 * * * * *"
-    user-ban: "*/30 * * * * *"
+    verify: "* */10 * * * *"    #каждые 10 сек // временно сделал каждые 10 минут
+    user-ban: "* */30 * * * *"  #каждые 10 сек // временно сделал каждые 30 минут
   batchSize: 100
   thread-pool-size: 4
   word-split-regex: "(?<=\\p{L})(?=\\p{P})|(?<=\\p{P})(?=\\p{L})|\\s+"
