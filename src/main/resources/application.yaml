@@ -34,6 +34,7 @@ spring:
           core-pool-size: 5
           max-pool-size: 10
           queue-capacity: 500
+          thread-name-prefix: cache-post-
 
   kafka:
     topics:
