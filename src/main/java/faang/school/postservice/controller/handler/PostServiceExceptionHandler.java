@@ -19,7 +19,7 @@ public class PostServiceExceptionHandler {
     private long maxRequestSize;
 
     @ExceptionHandler(FileValidationException.class)
-    public ResponseEntity<String> handleFileException(FileValidationException e) {
+    public ResponseEntity<String> handleFileValidationException(FileValidationException e) {
         String message = e.getMessage();
 
         log.error("FileException caught: {}", message);
