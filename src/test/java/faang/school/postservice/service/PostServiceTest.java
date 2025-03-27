@@ -62,7 +62,6 @@ public class PostServiceTest {
     private ResourseService resourseService;
     private KafkaTemplate<String, Long> kafkaTemplate;
     private PostEventPublisher postEventPublisher;
-    private UserServiceClient userServiceClient;
 
     @Captor
     private ArgumentCaptor<List<MultipartFile>> captor;
@@ -80,11 +79,8 @@ public class PostServiceTest {
         postEventPublisher = mock(PostEventPublisher.class);
         userServiceClient = mock(UserServiceClient.class);
 
-        postService = new PostService(postRepository, cacheRepository, kafkaTemplate,
-                postMapper, postValidator, resourseService, postEventPublisher, userServiceClient);
-        userServiceClient = mock(UserServiceClient.class);
         postService = new PostService(postRepository, cacheRepository, postAuthorCacheRepository, kafkaTemplate,
-                postMapper, userMapper, postValidator, resourseService, userServiceClient);
+                postMapper, userMapper, postValidator, resourseService, postEventPublisher, userServiceClient);
     }
 
     @Test
