@@ -1,15 +1,21 @@
 package faang.school.postservice;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
+import faang.school.postservice.dto.user.AuthorCacheDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.CommentMapper;
+import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.repository.RedisAuthorRepository;
 import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.validator.CommentValidator;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -19,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,11 +53,28 @@ public class CommentServiceTest {
     @Mock
     private CommentValidator commentValidator;
 
+    @Mock
+    private RedisAuthorRepository redisAuthorRepository;
+
+    @Mock
+    private UserServiceClient userServiceClient;
+
+    @Spy
+    private UserMapper userMapper = Mappers.getMapper(UserMapper.class);
+
     @Spy
     private CommentMapper commentMapper = Mappers.getMapper(CommentMapper.class);
 
     @Captor
     private ArgumentCaptor<Comment> commentCaptor;
+
+    @Captor
+    private ArgumentCaptor<AuthorCacheDto> authorDtoCaptor;
+
+    @BeforeEach
+    void init() {
+        ReflectionTestUtils.setField(commentService, "timeToLive", 24);
+    }
 
     @Test
     public void createComment_CommentNotFound() {
@@ -86,8 +110,11 @@ public class CommentServiceTest {
         comment.setAuthorId(request.getAuthorId());
         comment.setPost(post);
         comment.setContent("Title");
+        UserDto userDto = new UserDto(1L, "John", "John@mail.com");
+        AuthorCacheDto authorCacheDto = userMapper.toAuthorCacheDto(userDto);
         when(postService.getPost(request.getPostId())).thenReturn(post);
         when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+        when(userServiceClient.getUser(request.getAuthorId())).thenReturn(userDto);
 
         commentService.createComment(request);
 

@@ -1,17 +1,23 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentForListDto;
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.dto.comment.CreateCommentResponse;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
 import faang.school.postservice.dto.comment.UpdatedCommentResponse;
+import faang.school.postservice.dto.user.AuthorCacheDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.CommentMapper;
+import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.repository.RedisAuthorRepository;
 import faang.school.postservice.validator.CommentValidator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +32,12 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
     private final CommentValidator commentValidator;
+    private final RedisAuthorRepository redisAuthorRepository;
+    private final UserServiceClient userServiceClient;
+    private final UserMapper userMapper;
+
+    @Value("${spring.data.redis.properties.author-collection.hours-to-expire}")
+    private int timeToLive;
 
     @Transactional
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
@@ -35,6 +47,12 @@ public class CommentService {
 
         comment.setPost(post);
         Comment savedComment = commentRepository.save(comment);
+
+        UserDto authorDto = userServiceClient.getUser(savedComment.getAuthorId());
+        AuthorCacheDto authorCacheDto = userMapper.toAuthorCacheDto(authorDto);
+        authorCacheDto.setHoursToExpire(timeToLive);
+        redisAuthorRepository.save(authorCacheDto);
+
         return commentMapper.toCreateResponse(savedComment);
     }
 

@@ -5,13 +5,13 @@ import faang.school.postservice.dto.Post.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
-import faang.school.postservice.dto.user.PostAuthorCacheDto;
+import faang.school.postservice.dto.user.AuthorCacheDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.repository.RedisPostAuthorRepository;
+import faang.school.postservice.repository.RedisAuthorRepository;
 import faang.school.postservice.repository.RedisPostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,7 +39,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final RedisPostRepository postCacheRepository;
-    private final RedisPostAuthorRepository postAuthorCacheRepository;
+    private final RedisAuthorRepository postAuthorCacheRepository;
 
     private final KafkaTemplate<String, Long> kafkaTemplate;
 
@@ -77,9 +77,9 @@ public class PostService {
         postCacheRepository.save(postCacheDto);
 
         UserDto userDto = userServiceClient.getUser(post.getAuthorId());
-        PostAuthorCacheDto postAuthorCacheDto = userMapper.toPostAuthorCacheDto(userDto);
-        postAuthorCacheDto.setHoursToExpire(postAuthorHoursToExpire);
-        postAuthorCacheRepository.save(postAuthorCacheDto);
+        AuthorCacheDto authorCacheDto = userMapper.toAuthorCacheDto(userDto);
+        authorCacheDto.setHoursToExpire(postAuthorHoursToExpire);
+        postAuthorCacheRepository.save(authorCacheDto);
 
         return postMapper.toResponseDto(savedPost);
     }

@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 @RedisHash("Authors")
 @Data
 @Builder
-public class PostAuthorCacheDto implements Serializable {
+public class AuthorCacheDto implements Serializable {
     private Long id;
     private String username;
     private String email;
