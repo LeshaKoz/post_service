@@ -31,6 +31,9 @@ spring:
       cache:
         post:
           time-to-live: 86400
+          core-pool-size: 5
+          max-pool-size: 10
+          queue-capacity: 500
 
   kafka:
     topics:
