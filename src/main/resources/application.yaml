@@ -1,4 +1,7 @@
 spring:
+  multipart:
+    max-file-size: 5
+    max-request-size: 5
   mvc:
     servlet:
       path: /api/v1
@@ -53,3 +56,8 @@ s3:
   accessKey: user
   secretKey: password
   bucketName: corpbucket
+
+image:
+  resize-sizes:
+    - 1080
+    - 170
