@@ -1,6 +1,7 @@
 package faang.school.postservice.exception.handler;
 
 import faang.school.postservice.exception.BusinessException;
+import faang.school.postservice.exception.FileProcessingException;
 import jakarta.persistence.EntityNotFoundException;
 import faang.school.postservice.exception.DataValidationException;
 import org.springframework.http.HttpStatus;
@@ -39,5 +40,17 @@ public class GlobalExceptionHandler {
                 .map(error -> new Violation(error.getField(), error.getDefaultMessage()))
                 .toList()
         );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgumentException(IllegalArgumentException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(FileProcessingException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleFileProcessingException(FileProcessingException e) {
+        return new ErrorResponse(e.getMessage());
     }
 }
