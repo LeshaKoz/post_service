@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,14 +56,16 @@ public class LikeController {
     /**
      * Удаляет лайк с поста.
      *
-     * @param postId Идентификатор поста, с которого удаляется лайк.
+     * @param postId идентификатор поста, с которого нужно удалить лайк
+     * @return {@link ResponseEntity} с пустым телом и статусом {@code 204 No Content}
      */
     @DeleteMapping("/posts/{postId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unlikePost(@PathVariable
-                           @NotNull Long postId) {
+    public ResponseEntity<Void> unlikePost(@PathVariable
+                                           @NotNull Long postId) {
         long userId = userContext.getUserId();
         likeService.unlikePost(postId, userId);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -71,7 +74,7 @@ public class LikeController {
      * @param commentId Идентификатор комментария, к которому добавляется лайк.
      * @return Объект {@link LikeViewDto}, содержащий информацию о добавленном лайке.
      */
-    @PostMapping("/comment/{commentId}")
+    @PostMapping("/comments/{commentId}")
     public LikeViewDto likeComment(@PathVariable
                                    @NotNull Long commentId) {
         long userId = userContext.getUserId();
@@ -82,12 +85,14 @@ public class LikeController {
      * Удаляет лайк с комментария.
      *
      * @param commentId Идентификатор комментария, с которого удаляется лайк.
+     * @return {@link ResponseEntity} с пустым телом и статусом {@code 204 No Content}
      */
-    @DeleteMapping("/comment/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unlikeComment(@PathVariable
-                              @NotNull Long commentId) {
+    public ResponseEntity<Void> unlikeComment(@PathVariable
+                                              @NotNull Long commentId) {
         long userId = userContext.getUserId();
         likeService.unlikeComment(commentId, userId);
+        return ResponseEntity.noContent().build();
     }
 }
