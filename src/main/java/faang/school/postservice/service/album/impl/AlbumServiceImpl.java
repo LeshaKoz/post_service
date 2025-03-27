@@ -4,7 +4,7 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.album.AlbumFilterDto;
 import faang.school.postservice.dto.album.PostDto;
-import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.album.AlbumMapper;
 import faang.school.postservice.mapper.album.PostMapper;
 import faang.school.postservice.model.Album;
@@ -12,6 +12,8 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.album.AlbumRepository;
 import faang.school.postservice.service.album.AlbumService;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -48,15 +50,13 @@ public class AlbumServiceImpl implements AlbumService {
     @Override
     public AlbumDto addPost(long albumId, long userId, long postId) {
         Album album = albumRepository.findAlbumById(albumId);
+        Optional<Post> post = postRepository.findById(postId);
         checkIfAlbumExist(albumId);
         checkIfUserExist(userId);
-        Optional<Post> post = postRepository.findById(postId);
-        checkIfUserHaveAccess(userId, album);
-        if (post.isEmpty()) {
-            throw new RuntimeException("Post not found");
-        }
+        checkIfPostExist(postId);
+        checkIfUserHaveAccess(userId, albumId);
         if (album.getPosts().contains(post.get())) {
-            throw new RuntimeException("Post already exists in this album");
+            throw new EntityExistsException("Post already exists in this album");
         }
         album.addPost(post.get());
         albumRepository.save(album);
@@ -68,7 +68,7 @@ public class AlbumServiceImpl implements AlbumService {
         List<Album> allAlbums = albumRepository.findAll();
         Predicate<Album> albumPredicate = Album -> true;
         if (albumFilterDto.isPresent()) {
-            albumPredicate = doFiltration(albumPredicate, albumFilterDto.get());
+            albumPredicate = makePredicateFilter(albumPredicate, albumFilterDto.get());
         }
         return allAlbums.stream().filter(albumPredicate).map(albumMapper::toDto).collect(Collectors.toList());
     }
@@ -86,7 +86,7 @@ public class AlbumServiceImpl implements AlbumService {
         Predicate<Album> albumPredicate = Album -> true;
         checkIfUserExist(authorId);
         if (albumFilterDto.isPresent()) {
-            albumPredicate = doFiltration(albumPredicate, albumFilterDto.get());
+            albumPredicate = makePredicateFilter(albumPredicate, albumFilterDto.get());
         }
         return albums.stream().filter(albumPredicate).map(albumMapper::toDto).collect(Collectors.toList());
     }
@@ -102,6 +102,9 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumDto addAlbumToFavorites(long albumId, long userId) {
         checkIfAlbumExist(albumId);
         checkIfUserExist(userId);
+        if (!isNull(albumRepository.findAlbumInFavorites(albumId))) {
+            throw new EntityExistsException("This album is already in favorites");
+        }
         albumRepository.addAlbumToFavorite(albumId, userId);
         return albumMapper.toDto(albumRepository.findAlbumById(albumId));
     }
@@ -123,7 +126,7 @@ public class AlbumServiceImpl implements AlbumService {
         for (long favoriteAlbumId : favoriteAlbumIds) {
             favoriteAlbums.add(albumRepository.findAlbumById(favoriteAlbumId));
         }
-        albumPredicate = doFiltration(albumPredicate, albumFilterDto.get());
+        albumPredicate = makePredicateFilter(albumPredicate, albumFilterDto.get());
         return favoriteAlbums.stream().filter(albumPredicate).map(albumMapper::toDto).collect(Collectors.toList());
     }
 
@@ -131,12 +134,26 @@ public class AlbumServiceImpl implements AlbumService {
     public AlbumDto deleteAlbum(long albumId, long userId) {
         checkIfAlbumExist(albumId);
         checkIfUserExist(userId);
-        checkIfUserHaveAccess(userId, albumRepository.findAlbumById(albumId));
+        checkIfUserHaveAccess(userId, albumId);
         albumRepository.deleteAlbumById(albumId);
-        return null;
+        return albumMapper.toDto(albumRepository.findAlbumById(albumId));
     }
 
-    private Predicate<Album> doFiltration(Predicate<Album> albumPredicate, AlbumFilterDto albumFilterDto) {
+    @Override
+    public AlbumDto deletePost(long albumId, long userId, long postId) {
+        Album album = albumRepository.findAlbumById(albumId);
+        checkIfAlbumExist(albumId);
+        checkIfUserExist(userId);
+        checkIfPostExist(postId);
+        checkIfUserHaveAccess(userId, albumId);
+        if (album.getPosts().contains(postRepository.findById(postId).get())) {
+            throw new DataValidationException("Post is not in this album");
+        }
+        album.removePost(postId);
+        return albumMapper.toDto(album);
+    }
+
+    private Predicate<Album> makePredicateFilter(Predicate<Album> albumPredicate, AlbumFilterDto albumFilterDto) {
         String titleFilter = albumFilterDto.getTitle();
         LocalDate dateOfCreation = albumFilterDto.getDateOfCreation();
         if (!isNull(titleFilter)) {
@@ -150,19 +167,25 @@ public class AlbumServiceImpl implements AlbumService {
 
     private void checkIfAlbumExist(long albumId) {
         if (isNull(albumRepository.findAlbumById(albumId))) {
-            throw new RuntimeException("Album not found");
+            throw new EntityNotFoundException("Album not found");
         }
     }
 
     private void checkIfUserExist(long userId) {
         if (isNull(userServiceClient.getUser(userId))) {
-            throw new RuntimeException("User not found");
+            throw new EntityNotFoundException("User not found");
         }
     }
 
-    private void checkIfUserHaveAccess(long userId, Album album) {
-        if (album.getAuthorId() != userId) {
-            throw new RuntimeException("You don't have access to edit this album");
+    private void checkIfUserHaveAccess(long userId, long albumId) {
+        if (albumRepository.findAlbumById(albumId).getAuthorId() != userId) {
+            throw new DataValidationException("You don't have access to edit this album");
+        }
+    }
+
+    private void checkIfPostExist(long postId) {
+        if (postRepository.findById(postId).isEmpty()) {
+            throw new EntityNotFoundException("Post not found");
         }
     }
 }

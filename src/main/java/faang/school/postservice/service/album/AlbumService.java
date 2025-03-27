@@ -28,4 +28,6 @@ public interface AlbumService {
     public List<AlbumDto> findFavoriteAlbumsByUserId(long userId, Optional<AlbumFilterDto> albumFilterDto);
 
     public AlbumDto deleteAlbum(long albumId, long userId);
+
+    public AlbumDto deletePost(long albumId, long userId, long postId);
 }

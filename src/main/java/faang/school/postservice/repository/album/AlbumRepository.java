@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AlbumRepository extends JpaRepository<Album, Long> {
 
@@ -20,6 +21,9 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
 
     @Query(nativeQuery = true, value = "SELECT album_id FROM favorite_albums WHERE user_id = :userId")
     long[] findFavoriteAlbumIdsByUserId(long userId);
+
+    @Query(nativeQuery = true, value = "SELECT * FROM favorite_albums WHERE album_id = :albumId")
+    Album findAlbumInFavorites(long albumId);
 
     void deleteAlbumById(long id);
 }
