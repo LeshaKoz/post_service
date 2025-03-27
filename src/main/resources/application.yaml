@@ -38,15 +38,3 @@ payment-service:
   host: localhost
   port: 9080
 
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
