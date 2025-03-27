@@ -16,6 +16,7 @@ public interface LikeMapper {
 
     @Mapping(target = "authorId", source = "like.post.authorId")
     @Mapping(target = "postTitle", expression = "java(getPostBeginning(like))")
+    @Mapping(target = "postId", source = "like.post.id")
     LikeEvent toLikeEvent(Like like);
 
     default String getPostBeginning(Like like) {
