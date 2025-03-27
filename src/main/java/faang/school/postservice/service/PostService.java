@@ -1,12 +1,17 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.Post.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
+import faang.school.postservice.dto.user.PostAuthorCacheDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.RedisPostAuthorRepository;
 import faang.school.postservice.repository.RedisPostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,13 +34,21 @@ import java.util.function.Function;
 public class PostService {
     @Value("${spring.data.redis.properties.post-collection.hours-to-expire}")
     public long postHoursToExpire;
+    @Value("${spring.data.redis.properties.author-collection.hours-to-expire}")
+    private int postAuthorHoursToExpire;
 
     private final PostRepository postRepository;
     private final RedisPostRepository postCacheRepository;
+    private final RedisPostAuthorRepository postAuthorCacheRepository;
+
     private final KafkaTemplate<String, Long> kafkaTemplate;
+
     private final PostMapper postMapper;
+    private final UserMapper userMapper;
+
     private final PostValidator postValidator;
     private final ResourseService resourseService;
+    private final UserServiceClient userServiceClient;
 
     @Value("${author.banner.rejected_posts_to_ban}")
     private int rejectedPostsToBan;
@@ -62,6 +75,11 @@ public class PostService {
         PostCacheDto postCacheDto = postMapper.toCacheDto(savedPost);
         postCacheDto.setHoursToExpire(postHoursToExpire);
         postCacheRepository.save(postCacheDto);
+
+        UserDto userDto = userServiceClient.getUser(post.getAuthorId());
+        PostAuthorCacheDto postAuthorCacheDto = userMapper.toPostAuthorCacheDto(userDto);
+        postAuthorCacheDto.setHoursToExpire(postAuthorHoursToExpire);
+        postAuthorCacheRepository.save(postAuthorCacheDto);
 
         return postMapper.toResponseDto(savedPost);
     }

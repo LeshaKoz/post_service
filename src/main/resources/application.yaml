@@ -55,6 +55,8 @@ spring:
       properties:
         post-collection:
           hours-to-expire: 24
+        author-collection:
+          hours-to-expire: 24
 
 springdoc:
   packages-to-scan: faang.school.postservice.controller
