@@ -57,6 +57,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Find album by ID should return album DTO")
     public void testFindAlbumById() throws Exception {
         when(albumService.getAlbumById(eq(1L))).thenReturn(
                 new AlbumResponseDto(1L, "title", "description", 1L)
@@ -69,6 +70,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Find non-existent album by ID should return 404")
     void testFindNonExistentAlbumById() throws Exception {
         when(albumService.getAlbumById(999L)).thenThrow(new EntityNotFoundException("Album not found"));
 
@@ -79,6 +81,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Find albums by author ID should return album list")
     public void testFindAlbumsByAuthorId() throws Exception {
         when(albumService.getAlbumsByAuthorId(eq(1L))).thenReturn(
                 List.of(new AlbumResponseDto(1L, "title", "description", 1L))
@@ -91,6 +94,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Update album visibility should return updated album")
     public void testUpdateAlbumVisibility() throws Exception {
         AlbumResponseDto expectedResponse = new AlbumResponseDto(1L, "Test Title", "Test Description", 100L);
 
@@ -106,6 +110,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Update visibility for non-existent album should return 404")
     void testUpdateVisibilityForNonExistentAlbum() throws Exception {
         doThrow(new EntityNotFoundException("Album not found"))
                 .when(albumService).updateAlbumVisibility(eq(999L), eq(PUBLIC));
@@ -118,6 +123,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Add users for access to album should return updated user list")
     public void testAddUsersForAccessAlbum() throws Exception {
         AlbumUsersDto dto = new AlbumUsersDto(Arrays.asList(1L, 2L));
         List<Long> expectedResponse = dto.usersIds();
@@ -134,6 +140,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Add users to non-existent album should return 404")
     void testAddUsersToNonExistentAlbum() throws Exception {
         AlbumUsersDto dto = new AlbumUsersDto(List.of(1L, 2L));
         doThrow(new EntityNotFoundException("Album not found"))
@@ -147,6 +154,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Invalid ID format should return 400")
     void testInvalidIdFormat() throws Exception {
         mockMvc.perform(get("/albums/{id}", "invalid_id"))
                 .andDo(print())
@@ -154,6 +162,7 @@ class AlbumControllerTest {
     }
 
     @Test
+    @DisplayName("Invalid visibility value should return 400")
     void testInvalidVisibilityValue() throws Exception {
         mockMvc.perform(put("/albums/{id}/visibility/{visibility}", 1L, "INVALID_VISIBILITY"))
                 .andDo(print())
