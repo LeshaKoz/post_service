@@ -47,3 +47,9 @@ payment-service:
 post-service:
   tag:
     count-of-most-popular-tags: 2
+
+s3:
+  endpoint: http://localhost:9000
+  accessKey: user
+  secretKey: password
+  bucketName: projectbucket
