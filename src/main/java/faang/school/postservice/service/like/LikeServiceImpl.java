@@ -21,6 +21,9 @@ public class LikeServiceImpl implements LikeService {
     @Transactional
     public List<UserDto> getUserLikedPost(long postId) {
         List<Like> likes = likeRepository.findByPostId(postId);
+        if (likes.isEmpty()) {
+            throw new IllegalArgumentException("Не найдено лайков для поста с id: " + postId);
+        }
         List<Long> userIds = likes.stream()
                 .map(Like::getUserId)
                 .toList();
@@ -30,6 +33,9 @@ public class LikeServiceImpl implements LikeService {
     @Transactional
     public List<UserDto> getUserLikedComment(long commentId) {
         List<Like> likes = likeRepository.findByCommentId(commentId);
+        if (likes.isEmpty()) {
+            throw new IllegalArgumentException("Не найдено лайков для комментария с id: " + commentId);
+        }
         List<Long> userIds = likes.stream()
                 .map(Like::getUserId)
                 .toList();

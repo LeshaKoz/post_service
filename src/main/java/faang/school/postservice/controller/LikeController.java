@@ -19,34 +19,22 @@ public class LikeController {
     private final LikeServiceImpl likeServiceImpl;
 
     @GetMapping("/post/{postId}")
-    public ResponseEntity<List<UserDto>> getLikesByPostId(@PathVariable Long postId) {
-        try {
-            List<UserDto> users = likeServiceImpl.getUserLikedPost(postId);
-            if (users.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(users);
-            }
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+    public ResponseEntity<List<UserDto>> getLikesByPostId(@PathVariable("postId") Long postId) {
+        List<UserDto> users = likeServiceImpl.getUserLikedPost(postId);
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(users);
         }
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/comment/{commentId}")
-    public ResponseEntity<List<UserDto>> getLikesByCommentId(@PathVariable Long commentId) {
-        try {
-            List<UserDto> users = likeServiceImpl.getUserLikedComment(commentId);
-            if (users.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(users);
-            }
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+    public ResponseEntity<List<UserDto>> getLikesByCommentId(@PathVariable("commentId") Long commentId) {
+        List<UserDto> users = likeServiceImpl.getUserLikedComment(commentId);
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(users);
         }
+        return ResponseEntity.ok(users);
     }
 }
