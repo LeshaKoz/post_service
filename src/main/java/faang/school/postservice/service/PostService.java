@@ -5,8 +5,10 @@ import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ReadPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
+import faang.school.postservice.event.PostEvent;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.PostEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.corrector.PostCorrector;
 import faang.school.postservice.service.moderate.ModerationService;
@@ -36,6 +38,7 @@ public class PostService {
     private final PostCorrector postCorrector;
     private final ModerationService moderationService;
     private final AsyncConfig asyncConfig;
+    private final PostEventPublisher postEventPublisher;
 
     public Post findById(@NotNull Long id) {
         return postRepository.findById(id)
@@ -114,6 +117,11 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
 
         Post updatedPost = postRepository.save(post);
+        PostEvent event = PostEvent.builder()
+                .authorId(updatedPost.getAuthorId())
+                .postId(updatedPost.getId())
+                .build();
+        postEventPublisher.publish(event);
 
         return postMapper.toDto(updatedPost);
     }
