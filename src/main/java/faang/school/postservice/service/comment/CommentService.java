@@ -8,6 +8,9 @@ import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import feign.FeignException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,37 +31,53 @@ public class CommentService {
     private final CommentMapper commentMapper;
 
     @Transactional
-    public CommentDto createComment(CommentDto commentDto) {
+    public CommentDto createComment(@Valid CommentDto commentDto) {
         log.info("Creating a comment for post ID: {} by user ID: {}", commentDto.getPostId(), commentDto.getAuthorId());
+
         if (!postRepository.existsById(commentDto.getPostId())) {
-            throw new DataValidationException("Post with ID " + commentDto.getPostId() + " does not exist.");
+            throw new EntityNotFoundException("Post with ID " + commentDto.getPostId() + " does not exist.");
         }
-        UserDto userDto = userServiceClient.getUser(commentDto.getAuthorId());
-        if (userDto == null) {
-            throw new DataValidationException("User not found with ID: " + commentDto.getAuthorId());
+
+        try {
+            UserDto userDto = userServiceClient.getUser(commentDto.getAuthorId());
+            if (userDto == null) {
+                throw new EntityNotFoundException("User not found with ID: " + commentDto.getAuthorId());
+            }
+
+            Comment comment = commentMapper.toEntity(commentDto);
+            Comment savedComment = commentRepository.save(comment);
+            log.info("Comment created with ID: {}", savedComment.getId());
+            return commentMapper.toDto(savedComment);
+
+        } catch (FeignException e) {
+            log.error("Error while fetching user from userService: {}", e.getMessage());
+            throw new EntityNotFoundException("Error while verifying user existence: " + e.getMessage());
         }
-        LocalDateTime createdAt = LocalDateTime.now();
-        Comment comment = commentMapper.toEntity(commentDto, createdAt);
-        Comment savedComment = commentRepository.save(comment);
-        log.info("Comment created with ID: {}", savedComment.getId());
-        return commentMapper.toDto(savedComment);
     }
 
-    @Transactional
-    public CommentDto updateComment(CommentDto commentDto) {
-        log.info("Updating comment with ID: {}", commentDto.getId());
-        Comment existingComment = commentRepository.findById(commentDto.getId())
-                .orElseThrow(() -> new DataValidationException("Comment with ID " + commentDto.getId() + " does not exist."));
+    public CommentDto updateComment(long commentId, CommentDto commentDto) {
+        log.info("Updating comment with ID: {}", commentId);
 
-        existingComment.setContent(commentDto.getContent());
-        existingComment.setUpdatedAt(LocalDateTime.now());
+        Comment existingComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalStateException("Comment not found with ID: " + commentId));
+
+        if (!existingComment.getAuthorId().equals(commentDto.getAuthorId())) {
+            throw new IllegalArgumentException("Only the author of the comment can update it.");
+        }
+
+        if (commentDto.getContent() != null && !commentDto.getContent().isBlank()) {
+            existingComment.setContent(commentDto.getContent());
+            existingComment.setUpdatedAt(LocalDateTime.now());
+        } else {
+            throw new IllegalArgumentException("Content cannot be blank.");
+        }
 
         Comment updatedComment = commentRepository.save(existingComment);
-        log.info("Comment with ID: {} updated successfully.", commentDto.getId());
+        log.info("Comment with ID: {} updated successfully.", commentId);
+
         return commentMapper.toDto(updatedComment);
     }
 
-    @Transactional
     public List<CommentDto> getAllCommentsByPostId(long postId) {
         log.info("Fetching comments for post ID: {} in chronological order", postId);
         List<Comment> comments = commentRepository.findAllByPostId(postId);
@@ -69,16 +88,13 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteComment(long commentId, long postId) {
+    public void deleteComment(long commentId) {
         log.info("Deleting comment with ID: {}", commentId);
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new DataValidationException("Comment not found with ID: " + commentId));
-
-        if (comment.getPost().getId() != postId) {
-            throw new DataValidationException("Comment with ID " + commentId + " does not belong to post with ID " + postId);
+        if (!commentRepository.existsById(commentId)) {
+            throw new EntityNotFoundException("Comment not found with ID: " + commentId);
         }
 
-        commentRepository.deleteById(commentId);
+                commentRepository.deleteById(commentId);
         log.info("Comment with ID: {} has been deleted.", commentId);
     }
 }

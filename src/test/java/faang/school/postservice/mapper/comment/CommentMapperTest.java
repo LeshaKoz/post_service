@@ -19,9 +19,7 @@ public class CommentMapperTest {
         commentDto.setPostId(1L);
         commentDto.setContent("Test content");
 
-        LocalDateTime createdAt = LocalDateTime.now();
-
-        Comment comment = commentMapper.toEntity(commentDto, createdAt);
+        Comment comment = commentMapper.toEntity(commentDto);
 
         assertNotNull(comment);
         assertEquals(commentDto.getPostId(), comment.getPost().getId());
