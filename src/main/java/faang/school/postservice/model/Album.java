@@ -57,5 +57,11 @@ public class Album {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public void addPost(Post post) {
+        posts.add(post);
+    }
 
+    public void removePost(long postId) {
+        posts.removeIf(post -> post.getId() == postId);
+    }
 }

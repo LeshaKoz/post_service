@@ -10,5 +10,4 @@ public class AlbumDto {
     private Long id;
     private String title;
     private String description;
-    private boolean isFavorite = false;
 }
