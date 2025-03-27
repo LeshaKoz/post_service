@@ -1,6 +1,6 @@
 package faang.school.postservice.controller.handler;
 
-import faang.school.postservice.exception.FileException;
+import faang.school.postservice.exception.FileValidationException;
 import faang.school.postservice.exception.S3Exception;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
@@ -18,8 +18,8 @@ public class PostServiceExceptionHandler {
     @Value("${spring.multipart.max-request-size}")
     private long maxRequestSize;
 
-    @ExceptionHandler(FileException.class)
-    public ResponseEntity<String> handleFileException(FileException e) {
+    @ExceptionHandler(FileValidationException.class)
+    public ResponseEntity<String> handleFileException(FileValidationException e) {
         String message = e.getMessage();
 
         log.error("FileException caught: {}", message);

@@ -2,7 +2,7 @@ package faang.school.postservice.service.resource;
 
 import faang.school.postservice.dto.resource.ResourceResponseDto;
 import faang.school.postservice.dto.resource.S3UploadDto;
-import faang.school.postservice.exception.FileException;
+import faang.school.postservice.exception.FileValidationException;
 import faang.school.postservice.mapper.ResourceMapper;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.ResourceRepository;
@@ -46,7 +46,7 @@ public class ResourceServiceImpl implements ResourceService {
 
         String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
         if (!ThumbnailatorUtils.isSupportedOutputFormat(fileExtension)) {
-            throw new FileException("Unsupported file extension: " + fileExtension);
+            throw new FileValidationException("Unsupported file extension: " + fileExtension);
         }
 
         List<S3UploadDto> s3UploadDtos = new ArrayList<>();
@@ -84,7 +84,7 @@ public class ResourceServiceImpl implements ResourceService {
 
         String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
         if (ThumbnailatorUtils.isSupportedOutputFormat(fileExtension)) {
-            throw new FileException("Use another endpoint for upload images: " + fileExtension);
+            throw new FileValidationException("Use another endpoint for upload images: " + fileExtension);
         }
 
         byte[] bytes = getBytes(file);
@@ -153,7 +153,7 @@ public class ResourceServiceImpl implements ResourceService {
 
     private void validateFileName(String fileName) {
         if (fileName == null || fileName.isBlank() || !fileName.contains(".")) {
-            throw new FileException("Something went wrong with file: " + fileName);
+            throw new FileValidationException("Something went wrong with file: " + fileName);
         }
     }
 
