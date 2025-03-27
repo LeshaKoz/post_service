@@ -82,6 +82,11 @@ public class ResourceServiceImpl implements ResourceService {
         String fileName = file.getOriginalFilename();
         validateFileName(fileName);
 
+        String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        if (ThumbnailatorUtils.isSupportedOutputFormat(fileExtension)) {
+            throw new FileException("Use another endpoint for upload images: " + fileExtension);
+        }
+
         byte[] bytes = getBytes(file);
         Resource uploadedResource = upload(postId, file.getSize(), fileName, fileContentType, bytes);
         log.debug("Resource with name: {} uploaded to S3 successfully", fileName);
@@ -109,16 +114,14 @@ public class ResourceServiceImpl implements ResourceService {
     public ResponseEntity<Void> deleteResource(Long resourceId) {
         s3Service.deleteResource(getResourceKey(resourceId));
         resourceRepository.deleteResourceById(resourceId);
-
-        log.error("Resource: {} deleted successfully", resourceId);
-
+        log.debug("Resource: {} deleted successfully", resourceId);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     private Resource upload(Long postId, long fileSize, String fileName, String contentType, byte[] fileBytes) {
         Resource uploadedResource = s3Service.uploadResource(
                 new S3UploadDto(postId, fileSize, fileName, contentType, fileBytes));
-        log.error("Resource with name: {} uploaded successfully", fileName);
+        log.debug("Resource with name: {} uploaded successfully", fileName);
         return uploadedResource;
     }
 
