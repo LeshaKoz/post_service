@@ -28,6 +28,10 @@ spring:
           name: user_ban
         comment-channel: comment_channel
         like-event-channel: like_event
+      cache:
+        feedMaxSize: 500
+        pageSize: 20
+        ttl: 86400
 
   mvc:
     servlet:
