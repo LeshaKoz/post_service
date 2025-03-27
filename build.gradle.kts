@@ -46,6 +46,18 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
     /**
+     * Files
+     */
+    implementation("net.coobird:thumbnailator:0.4.14")
+    implementation("org.apache.tika:tika-core:2.9.1")
+
+    /**
+     * Amazon S3
+     */
+    implementation("com.amazonaws:aws-java-sdk-s3:1.12.464")
+    implementation("io.minio:minio:8.3.3")
+
+    /**
      * Test containers
      */
     implementation(platform("org.testcontainers:testcontainers-bom:1.17.6"))
