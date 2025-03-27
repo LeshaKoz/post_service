@@ -41,6 +41,8 @@ spring:
         name: "like_topic"
         partitions: 10
         replicas: 1
+      comment:
+        name: "comments"
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml

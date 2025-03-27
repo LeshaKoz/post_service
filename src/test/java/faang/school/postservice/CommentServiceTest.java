@@ -2,8 +2,10 @@ package faang.school.postservice;
 
 import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
+import faang.school.postservice.kafka.CommentEventPublisher;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.CommentEvent;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.CommentService;
@@ -45,6 +47,9 @@ public class CommentServiceTest {
 
     @Mock
     private CommentValidator commentValidator;
+
+    @Mock
+    private CommentEventPublisher commentEventPublisher;
 
     @Spy
     private CommentMapper commentMapper = Mappers.getMapper(CommentMapper.class);
@@ -92,6 +97,7 @@ public class CommentServiceTest {
         commentService.createComment(request);
 
         verify(commentRepository, times(1)).save(commentCaptor.capture());
+        verify(commentEventPublisher, times(1)).publish(any(CommentEvent.class));
 
     }
 

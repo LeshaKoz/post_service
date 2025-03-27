@@ -5,8 +5,10 @@ import faang.school.postservice.dto.comment.CreateCommentRequest;
 import faang.school.postservice.dto.comment.CreateCommentResponse;
 import faang.school.postservice.dto.comment.UpdateCommentRequest;
 import faang.school.postservice.dto.comment.UpdatedCommentResponse;
+import faang.school.postservice.kafka.CommentEventPublisher;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.CommentEvent;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.validator.CommentValidator;
@@ -26,15 +28,24 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
     private final CommentValidator commentValidator;
+    private final CommentEventPublisher commentEventPublisher;
 
     @Transactional
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
-        Post post = postService.getPost(createCommentRequest.getPostId());
+        Long postId = createCommentRequest.getPostId();
+        Post post = postService.getPost(postId);
         Comment comment = commentMapper.toEntity(createCommentRequest);
         commentValidator.verificationCreatingData(comment);
 
         comment.setPost(post);
         Comment savedComment = commentRepository.save(comment);
+
+        commentEventPublisher.publish(new CommentEvent(
+                savedComment.getId(),
+                postId,
+                savedComment.getAuthorId())
+        );
+
         return commentMapper.toCreateResponse(savedComment);
     }
 
