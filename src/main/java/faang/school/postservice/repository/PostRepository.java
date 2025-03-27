@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PostRepository extends CrudRepository<Post, Long>, JpaSpecificationExecutor<Post> {
@@ -21,4 +22,12 @@ public interface PostRepository extends CrudRepository<Post, Long>, JpaSpecifica
 
     @Query("SELECT p FROM Post p WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
+
+    @Query(value = "SELECT * FROM post p " +
+            "WHERE p.author_id IN (:authorIds) " +
+            "AND p.deleted = false " +
+            "AND (:lastSeenDate IS NULL OR p.published_at < :lastSeenDate)" +
+            "ORDER BY p.published_at DESC " +
+            "LIMIT :quantity", nativeQuery = true)
+    List<Post> findPostsForFeed(List<Long> authorIds, LocalDateTime lastSeenDate, int quantity);
 }
