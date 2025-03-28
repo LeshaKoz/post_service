@@ -7,7 +7,7 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.FileProcessException;
 import faang.school.postservice.exception.ForbiddenException;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.service.file.FileDataDetectionService;
+import faang.school.postservice.service.file.implementations.FileDataDetectionServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +22,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class PostFileValidator {
     private final PostFileUploadRequirements postFileUploadRequirements;
-    private final FileDataDetectionService fileDataDetectionService;
+    private final FileDataDetectionServiceImpl fileDataDetectionService;
 
     public void validateUploadFilesAmount(List<MultipartFile> files) {
         int minFileUploadAmount = postFileUploadRequirements.getMinAmount();

@@ -8,7 +8,7 @@ import faang.school.postservice.exception.FileProcessException;
 import faang.school.postservice.mapper.post_file.PostFileMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.service.amazons3.AmazonS3Service;
+import faang.school.postservice.service.amazons3.implementations.AmazonS3ServiceImpl;
 import faang.school.postservice.service.post.interfaces.PostService;
 import faang.school.postservice.service.post_file.interfaces.PostFileService;
 import faang.school.postservice.service.resource.interfaces.ResourceService;
@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -33,9 +34,10 @@ public class PostFileServiceImpl implements PostFileService {
     private final PostFileValidator postFileValidator;
     private final PostService postService;
     private final ResourceService resourceService;
-    private final AmazonS3Service amazonS3Service;
+    private final AmazonS3ServiceImpl amazonS3Service;
 
     @Override
+    @Transactional
     public void uploadFilesToPost(long postId, List<MultipartFile> files) {
         long requesterId = userContext.getUserId();
         log.info("Received request from user with id {} to upload files to post with id {}", requesterId, postId);
@@ -58,6 +60,7 @@ public class PostFileServiceImpl implements PostFileService {
     }
 
     @Override
+    @Transactional
     public List<PostFileDto> getPostFilesInfo(long postId) {
         long requesterId = userContext.getUserId();
         log.info("Received request from user with id {} to get files info by post id {}", requesterId, postId);
@@ -69,6 +72,7 @@ public class PostFileServiceImpl implements PostFileService {
     }
 
     @Override
+    @Transactional
     public void deletePostFile(long postId, long fileId) {
         long requesterId = userContext.getUserId();
         log.info("Received request from user with id {} to delete file with id {} from post with id {}",
@@ -85,6 +89,7 @@ public class PostFileServiceImpl implements PostFileService {
     }
 
     @Override
+    @Transactional
     public FileMetaData downloadFile(long postId, long fileId) {
         long requesterId = userContext.getUserId();
         log.info("Received request from user with id {} to download file with id {} from post with id {}",

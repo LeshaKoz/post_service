@@ -1,6 +1,7 @@
-package faang.school.postservice.service.file;
+package faang.school.postservice.service.file.implementations;
 
 import faang.school.postservice.dto.file.FileMetaData;
+import faang.school.postservice.service.file.interfaces.FileDataDetectionService;
 import lombok.RequiredArgsConstructor;
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
@@ -12,10 +13,11 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
-public class FileDataDetectionService {
+public class FileDataDetectionServiceImpl implements FileDataDetectionService {
     private static final Pattern BEFORE_AND_AFTER_SLASH_PATTERN = Pattern.compile("([^/]+)/([^/]+)");
     private final Tika tika;
 
+    @Override
     public FileMetaData detect(MultipartFile file) throws IOException {
         byte[] fileData = file.getBytes();
         String typeWithExtension = tika.detect(file.getInputStream());

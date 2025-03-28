@@ -1,5 +1,6 @@
-package faang.school.postservice.service.file;
+package faang.school.postservice.service.file.implementations;
 
+import faang.school.postservice.service.file.interfaces.ImageCompressionService;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,7 @@ import java.io.IOException;
 import java.util.Objects;
 
 @Service
-public class ImageCompressionService {
+public class ImageCompressionServiceImpl implements ImageCompressionService {
     @Value("${file-upload.post.image-size-limits.square.max-length}")
     private int maxSquareLength;
 
@@ -22,6 +23,7 @@ public class ImageCompressionService {
     @Value("${file-upload.post.image-size-limits.rectangular.max-short-side-length}")
     private int maxRectangularShortSideLength;
 
+    @Override
     public byte[] compressImage(byte[] data, String extension) throws IOException {
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(data));
         if (Objects.isNull(image)) {

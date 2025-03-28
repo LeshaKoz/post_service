@@ -1,4 +1,4 @@
-package faang.school.postservice.service.amazons3;
+package faang.school.postservice.service.amazons3.implementations;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
@@ -8,7 +8,8 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import faang.school.postservice.dto.file.FileMetaData;
 import faang.school.postservice.exception.FileProcessException;
-import faang.school.postservice.service.file.ImageCompressionService;
+import faang.school.postservice.service.amazons3.interfaces.AmazonS3Service;
+import faang.school.postservice.service.file.implementations.ImageCompressionServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,13 +26,14 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AmazonS3Service {
+public class AmazonS3ServiceImpl implements AmazonS3Service {
     private static final String IMAGE_TYPE = "image";
     private final AmazonS3 amazonS3Client;
-    private final ImageCompressionService imageCompressionService;
+    private final ImageCompressionServiceImpl imageCompressionService;
     @Value("${s3.bucket-name}")
     private String bucketName;
 
+    @Override
     @Async("fileUploadTaskExecutor")
     public CompletableFuture<Pair<String, FileMetaData>> uploadFile(FileMetaData fileMetaData, String folder) {
         log.info("Starting uploading file named {} to folder named {}", fileMetaData.getOriginalName(), folder);
@@ -52,6 +54,7 @@ public class AmazonS3Service {
         }
     }
 
+    @Override
     public void deleteFile(String fileKey) {
         log.info("Starting deleting file with key '{}'", fileKey);
         try {
@@ -62,6 +65,7 @@ public class AmazonS3Service {
         }
     }
 
+    @Override
     public S3Object getFileFromS3(String fileKey) {
         log.info("Starting downloading file with key {}", fileKey);
         try {
