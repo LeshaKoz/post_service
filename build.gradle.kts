@@ -64,20 +64,15 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 tasks.withType<Test> {
     useJUnitPlatform()
+    testLogging.showStandardStreams = true
+    finalizedBy(tasks.jacocoTestReport)
 }
-
-val test by tasks.getting(Test::class) { testLogging.showStandardStreams = true }
 
 tasks.bootJar {
     archiveFileName.set("service.jar")
 }
-
 
 /**
  * Jacoco settings
@@ -88,13 +83,12 @@ val jacocoInclude = listOf(
     "**/validation/**"
 )
 
-val minCoverage = "0.45".toBigDecimal();
-
-tasks.test {
-    finalizedBy(tasks.jacocoTestReport)
+jacoco {
+    toolVersion = "0.8.9"
 }
 
 tasks.jacocoTestReport {
+    dependsOn(tasks.test)
     reports {
         xml.required.set(true)
         html.required.set(true)
@@ -107,12 +101,23 @@ tasks.jacocoTestReport {
 }
 
 tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            include(jacocoInclude)
+        }
+    )
     violationRules {
         rule {
             element = "CLASS"
             limit {
-                minimum = minCoverage
+                minimum = "0.45".toBigDecimal()
             }
+            includes = jacocoInclude
         }
     }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
