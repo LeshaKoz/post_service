@@ -1,6 +1,7 @@
 package faang.school.postservice.service.like.implementations;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.exception.AuthorNotFoundException;
 import faang.school.postservice.exception.CommentNotFoundException;
@@ -36,6 +37,7 @@ public class LikeServiceImpl implements LikeService {
     private final UserServiceClient userServiceClient;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final UserContext userContext;
 
     private void checkLikeExistence(long entityId, long userId,
                                     BiFunction<Long, Long, Optional<Like>> findLikeEntityFunction,
@@ -59,8 +61,9 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     @Transactional
-    public LikeDto likePost(long postId, long userId) {
+    public LikeDto likePost(long postId) {
         Post post = checkPostId(postId);
+        long userId = userContext.getUserId();
         checkAuthor(userId);
         checkLikeExistence(postId, userId, likeRepository::findByPostIdAndUserId, "post");
         Like like = Like.builder().userId(userId).post(post).build();
@@ -69,14 +72,15 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     @Transactional
-    public void unlikePost(long postId, long userId) {
-        removeLike(postId, userId, likeRepository::findByPostIdAndUserId, "post");
+    public void unlikePost(long postId) {
+        removeLike(postId, userContext.getUserId(), likeRepository::findByPostIdAndUserId, "post");
     }
 
     @Override
     @Transactional
-    public LikeDto likeComment(long commentId, long userId) {
+    public LikeDto likeComment(long commentId) {
         Comment comment = checkCommentId(commentId);
+        long userId = userContext.getUserId();
         checkAuthor(userId);
         checkLikeExistence(commentId, userId, likeRepository::findByCommentIdAndUserId, "comment");
 
@@ -86,8 +90,8 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     @Transactional
-    public void unlikeComment(long commentId, long userId) {
-        removeLike(commentId, userId, likeRepository::findByCommentIdAndUserId, "comment");
+    public void unlikeComment(long commentId) {
+        removeLike(commentId, userContext.getUserId(), likeRepository::findByCommentIdAndUserId, "comment");
     }
 
     private <T> T checkEntityId(long entityId,
