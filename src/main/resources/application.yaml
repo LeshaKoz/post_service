@@ -118,3 +118,8 @@ comment:
   thread-pool-size: 4
   word-split-regex: "(?<=\\p{L})(?=\\p{P})|(?<=\\p{P})(?=\\p{L})|\\s+"
   number-bad-comments: 5
+
+newsfeed:
+  prefix: newsfeed8
+  max-posts: 10
+  page-size: 5
