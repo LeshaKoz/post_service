@@ -22,7 +22,7 @@ public class KafkaFeedPostProducer {
     private final UserServiceClient userServiceClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${spring.kafka.producer.news-feed.post-followers-batch-max-size}")
+    @Value("A${spring.kafka.producer.news-feed.post-followers-batch-max-size}")
     private int postFollowersBatchMaxSize;
 
     @Value("${spring.kafka.topics.post-create-event}")
@@ -36,7 +36,7 @@ public class KafkaFeedPostProducer {
 
         while (followersIds.size() > postFollowersBatchMaxSize) {
             List<Long> currentFollowersBatch = followersIds.stream().limit(postFollowersBatchMaxSize).toList();
-            followersIds.removeAll(currentFollowersBatch);
+            followersIds = followersIds.stream().filter(id -> !currentFollowersBatch.contains(id)).toList();
             event = new CreatePostEvent(post.getId(), currentFollowersBatch);
             send(topicCreatePostName, event);
         }
