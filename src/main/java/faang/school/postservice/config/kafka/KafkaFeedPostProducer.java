@@ -22,7 +22,7 @@ public class KafkaFeedPostProducer {
     private final UserServiceClient userServiceClient;
     private final ObjectMapper objectMapper;
 
-    @Value("A${spring.kafka.producer.news-feed.post-followers-batch-max-size}")
+    @Value("${spring.kafka.producer.news-feed.post-followers-batch-max-size}")
     private int postFollowersBatchMaxSize;
 
     @Value("${spring.kafka.topics.post-create-event}")
