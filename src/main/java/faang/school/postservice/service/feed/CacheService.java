@@ -32,12 +32,14 @@ public class CacheService {
     private final UserServiceClient userServiceClient;
     private final PostRepository postRepository;
     private final PostMapper postMapper;
+    //private final FeedGetPostService feedGetPostService;
 
     public void savePost(PostResponseDto postDto) {
         redisPostRepository.addNewPost(postDto);
     }
 
     //@Async("feedExecutor")
+    @Async
     public void savePosts(List<PostResponseDto> postDtos) {
         postDtos.forEach(this::savePost);
     }
@@ -85,6 +87,7 @@ public class CacheService {
     }
 
     //@Async("feedExecutor")
+    @Async
     public void saveUsers(List<UserDto> userDtos) {
         redisUserRepository.save(userDtos);
     }
@@ -148,6 +151,12 @@ public class CacheService {
                 .toList();
     }
 
+
+    public void handlePostDeletion(Long postId) {
+        redisPostRepository.deletePost(postId);
+        redisFeedRepository.deletePostFromAllFeeds(postId);
+    }
+
     @Transactional
     public List<PostResponseDto> getPostDtosFromDB(List<Long> postsIds) {
         Iterable<Post> missingPosts = postRepository.findAllById(postsIds);
@@ -158,17 +167,12 @@ public class CacheService {
                 .filter(post -> {
                     if (post.isDeleted()) {
                         log.info("Post with ID {} was found in DB but it was deleted", post.getId());
-                        handlePostDeletion(post.getId());
+                        //cacheService.handlePostDeletion(post.getId());
                         return false;
                     }
                     return true;
                 })
                 .map(postMapper::toPostResponseDto)
                 .toList();
-    }
-
-    public void handlePostDeletion(Long postId) {
-        redisPostRepository.deletePost(postId);
-        redisFeedRepository.deletePostFromAllFeeds(postId);
     }
 }

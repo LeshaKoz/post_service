@@ -1,6 +1,12 @@
 package faang.school.postservice.dto.post;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Builder;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +17,12 @@ public record PostResponseDto(
         Long authorId,
         Long projectId,
         boolean isPublished,
+        @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+        @JsonSerialize(using = LocalDateTimeSerializer.class)
+        //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         LocalDateTime createdAt,
+        @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+        @JsonSerialize(using = LocalDateTimeSerializer.class)
+        //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         LocalDateTime publishedAt) {
 }

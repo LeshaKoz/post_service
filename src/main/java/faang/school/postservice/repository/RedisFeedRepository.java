@@ -2,6 +2,7 @@ package faang.school.postservice.repository;
 
 import faang.school.postservice.config.redis.CacheProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class RedisFeedRepository {
@@ -22,7 +24,7 @@ public class RedisFeedRepository {
         double score = publishedAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 
         cacheRedisTemplate.opsForZSet().add(key, postId, score);
-        cacheRedisTemplate.opsForZSet().removeRange(key, 0, (long) - properties.getFeedMaxSize() - 1);
+        //cacheRedisTemplate.opsForZSet().removeRange(key, 0, (long) - properties.getFeedMaxSize() - 1);
     }
 
     public void addPost(List<Long> subscribersIds, Long postId, LocalDateTime publishedAt) {
@@ -49,6 +51,8 @@ public class RedisFeedRepository {
             postIds = cacheRedisTemplate.opsForZSet()
                     .reverseRangeByScore(key, 0, maxScore, 0, pageSize);
         }
+
+        log.info("postIds = {} ", postIds);
 
         if (postIds == null || postIds.isEmpty()) {
             return Collections.emptyList();

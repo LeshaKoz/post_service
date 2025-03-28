@@ -11,6 +11,7 @@ import faang.school.postservice.filter.post.PostPublishedSpecification;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.feed.CacheService;
 import faang.school.postservice.service.feed.FeedEventService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,8 @@ class PostServiceImplTest {
     ExecutorService executorService;
     @Mock
     FeedEventService feedEventService;
+    @Mock
+    private CacheService cacheService;
     @InjectMocks
     private PostServiceImpl postService;
     private PostCreateRequestDto postCreateRequestDto;
@@ -64,7 +67,8 @@ class PostServiceImplTest {
                 postMapper,
                 postSpecificationFilters,
                 executorService,
-                feedEventService
+                feedEventService,
+                cacheService
         );
 
         postCreateRequestDto = PostCreateRequestDto.builder()
@@ -149,8 +153,11 @@ class PostServiceImplTest {
     @DisplayName("Test delete post")
     void testDeletePost() {
         Long postId = 123L;
-        Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.of(new Post()));
-        postService.deletePost(123L);
+        Post post = Post.builder()
+                .id(postId)
+                .build();
+        Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.of(post));
+        postService.deletePost(postId);
         Mockito.verify(postRepositoryMock, Mockito.times(1)).save(Mockito.any());
     }
 
