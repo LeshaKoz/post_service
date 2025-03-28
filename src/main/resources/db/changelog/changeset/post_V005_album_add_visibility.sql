@@ -1,0 +1,2 @@
+ALTER TABLE album
+ADD COLUMN IF NOT EXISTS album_visibility varchar(30) DEFAULT 'PUBLIC';

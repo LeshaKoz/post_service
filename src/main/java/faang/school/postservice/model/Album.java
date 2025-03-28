@@ -2,6 +2,8 @@ package faang.school.postservice.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,6 +40,10 @@ public class Album {
 
     @Column(name = "description", nullable = false, length = 4096)
     private String description;
+
+    @Column(name = "album_visibility", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private AlbumVisibility albumVisibility;
 
     @Column(name = "author_id", nullable = false)
     private long authorId;
