@@ -6,6 +6,7 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
+import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.validation.LikeValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +79,7 @@ public class LikeServiceTest {
     @DisplayName("likeComment: позитивный сценарий")
     public void givenValidPostAndUserWhenLikeCommentThenReturnLikeViewDto() {
         likeViewDto.setCommentId(commentId);
-        Mockito.when(commentService.getCommentEntity(commentId)).thenReturn(commentEntity);
+        Mockito.when(commentService.getCommentById(commentId)).thenReturn(commentEntity);
         Mockito.when(likeRepository.save(Mockito.any(Like.class))).thenReturn(likeEntity);
         Mockito.when(likeMapper.toDto(likeEntity)).thenReturn(likeViewDto);
 
@@ -86,7 +87,7 @@ public class LikeServiceTest {
         Assertions.assertNotNull(result);
 
         Mockito.verify(likeValidator).validateForAddingCommentLike(commentId, userId);
-        Mockito.verify(commentService).getCommentEntity(commentId);
+        Mockito.verify(commentService).getCommentById(commentId);
         Mockito.verify(likeRepository).save(Mockito.any(Like.class));
         Mockito.verify(likeMapper).toDto(likeEntity);
     }

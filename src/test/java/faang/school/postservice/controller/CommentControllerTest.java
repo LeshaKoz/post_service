@@ -1,4 +1,4 @@
-package faang.school.postservice.util.controller.comment;
+package faang.school.postservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.config.context.UserContext;

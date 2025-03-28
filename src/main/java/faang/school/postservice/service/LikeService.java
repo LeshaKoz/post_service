@@ -6,6 +6,7 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
+import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.validation.LikeValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +85,7 @@ public class LikeService {
         log.info("Попытка добавить лайк на комментарий с ID {} от пользователя с ID {}",
                 commentId, userId);
         likeValidator.validateForAddingCommentLike(commentId, userId);
-        Comment comment = commentService.getCommentEntity(commentId);
+        Comment comment = commentService.getCommentById(commentId);
 
         Like like = new Like();
         like.setUserId(userId);

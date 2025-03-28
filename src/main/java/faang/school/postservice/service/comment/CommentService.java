@@ -148,9 +148,12 @@ public class CommentService {
      * @return найденный комментарий
      * @throws EntityNotFoundException если комментарий не найден
      */
-    private Comment getCommentById(Long commentId) {
+    public Comment getCommentById(Long commentId) {
         return commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Comment with ID " + commentId + " not found"));
+                .orElseThrow(() -> {
+                    log.error("Comment with ID {} not found", commentId);
+                    return new EntityNotFoundException("Comment with ID " + commentId + " not found");
+                });
     }
 
     /**

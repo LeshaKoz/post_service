@@ -6,8 +6,8 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
-import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.comment.CommentService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -125,7 +125,7 @@ public class LikeValidatorTest {
     @Test
     @DisplayName("validateCommentLikeConditions: валидные данные, не выбрасывается исключение")
     public void givenValidCommentAndUserWhenValidateForAddingCommentLikeThenSuccess() {
-        Mockito.when(commentService.getCommentEntity(commentId)).thenReturn(comment);
+        Mockito.when(commentService.getCommentById(commentId)).thenReturn(comment);
 
         Assertions.assertDoesNotThrow(() ->
                 likeValidator.validateForAddingCommentLike(commentId, userId));
@@ -153,7 +153,7 @@ public class LikeValidatorTest {
     @Test
     @DisplayName("validateCommentLikeConditions: пользователь уже ставил лайк на пост, выбрасывается DataValidationException")
     public void givenUserAlreadyLikedPostOfCommentWhenValidateForAddingCommentLikeThenThrowDataValidationException() {
-        Mockito.when(commentService.getCommentEntity(commentId)).thenReturn(comment);
+        Mockito.when(commentService.getCommentById(commentId)).thenReturn(comment);
         Mockito.when(likeRepository.findByPostIdAndUserId(postId, userId))
                 .thenReturn(Optional.of(new Like()));
 
@@ -176,7 +176,7 @@ public class LikeValidatorTest {
         Assertions.assertDoesNotThrow(() ->
                 likeValidator.validateForRemovingCommentLike(commentId, userId));
 
-        Mockito.verify(commentService, Mockito.times(1)).getCommentEntity(commentId);
+        Mockito.verify(commentService, Mockito.times(1)).getCommentById(commentId);
         Mockito.verify(userServiceClient, Mockito.times(1)).getUser(userId);
         Mockito.verify(likeRepository, Mockito.times(1)).findByCommentIdAndUserId(commentId, userId);
     }
@@ -192,7 +192,7 @@ public class LikeValidatorTest {
         Assertions.assertEquals(String.format("User with ID %d has not liked comment with ID %d", userId, commentId),
                 exception.getMessage());
 
-        Mockito.verify(commentService, Mockito.times(1)).getCommentEntity(commentId);
+        Mockito.verify(commentService, Mockito.times(1)).getCommentById(commentId);
         Mockito.verify(userServiceClient, Mockito.times(1)).getUser(userId);
         Mockito.verify(likeRepository, Mockito.times(1)).findByCommentIdAndUserId(commentId, userId);
     }
