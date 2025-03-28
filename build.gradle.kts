@@ -27,6 +27,11 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
     /**
+     * Swagger
+     */
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+
+    /**
      * Database
      */
     implementation("org.liquibase:liquibase-core")
@@ -60,16 +65,60 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 tasks.withType<Test> {
     useJUnitPlatform()
+    testLogging.showStandardStreams = true
+    finalizedBy(tasks.jacocoTestReport)
 }
-
-val test by tasks.getting(Test::class) { testLogging.showStandardStreams = true }
 
 tasks.bootJar {
     archiveFileName.set("service.jar")
+}
+
+/**
+ * Jacoco settings
+ */
+val jacocoInclude = listOf(
+    "**/service/**",
+    "**/controller/**",
+    "**/validation/**"
+)
+
+jacoco {
+    toolVersion = "0.8.9"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            include(jacocoInclude)
+        }
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            include(jacocoInclude)
+        }
+    )
+    violationRules {
+        rule {
+            element = "CLASS"
+            limit {
+                minimum = "0.45".toBigDecimal()
+            }
+            includes = jacocoInclude
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
