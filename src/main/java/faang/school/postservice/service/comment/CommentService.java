@@ -3,7 +3,6 @@ package faang.school.postservice.service.comment;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentViewDto;
-import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.CommentMapper;
@@ -11,6 +10,7 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.validation.CommentValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +21,23 @@ import java.util.List;
 
 /**
  * Сервис для работы с комментариями.
- * Содержит бизнес-логику для создания, обновления, получения и удаления комментариев.
+ * Содержит бизнес-логику для управления комментариями.
  *
+ * <p>Основные методы:</p>
+ * <ul>
+ *   <li>{@link #createComment(Long, CommentCreateDto)} - Создание нового комментария</li>
+ *   <li>{@link #updateComment(Long, Long, CommentCreateDto)} - Обновление существующего комментария</li>
+ *   <li>{@link #getCommentsByPostId(Long)} - Получение всех комментариев поста</li>
+ *   <li>{@link #deleteComment(Long, Long)} - Удаление комментария</li>
+ * </ul>
+ *
+ * <p>Вспомогательные методы:</p>
+ * <ul>
+ *   <li>{@link #getCommentById(Long)} - Получение комментария по ID</li>
+ *   <li>{@link #getPostById(Long)} - Получение поста по ID</li>
+ * </ul>
+ *
+ * @see CommentValidator Для методов валидации
  * @author Zhltsk-V
  * @version 1.0
  */
@@ -34,20 +49,23 @@ public class CommentService {
     private final PostRepository postRepository;
     private final CommentMapper commentMapper;
     private final UserServiceClient userServiceClient;
+    private final CommentValidator commentValidator;
 
     /**
-     * Создает новый комментарий.
+     * Создает новый комментарий к указанному посту.
      *
-     * @param postId           Идентификатор поста, к которому относится комментарий.
-     * @param commentCreateDto DTO с данными для создания комментария.
-     * @return Созданный комментарий в формате CommentViewDto.
-     * @throws EntityNotFoundException Если пост или пользователь не найдены.
+     * @param postId ID поста для комментария
+     * @param commentCreateDto DTO с данными для создания комментария
+     * @return созданный комментарий в формате CommentViewDto
+     * @throws EntityNotFoundException если пост не найден или пользователь не существует
+     *
+     * @see CommentValidator#validateUserById(Long)
      */
     @Transactional
     public CommentViewDto createComment(Long postId, CommentCreateDto commentCreateDto) {
         log.debug("Creating comment for post with ID: {}", postId);
         Post post = getPostById(postId);
-        validateUserById(commentCreateDto.getAuthorId());
+        commentValidator.validateUserById(commentCreateDto.getAuthorId());
 
         Comment comment = commentMapper.toEntity(commentCreateDto);
         comment.setPost(post);
@@ -60,20 +78,22 @@ public class CommentService {
     }
 
     /**
-     * Обновляет текст комментария.
+     * Обновляет существующий комментарий.
      *
-     * @param postId           Идентификатор поста, к которому относится комментарий.
-     * @param commentId        Идентификатор комментария, который нужно обновить.
-     * @param commentCreateDto DTO с новым текстом комментария.
-     * @return Обновленный комментарий в формате CommentViewDto.
-     * @throws EntityNotFoundException Если комментарий не найден.
-     * @throws DataValidationException Если комментарий не принадлежит указанному посту.
+     * @param postId ID поста, содержащего комментарий
+     * @param commentId ID комментария для обновления
+     * @param commentCreateDto DTO с обновленными данными комментария
+     * @return обновленный комментарий в формате CommentViewDto
+     * @throws EntityNotFoundException если комментарий не найден
+     * @throws DataValidationException если комментарий не принадлежит указанному посту
+     *
+     * @see CommentValidator#validateCommentBelongsToPost(Comment, Long, Long)
      */
     @Transactional
     public CommentViewDto updateComment(Long postId, Long commentId, CommentCreateDto commentCreateDto) {
         log.debug("Updating comment with ID: {} for post with ID: {}", commentId, postId);
         Comment comment = getCommentById(commentId);
-        validateCommentBelongsToPost(comment, postId, commentId);
+        commentValidator.validateCommentBelongsToPost(comment, postId, commentId);
 
         comment.setContent(commentCreateDto.getContent());
         comment.setUpdatedAt(LocalDateTime.now());
@@ -85,10 +105,10 @@ public class CommentService {
     }
 
     /**
-     * Возвращает список всех комментариев для указанного поста.
+     * Получает все комментарии для указанного поста.
      *
-     * @param postId Идентификатор поста.
-     * @return Список комментариев в формате CommentViewDto.
+     * @param postId ID поста для получения комментариев
+     * @return список комментариев в формате CommentViewDto
      */
     @Transactional
     public List<CommentViewDto> getCommentsByPostId(Long postId) {
@@ -102,18 +122,20 @@ public class CommentService {
     }
 
     /**
-     * Удаляет комментарий по его идентификатору.
+     * Удаляет указанный комментарий.
      *
-     * @param postId    Идентификатор поста, к которому относится комментарий.
-     * @param commentId Идентификатор комментария, который нужно удалить.
-     * @throws EntityNotFoundException Если комментарий не найден.
-     * @throws DataValidationException Если комментарий не принадлежит указанному посту.
+     * @param postId ID поста, содержащего комментарий
+     * @param commentId ID комментария для удаления
+     * @throws EntityNotFoundException если комментарий не найден
+     * @throws DataValidationException если комментарий не принадлежит указанному посту
+     *
+     * @see CommentValidator#validateCommentBelongsToPost(Comment, Long, Long)
      */
     @Transactional
     public void deleteComment(Long postId, Long commentId) {
         log.debug("Deleting comment with ID: {} for post with ID: {}", commentId, postId);
         Comment comment = getCommentById(commentId);
-        validateCommentBelongsToPost(comment, postId, commentId);
+        commentValidator.validateCommentBelongsToPost(comment, postId, commentId);
 
         commentRepository.delete(comment);
         log.debug("Comment with ID: {} successfully deleted", commentId);
@@ -122,9 +144,9 @@ public class CommentService {
     /**
      * Получает комментарий по его идентификатору.
      *
-     * @param commentId Идентификатор комментария.
-     * @return Найденный комментарий.
-     * @throws EntityNotFoundException Если комментарий не найден.
+     * @param commentId ID комментария
+     * @return найденный комментарий
+     * @throws EntityNotFoundException если комментарий не найден
      */
     private Comment getCommentById(Long commentId) {
         return commentRepository.findById(commentId)
@@ -132,43 +154,14 @@ public class CommentService {
     }
 
     /**
-     * Проверяет, что комментарий принадлежит указанному посту.
-     *
-     * @param comment   Комментарий для проверки.
-     * @param postId    Идентификатор поста.
-     * @param commentId Идентификатор комментария (для сообщения об ошибке).
-     * @throws DataValidationException Если комментарий не принадлежит указанному посту.
-     */
-    private void validateCommentBelongsToPost(Comment comment, Long postId, Long commentId) {
-        if (!comment.getPost().getId().equals(postId)) {
-            throw new DataValidationException("Comment with ID " + commentId
-                    + " doesn't belong to post with ID " + postId);
-        }
-    }
-
-    /**
      * Получает пост по его идентификатору.
      *
-     * @param postId Идентификатор поста.
-     * @return Найденный пост.
-     * @throws EntityNotFoundException Если пост не найден.
+     * @param postId ID поста
+     * @return найденный пост
+     * @throws EntityNotFoundException если пост не найден
      */
     private Post getPostById(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post with ID " + postId + " not found"));
-    }
-
-    /**
-     * Проверяет существование пользователя по его идентификатору.
-     *
-     * @param authorId Идентификатор пользователя.
-     * @throws EntityNotFoundException Если пользователь не найден.
-     */
-    private void validateUserById(Long authorId) {
-        UserDto userDto = userServiceClient.getUser(authorId);
-        if (userDto == null) {
-            log.error("User with ID {} not found", authorId);
-            throw new EntityNotFoundException("User with ID " + authorId + " not found");
-        }
     }
 }

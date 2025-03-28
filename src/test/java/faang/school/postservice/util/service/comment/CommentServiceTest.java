@@ -3,7 +3,6 @@ package faang.school.postservice.util.service.comment;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentViewDto;
-import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.CommentMapper;
@@ -12,6 +11,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.comment.CommentService;
+import faang.school.postservice.validation.CommentValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,15 +22,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,15 +46,19 @@ public class CommentServiceTest {
     private CommentMapper commentMapper;
     @Mock
     private UserServiceClient userServiceClient;
+    @Mock
+    private CommentValidator commentValidator;
 
     @InjectMocks
     private CommentService commentService;
 
+    private final Long postId = 1L;
+    private final Long commentId = 1L;
+    private final Long authorId = 1L;
     private CommentCreateDto commentCreateDto;
     private CommentViewDto commentViewDto;
     private Comment comment;
     private Post post;
-    private UserDto userDto;
 
     @BeforeEach
     void setUp() {
@@ -77,113 +82,112 @@ public class CommentServiceTest {
         comment.setAuthorId(1L);
         comment.setPost(post);
         comment.setCreatedAt(LocalDateTime.now());
-
-        userDto = new UserDto(1L, "test_user", "test@example.com");
     }
 
     @Nested
-    @DisplayName("Tests for createComment method")
-    class CreateCommentTests {
+    @DisplayName("Создание комментария")
+    class CreateComment {
 
         @Test
-        @DisplayName("Should successfully create comment with valid data")
-        void givenValidCommentData_whenCreateComment_thenReturnCreatedComment() {
-            when(postRepository.findById(1L)).thenReturn(Optional.of(post));
-            when(userServiceClient.getUser(1L)).thenReturn(userDto);
+        @DisplayName("Успешное создание комментария")
+        void givenValidCommentDataAndExistingPost_whenCreateComment_thenReturnCommentDto() {
+            when(postRepository.findById(postId)).thenReturn(Optional.of(post));
             when(commentMapper.toEntity(commentCreateDto)).thenReturn(comment);
-            when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+            when(commentRepository.save(comment)).thenReturn(comment);
             when(commentMapper.toViewDto(comment)).thenReturn(commentViewDto);
 
-            CommentViewDto result = commentService.createComment(1L, commentCreateDto);
+            CommentViewDto result = commentService.createComment(postId, commentCreateDto);
 
             assertNotNull(result);
-            assertEquals(1L, result.getId());
-            assertEquals("Test content", result.getContent());
-            verify(commentRepository, times(1)).save(comment);
+            assertEquals(commentViewDto, result);
+            verify(commentValidator).validateUserById(authorId);
+            verify(commentRepository).save(comment);
         }
 
         @Test
-        @DisplayName("Should throw EntityNotFoundException when post doesn't exist")
+        @DisplayName("Ошибка при несуществующем посте")
         void givenNonExistentPost_whenCreateComment_thenThrowEntityNotFoundException() {
-            when(postRepository.findById(1L)).thenReturn(Optional.empty());
+            when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class,
-                    () -> commentService.createComment(1L, commentCreateDto));
+                    () -> commentService.createComment(postId, commentCreateDto));
         }
 
         @Test
-        @DisplayName("Should throw EntityNotFoundException when author doesn't exist")
+        @DisplayName("Ошибка при несуществующем авторе")
         void givenNonExistentAuthor_whenCreateComment_thenThrowEntityNotFoundException() {
-            when(postRepository.findById(1L)).thenReturn(Optional.of(post));
-            when(userServiceClient.getUser(1L)).thenReturn(null);
+            when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+            doThrow(new EntityNotFoundException("User not found"))
+                    .when(commentValidator).validateUserById(authorId);
 
             assertThrows(EntityNotFoundException.class,
-                    () -> commentService.createComment(1L, commentCreateDto));
+                    () -> commentService.createComment(postId, commentCreateDto));
         }
     }
 
     @Nested
-    @DisplayName("Tests for updateComment method")
-    class UpdateCommentTests {
+    @DisplayName("Обновление комментария")
+    class UpdateComment {
 
         @Test
-        @DisplayName("Should successfully update comment with valid data")
-        void givenValidCommentData_whenUpdateComment_thenReturnUpdatedComment() {
-            when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
-            when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+        @DisplayName("Успешное обновление комментария")
+        void givenValidCommentData_whenUpdateComment_thenReturnUpdatedCommentDto() {
+            when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+            when(commentRepository.save(comment)).thenReturn(comment);
             when(commentMapper.toViewDto(comment)).thenReturn(commentViewDto);
 
-            CommentViewDto result = commentService.updateComment(1L, 1L, commentCreateDto);
+            CommentViewDto result = commentService.updateComment(postId, commentId, commentCreateDto);
 
             assertNotNull(result);
-            assertEquals(1L, result.getId());
+            assertEquals(commentViewDto, result);
             assertNotNull(comment.getUpdatedAt());
-            verify(commentRepository, times(1)).save(comment);
+            verify(commentValidator).validateCommentBelongsToPost(comment, postId, commentId);
         }
 
         @Test
-        @DisplayName("Should throw EntityNotFoundException when comment doesn't exist")
+        @DisplayName("Ошибка при несуществующем комментарии")
         void givenNonExistentComment_whenUpdateComment_thenThrowEntityNotFoundException() {
-            when(commentRepository.findById(1L)).thenReturn(Optional.empty());
+            when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class,
-                    () -> commentService.updateComment(1L, 1L, commentCreateDto));
+                    () -> commentService.updateComment(postId, commentId, commentCreateDto));
         }
 
         @Test
-        @DisplayName("Should throw DataValidationException when postId doesn't match")
+        @DisplayName("Ошибка при несоответствии postId")
         void givenMismatchedPostId_whenUpdateComment_thenThrowDataValidationException() {
-            comment.getPost().setId(2L);
-            when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
+            when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+            doThrow(new DataValidationException("Invalid post ID"))
+                    .when(commentValidator).validateCommentBelongsToPost(comment, postId, commentId);
 
             assertThrows(DataValidationException.class,
-                    () -> commentService.updateComment(1L, 1L, commentCreateDto));
+                    () -> commentService.updateComment(postId, commentId, commentCreateDto));
         }
     }
 
     @Nested
-    @DisplayName("Tests for getCommentsByPostId method")
-    class GetCommentsTests {
+    @DisplayName("Получение комментариев")
+    class GetComments {
 
         @Test
-        @DisplayName("Should return list of comments for existing post")
-        void givenExistingPostWithComments_whenGetComments_thenReturnCommentList() {
-            when(commentRepository.findAllByPostId(1L)).thenReturn(List.of(comment));
+        @DisplayName("Успешное получение списка комментариев")
+        void givenPostWithComments_whenGetComments_thenReturnCommentDtoList() {
+            when(commentRepository.findAllByPostId(postId)).thenReturn(List.of(comment));
             when(commentMapper.toViewDto(comment)).thenReturn(commentViewDto);
 
-            List<CommentViewDto> result = commentService.getCommentsByPostId(1L);
+            List<CommentViewDto> result = commentService.getCommentsByPostId(postId);
 
             assertNotNull(result);
             assertEquals(1, result.size());
-            assertEquals(1L, result.get(0).getId());
+            assertEquals(commentViewDto, result.get(0));
         }
 
         @Test
-        @DisplayName("Should return empty list when post has no comments")
-        void givenExistingPostWithoutComments_whenGetComments_thenReturnEmptyList() {
-            when(commentRepository.findAllByPostId(1L)).thenReturn(List.of());
+        @DisplayName("Получение пустого списка комментариев")
+        void givenPostWithoutComments_whenGetComments_thenReturnEmptyList() {
+            when(commentRepository.findAllByPostId(postId)).thenReturn(Collections.emptyList());
 
-            List<CommentViewDto> result = commentService.getCommentsByPostId(1L);
+            List<CommentViewDto> result = commentService.getCommentsByPostId(postId);
 
             assertNotNull(result);
             assertTrue(result.isEmpty());
@@ -191,36 +195,37 @@ public class CommentServiceTest {
     }
 
     @Nested
-    @DisplayName("Tests for deleteComment method")
-    class DeleteCommentTests {
+    @DisplayName("Удаление комментария")
+    class DeleteComment {
 
         @Test
-        @DisplayName("Should successfully delete comment with valid ids")
-        void givenValidCommentId_whenDeleteComment_thenDeleteSuccessfully() {
-            when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
+        @DisplayName("Успешное удаление комментария")
+        void givenValidPostAndCommentIds_whenDeleteComment_thenSuccess() {
+            when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
-            commentService.deleteComment(1L, 1L);
-
-            verify(commentRepository, times(1)).delete(comment);
+            assertDoesNotThrow(() -> commentService.deleteComment(postId, commentId));
+            verify(commentRepository).delete(comment);
+            verify(commentValidator).validateCommentBelongsToPost(comment, postId, commentId);
         }
 
         @Test
-        @DisplayName("Should throw EntityNotFoundException when comment doesn't exist")
+        @DisplayName("Ошибка при несуществующем комментарии")
         void givenNonExistentComment_whenDeleteComment_thenThrowEntityNotFoundException() {
-            when(commentRepository.findById(1L)).thenReturn(Optional.empty());
+            when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class,
-                    () -> commentService.deleteComment(1L, 1L));
+                    () -> commentService.deleteComment(postId, commentId));
         }
 
         @Test
-        @DisplayName("Should throw DataValidationException when postId doesn't match")
+        @DisplayName("Ошибка при несоответствии postId")
         void givenMismatchedPostId_whenDeleteComment_thenThrowDataValidationException() {
-            comment.getPost().setId(2L);
-            when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
+            when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+            doThrow(new DataValidationException("Invalid post ID"))
+                    .when(commentValidator).validateCommentBelongsToPost(comment, postId, commentId);
 
             assertThrows(DataValidationException.class,
-                    () -> commentService.deleteComment(1L, 1L));
+                    () -> commentService.deleteComment(postId, commentId));
         }
     }
 }

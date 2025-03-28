@@ -13,7 +13,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Глобальный обработчик исключений для всех контроллеров.
+ * Глобальный обработчик исключений для всех контроллеров приложения.
+ *
+ * <p>Поддерживаемые обработчики исключений:</p>
+ * <ul>
+ *   <li>{@link #handlerDataValidationException(DataValidationException)}
+ *   - Обрабатывает ошибки валидации данных (HTTP 400)</li>
+ *   <li>{@link #handlerEntityNotFoundException(EntityNotFoundException)}
+ *   - Обрабатывает случаи ненайденных сущностей (HTTP 404)</li>
+ *   <li>{@link #handleValidationExceptions(MethodArgumentNotValidException)}
+ *   - Обрабатывает ошибки валидации Spring Bean (HTTP 400)</li>
+ *   <li>{@link #handlerException(Exception)}
+ *   - Универсальный обработчик для всех непредвиденных исключений (HTTP 500)</li>
+ * </ul>
  *
  * @author Zhltsk-V
  * @version 1.0
@@ -23,34 +35,34 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     /**
-     * Обрабатывает исключения типа DataValidationException.
+     * Обрабатывает исключения типа {@link DataValidationException} (ошибки валидации данных).
      *
-     * @param e Исключение.
-     * @return Ответ с сообщением об ошибке и статусом HTTP 400 (Bad Request).
+     * @param exception перехваченное исключение
+     * @return ответ с сообщением об ошибке (HTTP 400 Bad Request)
      */
     @ExceptionHandler(DataValidationException.class)
-    public ResponseEntity<String> handlerDataValidationException(DataValidationException e) {
-        log.error("Data validation error: {}", e.getMessage());
-        return ResponseEntity.badRequest().body("Data validation error: " + e.getMessage());
+    public ResponseEntity<String> handlerDataValidationException(DataValidationException exception) {
+        log.error("Data validation error: {}", exception.getMessage());
+        return ResponseEntity.badRequest().body("Data validation error: " + exception.getMessage());
     }
 
     /**
-     * Обрабатывает исключения типа EntityNotFoundException.
+     * Обрабатывает исключения типа {@link EntityNotFoundException} (ненайденные сущности).
      *
-     * @param e Исключение.
-     * @return Ответ с сообщением об ошибке и статусом HTTP 404 (Not Found).
+     * @param exception перехваченное исключение
+     * @return ответ с сообщением об ошибке (HTTP 404 Not Found)
      */
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handlerEntityNotFoundException(EntityNotFoundException e) {
-        log.error("Entity not found: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Entity not found: " + e.getMessage());
+    public ResponseEntity<String> handlerEntityNotFoundException(EntityNotFoundException exception) {
+        log.error("Entity not found: {}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Entity not found: " + exception.getMessage());
     }
 
     /**
-     * Обрабатывает исключения типа MethodArgumentNotValidException.
+     * Обрабатывает исключения типа {@link MethodArgumentNotValidException} (ошибки валидации параметров методов).
      *
-     * @param exception Исключение.
-     * @return Ответ с сообщением об ошибках валидации и статусом HTTP 400 (Bad Request).
+     * @param exception перехваченное исключение
+     * @return ответ с картой ошибок валидации (HTTP 400 Bad Request)
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException exception) {
@@ -64,15 +76,15 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Обрабатывает все остальные исключения.
+     * Универсальный обработчик для всех неперехваченных исключений.
      *
-     * @param e Исключение.
-     * @return Ответ с сообщением об ошибке и статусом HTTP 500 (Internal Server Error).
+     * @param exception перехваченное исключение
+     * @return ответ с сообщением об ошибке (HTTP 500 Internal Server Error)
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handlerException(Exception e) {
-        log.error("Internal server error occurred: {}", e.getMessage());
+    public ResponseEntity<String> handlerException(Exception exception) {
+        log.error("Internal server error occurred: {}", exception.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Internal server error occurred: " + e.getMessage());
+                .body("Internal server error occurred: " + exception.getMessage());
     }
 }

@@ -23,7 +23,15 @@ import java.util.List;
 
 /**
  * Контроллер для обработки запросов, связанных с комментариями.
- * Предоставляет REST-эндпоинты для создания, обновления, получения и удаления комментариев.
+ * Предоставляет REST-эндпоинты для управления комментариями к постам.
+ *
+ * <p>Доступные методы:</p>
+ * <ul>
+ *   <li>{@link #createComment(long, CommentCreateDto)} - Создание нового комментария</li>
+ *   <li>{@link #updateComment(long, long, CommentCreateDto)} - Обновление существующего комментария</li>
+ *   <li>{@link #getCommentsByPostId(long)} - Получение всех комментариев к посту</li>
+ *   <li>{@link #deleteComment(long, long)} - Удаление комментария</li>
+ * </ul>
  *
  * @author Zhltsk-V
  * @version 1.0
@@ -48,7 +56,7 @@ public class CommentController {
             @RequestBody @Valid CommentCreateDto commentCreateDto) {
         log.info("Request to create comment for post with ID: {}", postId);
         CommentViewDto createdComment = commentService.createComment(postId, commentCreateDto);
-        log.info("Comment successfully created with ID: {}", createdComment.getId());
+
         return ResponseEntity.ok(createdComment);
     }
 
@@ -66,7 +74,7 @@ public class CommentController {
             @RequestBody @Valid CommentCreateDto commentCreateDto) {
         log.info("Request to update comment with ID: {} for post with ID: {}", commentId, postId);
         CommentViewDto updatedComment = commentService.updateComment(postId, commentId, commentCreateDto);
-        log.info("Comment with ID: {} successfully updated", commentId);
+
         return ResponseEntity.ok(updatedComment);
     }
 
@@ -80,7 +88,7 @@ public class CommentController {
             @PathVariable long postId) {
         log.info("Request to get comments for post with ID: {}", postId);
         List<CommentViewDto> comments = commentService.getCommentsByPostId(postId);
-        log.info("Found {} comments for post with ID: {}", comments.size(), postId);
+
         return ResponseEntity.ok(comments);
     }
 
@@ -96,7 +104,7 @@ public class CommentController {
             @PathVariable long commentId) {
         log.info("Request to delete comment with ID: {} for post with ID: {}", commentId, postId);
         commentService.deleteComment(postId, commentId);
-        log.info("Comment with ID: {} successfully deleted", commentId);
+
         return ResponseEntity.noContent().build();
     }
 }
