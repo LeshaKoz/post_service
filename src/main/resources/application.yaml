@@ -129,6 +129,9 @@ task:
       max-size: 8
       keep-alive: 60
 
+news-feed:
+  batch-size: 20
+
 ---
 
 spring:
