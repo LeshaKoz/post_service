@@ -1,13 +1,16 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.Post.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
+import faang.school.postservice.dto.event.PostViewEvent;
 import faang.school.postservice.kafka.PostEventPublisher;
 import faang.school.postservice.dto.user.AuthorCacheDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.kafka.producer.KafkaPostViewEventProducer;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Post;
@@ -54,6 +57,8 @@ public class PostService {
     private final ResourseService resourseService;
     private final PostEventPublisher postEventPublisher;
     private final UserServiceClient userServiceClient;
+    private final KafkaPostViewEventProducer kafkaPostViewEventProducer;
+    private final UserContext userContext;
 
     @Value("${author.banner.rejected_posts_to_ban}")
     private int rejectedPostsToBan;
@@ -113,6 +118,13 @@ public class PostService {
     public PostResponseDto getPost(long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + id));
+
+        PostViewEvent postViewEvent = PostViewEvent.builder()
+                .postId(post.getId())
+                .viewerId(userContext.getUserId())
+                .build();
+        kafkaPostViewEventProducer.send(postViewEvent);
+
         return postMapper.toResponseDto(post);
     }
 

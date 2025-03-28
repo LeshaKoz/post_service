@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.Post.PostCacheDto;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
@@ -8,6 +9,7 @@ import faang.school.postservice.dto.Post.UpdatePostDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.kafka.PostEventPublisher;
+import faang.school.postservice.kafka.producer.KafkaPostViewEventProducer;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Like;
@@ -62,6 +64,8 @@ public class PostServiceTest {
     private ResourseService resourseService;
     private KafkaTemplate<String, Long> kafkaTemplate;
     private PostEventPublisher postEventPublisher;
+    private KafkaPostViewEventProducer kafkaPostViewEventProducer;
+    private UserContext userContext;
 
     @Captor
     private ArgumentCaptor<List<MultipartFile>> captor;
@@ -78,9 +82,12 @@ public class PostServiceTest {
         resourseService = mock(ResourseService.class);
         postEventPublisher = mock(PostEventPublisher.class);
         userServiceClient = mock(UserServiceClient.class);
+        kafkaPostViewEventProducer = mock(KafkaPostViewEventProducer.class);
+        userContext = mock(UserContext.class);
 
         postService = new PostService(postRepository, cacheRepository, postAuthorCacheRepository, kafkaTemplate,
-                postMapper, userMapper, postValidator, resourseService, postEventPublisher, userServiceClient);
+                postMapper, userMapper, postValidator, resourseService, postEventPublisher, userServiceClient,
+                kafkaPostViewEventProducer, userContext);
     }
 
     @Test
@@ -232,7 +239,9 @@ public class PostServiceTest {
     public void getPost_ShouldReturnWhenPostExists() {
         long postId = 1L;
         Post post = new Post();
+        post.setId(postId);
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(userContext.getUserId()).thenReturn(2L);
 
         PostResponseDto actualResponse = postService.getPost(postId);
 

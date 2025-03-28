@@ -1,5 +1,6 @@
 package faang.school.postservice.config;
 
+import faang.school.postservice.dto.event.PostViewEvent;
 import faang.school.postservice.model.LikeEvent;
 import faang.school.postservice.model.PostEvent;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -32,6 +33,11 @@ public class KafkaConfig {
 
     @Bean
     public KafkaTemplate<String, PostEvent> postEventKafkaTemplate(KafkaProperties kafkaProperties) {
+        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaProperties.buildProducerProperties()));
+    }
+
+    @Bean
+    public KafkaTemplate<String, PostViewEvent> postViewEventKafkaTemplate(KafkaProperties kafkaProperties) {
         return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaProperties.buildProducerProperties()));
     }
 
