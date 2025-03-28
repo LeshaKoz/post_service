@@ -1,9 +1,9 @@
 package faang.school.postservice.controller.post;
 
-import faang.school.postservice.dto.post.PostDto;
-import faang.school.postservice.exception.PostDtoValidationException;
 import faang.school.postservice.dto.file.FileMetaData;
+import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post_file.PostFileDto;
+import faang.school.postservice.exception.PostDtoValidationException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.service.post.interfaces.PostService;
 import faang.school.postservice.service.post_file.interfaces.PostFileService;
@@ -75,6 +75,8 @@ public class PostController {
     public ResponseEntity<PostDto> getPost(@RequestBody PostDto postDto) {
         validateId(postDto.getId());
         return ResponseEntity.ok().body(postService.getPost(postDto));
+    }
+
     @GetMapping("/{postId}")
     public ResponseEntity<Post> getPostById(@PathVariable long postId) {
         Post postById = postService.getPostById(postId);
@@ -85,6 +87,8 @@ public class PostController {
     public ResponseEntity<List<PostDto>> getAuthorPostDrafts(@RequestBody PostDto postDto) {
         validateId(postDto.getAuthorId());
         return ResponseEntity.ok().body(postService.getAuthorPostDrafts(postDto));
+    }
+
     @PostMapping("/{postId}/files")
     public ResponseEntity<Void> uploadFilesToPost(@PathVariable @Min(1) long postId,
                                                   @RequestPart @NotNull @NotEmpty List<@NotNull MultipartFile> files) {
@@ -96,6 +100,8 @@ public class PostController {
     public ResponseEntity<List<PostDto>> getProjectPostDrafts(@RequestBody PostDto postDto) {
         validateId(postDto.getProjectId());
         return ResponseEntity.ok().body(postService.getProjectPostDrafts(postDto));
+    }
+
     @GetMapping("/{postId}/files")
     public ResponseEntity<List<PostFileDto>> getPostFilesInfo(@PathVariable @Min(1) long postId) {
         List<PostFileDto> postFilesInfo = postFileService.getPostFilesInfo(postId);
@@ -106,8 +112,11 @@ public class PostController {
     public ResponseEntity<List<PostDto>> getAuthorPosts(@RequestBody PostDto postDto) {
         validateId(postDto.getAuthorId());
         return ResponseEntity.ok().body(postService.getAuthorPublishedPosts(postDto));
+    }
+
     @DeleteMapping("/{postId}/files/{fileId}")
-    public ResponseEntity<Void> deletePostFile(@PathVariable @Min(1) long postId, @PathVariable @Min(1) long fileId) {
+    public ResponseEntity<Void> deletePostFile(@PathVariable @Min(1) long postId,
+                                               @PathVariable @Min(1) long fileId) {
         postFileService.deletePostFile(postId, fileId);
         return ResponseEntity.noContent().build();
     }
@@ -121,6 +130,9 @@ public class PostController {
     private void validateId(long id) {
         if (id < 1) {
             throw new PostDtoValidationException("ID must be greater than zero");
+        }
+    }
+
     @GetMapping("/{postId}/files/{fileId}")
     public ResponseEntity<byte[]> downLoadPostFile(@PathVariable @Min(1) long postId,
                                                    @PathVariable @Min(1) long fileId) {

@@ -12,7 +12,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ResourceServiceImpl implements ResourceService {
-    private static final String RESOURCE = "Resource";
     private final ResourceRepository resourceRepository;
 
     @Override
@@ -33,7 +32,7 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public Resource getResource(long resourceId) {
         return resourceRepository.findById(resourceId)
-                .orElseThrow(() -> new EntityNotFoundException(RESOURCE, resourceId));
+                .orElseThrow(() -> new EntityNotFoundException(resourceId));
     }
 
     @Override

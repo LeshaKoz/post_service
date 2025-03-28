@@ -143,7 +143,7 @@ class AlbumServiceTest {
         album.setAuthorId(authorId);
         when(userContext.getUserId()).thenReturn(userId);
         when(albumRepository.findById(albumId)).thenReturn(Optional.of(album));
-        doThrow(new ForbiddenException(userId)).when(albumValidator).validateAuthor(album, userId);
+        doThrow(new ForbiddenException(userId, "author with id %d added post".formatted(userId))).when(albumValidator).validateAuthor(album, userId);
 
         assertThrows(ForbiddenException.class, () -> albumService.addPostToAlbum(albumId, postId));
 

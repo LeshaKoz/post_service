@@ -40,7 +40,7 @@ public class AlbumValidatorImpl implements AlbumValidator {
     public void validateAuthor(Album album, long userId) {
         if (album.getAuthorId() != userId) {
             log.error("User with ID {} is not the author of this album", userId);
-            throw new ForbiddenException(userId);
+            throw new ForbiddenException(userId, "author with id %d added post".formatted(userId));
         }
     }
 }
