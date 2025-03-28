@@ -8,10 +8,6 @@ import lombok.Data;
 @Data
 public class CommentUpdateDto {
 
-    @NotNull
-    @Min(1)
-    private Long id;
-
     @NotBlank
     private String content;
 

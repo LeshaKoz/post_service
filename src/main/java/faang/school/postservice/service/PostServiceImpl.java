@@ -135,7 +135,7 @@ public class PostServiceImpl implements PostService {
             throw new EntityNotFoundException("Post not found");
         }
 
-        log.info("Post with ID {} fetched successfully", id);
+        log.debug("Post with ID {} fetched successfully", id);
         return postOptional.get();
     }
 

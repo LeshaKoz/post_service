@@ -83,6 +83,7 @@ class CommentServiceImplTest {
     @DisplayName("ID Code check in userDto Null")
     void testAddCommentIfUserIdIsNull() {
         CommentCreateDto commentCreateDto = new CommentCreateDto();
+        commentCreateDto.setAuthorId(1L);
         UserDto userDto = new UserDto(null, "Leo", "no@null.net");
 
         when(userServiceClient.getUser(commentCreateDto.getAuthorId())).thenReturn(userDto);
@@ -96,6 +97,7 @@ class CommentServiceImplTest {
     @DisplayName("Check when ID in userDto is less than one")
     void testAddCommentIfUserIdLessThanOne() {
         CommentCreateDto commentCreateDto = new CommentCreateDto();
+        commentCreateDto.setAuthorId(1L);
         UserDto userDto = new UserDto(0L, "Leo", "no@null.net");
 
         when(userServiceClient.getUser(commentCreateDto.getAuthorId())).thenReturn(userDto);
@@ -108,9 +110,9 @@ class CommentServiceImplTest {
     @Test
     void testAddCommentWhenUserDtoIsNull() {
         CommentCreateDto commentCreateDto = new CommentCreateDto();
-        UserDto userDto = null;
+        commentCreateDto.setAuthorId(1L);
 
-        when(userServiceClient.getUser(commentCreateDto.getAuthorId())).thenReturn(userDto);
+        when(userServiceClient.getUser(commentCreateDto.getAuthorId())).thenReturn(null);
 
         Exception exception = assertThrows(
                 NotFoundException.class, () -> commentService.createComment(commentCreateDto));
@@ -124,7 +126,7 @@ class CommentServiceImplTest {
         commentUpdateDto.setContent("test");
 
         Exception exception = assertThrows(
-                EntityNotFoundException.class, () -> commentService.updateCommentContent(commentUpdateDto));
+                EntityNotFoundException.class, () -> commentService.updateCommentContent(1, commentUpdateDto));
         assertEquals("Comment not found", exception.getMessage());
     }
 
@@ -132,16 +134,15 @@ class CommentServiceImplTest {
     @DisplayName("Id of the author of the comment does not coincide with id of the author update")
     void testUpdateCommentContentIdDoesNotMatch() {
         CommentUpdateDto commentUpdateDto = new CommentUpdateDto();
-        commentUpdateDto.setId(5L);
         commentUpdateDto.setAuthorId(1L);
         commentUpdateDto.setContent("test");
 
         Comment comment = Comment.builder().authorId(2L).build();
 
-        when(commentRepository.findById(commentUpdateDto.getId())).thenReturn(Optional.of(comment));
+        when(commentRepository.findById(5L)).thenReturn(Optional.of(comment));
 
         Exception exception = assertThrows(
-                DataValidationException.class, () -> commentService.updateCommentContent(commentUpdateDto));
+                DataValidationException.class, () -> commentService.updateCommentContent(5, commentUpdateDto));
         assertEquals(
                 "Id of the author of the comment does not coincide with id of the author update",
                 exception.getMessage());
@@ -151,15 +152,15 @@ class CommentServiceImplTest {
     @Test
     void testUpdateCommentContentSaveComment() {
         CommentUpdateDto commentUpdateDto = new CommentUpdateDto();
-        commentUpdateDto.setId(5L);
+
         commentUpdateDto.setAuthorId(1L);
         commentUpdateDto.setContent("test");
 
         Comment comment = Comment.builder().authorId(1L).content(commentUpdateDto.getContent()).build();
 
-        when(commentRepository.findById(commentUpdateDto.getId())).thenReturn(Optional.of(comment));
+        when(commentRepository.findById(5L)).thenReturn(Optional.of(comment));
 
-        commentService.updateCommentContent(commentUpdateDto);
+        commentService.updateCommentContent(5, commentUpdateDto);
 
         verify(commentRepository, times(1)).save(comment);
     }

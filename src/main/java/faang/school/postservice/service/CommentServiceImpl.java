@@ -46,49 +46,48 @@ public class CommentServiceImpl implements CommentService {
 
         log.debug("Receipt post with ID: {}", commentCreateDto.getPostId());
         Post post = postService.getPostEntryById(commentCreateDto.getPostId());
-        log.info("Post with ID {} fetched successfully", commentCreateDto.getPostId());
+        log.debug("Post with ID {} fetched successfully", commentCreateDto.getPostId());
 
         Comment comment = commentCreateMapper.toEntity(commentCreateDto);
         log.debug("Mapped comment entity: {}", comment);
 
         log.debug("The {} is set to the {}", post, comment);
         comment.setPost(post);
-        log.info("Adding a {} to {}", comment, post);
+        log.debug("Adding a {} to {}", comment, post);
         log.debug("Adding {} to post with ID: {}", comment, commentCreateDto.getPostId());
         post.getComments().add(comment);
-        log.info("{} successfully added to post with ID: {}", comment, commentCreateDto.getPostId());
+        log.debug("{} successfully added to post with ID: {}", comment, commentCreateDto.getPostId());
 
         log.debug("Saving {} to the database", comment);
         commentRepository.save(comment);
-        log.info("{} successfully saved to the database", comment);
+        log.debug("{} successfully saved to the database", comment);
     }
 
     @Override
-    public void updateCommentContent(CommentUpdateDto commentUpdateDto) {
+    public void updateCommentContent(long commentId, CommentUpdateDto commentUpdateDto) {
         log.debug("Updating comment: {}", commentUpdateDto);
 
         Comment comment = commentRepository
-                .findById(commentUpdateDto.getId()).orElseThrow(() -> new EntityNotFoundException("Comment not found"));
-        log.debug("Updating comment entity: {}", comment);
-        log.info("{} has been successfully obtained", comment);
+                .findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+        log.debug("{} has been successfully obtained", comment);
 
 
         if (!comment.getAuthorId().equals(commentUpdateDto.getAuthorId())) {
             log.error("Id of {} of the comment does not coincide with id of {} update",
-                    commentUpdateDto.getAuthorId(), commentUpdateDto.getId());
+                    commentUpdateDto.getAuthorId(), commentId);
             throw new DataValidationException(
                     "Id of the author of the comment does not coincide with id of the author update");
         }
-        log.info("{} author of the commentary and {} of the author of the update are the same",
+        log.debug("{} author of the commentary and {} of the author of the update are the same",
                 comment.getAuthorId(), commentUpdateDto.getAuthorId());
 
         log.debug("Updating comment entity: {}", comment);
         comment.setContent(commentUpdateDto.getContent());
-        log.info("Successful update of {} {}", comment, commentUpdateDto.getContent());
+        log.debug("Successful update of {} {}", comment, commentUpdateDto.getContent());
 
         log.debug("Commenting the {} in the database", comment);
         commentRepository.save(comment);
-        log.info("Comment saved to the database");
+        log.debug("Comment saved to the database");
     }
 
     @Override
@@ -97,7 +96,7 @@ public class CommentServiceImpl implements CommentService {
 
         log.debug("Receipt post with ID: {}", postId);
         Post post = postService.getPostEntryById(postId);
-        log.info("Post with ID {} fetched successfully", postId);
+        log.debug("Post with ID {} fetched successfully", postId);
 
         log.debug("Converting comments into DTO and sorting");
         List<CommentResponseDto> commentResponseDtos = post.getComments().stream()
@@ -108,9 +107,9 @@ public class CommentServiceImpl implements CommentService {
                         Comparator.nullsLast(Comparator.reverseOrder())
                 ))
                 .toList();
-        log.info("Fetched and sorted {} comments for post with ID {}", commentResponseDtos.size(), postId);
+        log.debug("Fetched and sorted {} comments for post with ID {}", commentResponseDtos.size(), postId);
 
-        log.info("{} is interrupted by ResponseEntity and returned", commentResponseDtos);
+        log.debug("{} is interrupted by ResponseEntity and returned", commentResponseDtos);
         return ResponseEntity.ok(commentResponseDtos);
     }
 
@@ -126,11 +125,11 @@ public class CommentServiceImpl implements CommentService {
             log.error("Comment with ID {} does not exist", commentId);
             throw new EntityNotFoundException("Comment not found");
         }
-        log.info("Comment with ID {} exists and will be deleted", commentId);
+        log.debug("Comment with ID {} exists and will be deleted", commentId);
 
         log.debug("Deleting comment with ID: {}", commentId);
         commentRepository.deleteById(commentId);
-        log.info("Comment with ID {} successfully deleted", commentId);
+        log.debug("Comment with ID {} successfully deleted", commentId);
     }
 
     private void validateUserDto(UserDto userDto) {

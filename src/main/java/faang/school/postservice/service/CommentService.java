@@ -11,7 +11,7 @@ public interface CommentService {
 
     void createComment(CommentCreateDto commentCreateDto);
 
-    void updateCommentContent(CommentUpdateDto commentUpdateDto);
+    void updateCommentContent(long commentId, CommentUpdateDto commentUpdateDto);
 
     ResponseEntity<List<CommentResponseDto>> getAllComments(long postId);
 

@@ -24,44 +24,45 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/comment")
+@RequestMapping("/comments")
 @Validated
 @Slf4j
 public class CommentController {
 
     private final CommentService commentService;
 
-    @PostMapping(value = "/create")
+    @PostMapping()
     public ResponseEntity<Void> createComment(@RequestBody @Valid CommentCreateDto commentCreateDto) {
-        log.info("Received request to add comment: {}", commentCreateDto);
+        log.debug("Received request to add comment: {}", commentCreateDto);
         commentService.createComment(commentCreateDto);
-        log.info("Comment successfully added cre");
+        log.debug("Comment successfully added cre");
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PutMapping(value = "/update/content")
-    public ResponseEntity<Void> updateCommentContent(@RequestBody @Valid CommentUpdateDto commentUpdateDto) {
-        log.info("Received request to update comment content: {}", commentUpdateDto);
-        commentService.updateCommentContent(commentUpdateDto);
-        log.info("Comment successfully updated");
+    @PutMapping(value = "/{commentId}")
+    public ResponseEntity<Void> updateCommentContent(
+            @PathVariable @Min(1) long commentId, @RequestBody @Valid CommentUpdateDto commentUpdateDto) {
+        log.debug("Received request to update comment content: {}", commentUpdateDto);
+        commentService.updateCommentContent(commentId, commentUpdateDto);
+        log.debug("Comment successfully updated");
 
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping(value = "/get/{postId}")
+    @GetMapping(value = "/posts/{postId}/comments")
     public ResponseEntity<List<CommentResponseDto>> getAllComments(@PathVariable @Min(1) long postId) {
         log.debug("Fetching all comments for post with ID: {}", postId);
         ResponseEntity<List<CommentResponseDto>> response = commentService.getAllComments(postId);
-        log.info("Fetched all comments for post with ID: {}", postId);
+        log.debug("Fetched all comments for post with ID: {}", postId);
         return response;
     }
 
-    @DeleteMapping("/delete/{commentId}")
+    @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable @Min(1) long commentId) {
-        log.info("Received request to delete comment with ID: {}", commentId);
+        log.debug("Received request to delete comment with ID: {}", commentId);
         commentService.deleteComment(commentId);
-        log.info("Comment with ID {} successfully deleted", commentId);
+        log.debug("Comment with ID {} successfully deleted", commentId);
 
         return ResponseEntity.noContent().build();
     }
