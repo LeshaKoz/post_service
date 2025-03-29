@@ -57,12 +57,12 @@ public class CommentService {
         authorCacheDto.setHoursToExpire(timeToLive);
         redisAuthorRepository.save(authorCacheDto);
 
-
         commentEventPublisher.publish(new CommentEvent(
                 savedComment.getId(),
                 postId,
                 savedComment.getAuthorId(),
-                savedComment.getContent())
+                savedComment.getContent(),
+                savedComment.getCreatedAt())
         );
 
         return commentMapper.toCreateResponse(savedComment);

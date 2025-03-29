@@ -39,4 +39,9 @@ public class KafkaConfig {
     public KafkaTemplate<String, LikeEvent> likeEventKafkaTemplate(KafkaProperties kafkaProperties) {
         return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaProperties.buildProducerProperties()));
     }
+
+    @Bean
+    public KafkaTemplate<String, Long> userBanKafkaTemplate(KafkaProperties kafkaProperties) {
+        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(kafkaProperties.buildProducerProperties()));
+    }
 }

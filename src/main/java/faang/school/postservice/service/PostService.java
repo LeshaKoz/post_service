@@ -41,7 +41,7 @@ public class PostService {
     private final RedisPostRepository postCacheRepository;
     private final RedisAuthorRepository postAuthorCacheRepository;
 
-    private final KafkaTemplate<String, Long> kafkaTemplate;
+    private final KafkaTemplate<String, Long> userBanKafkaTemplate;
 
     private final PostMapper postMapper;
     private final UserMapper userMapper;
@@ -152,7 +152,7 @@ public class PostService {
         log.info("Start publishing authors to ban");
         for (Long authorIdToBan : authorIdsToBan) {
             log.debug("Publishing author {} to ban", authorIdToBan);
-            kafkaTemplate.send(banTopic, authorIdToBan);
+            userBanKafkaTemplate.send(banTopic, authorIdToBan);
         }
         log.info("Finish publishing authors to ban");
     }
