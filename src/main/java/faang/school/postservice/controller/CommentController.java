@@ -31,7 +31,7 @@ public class CommentController {
         return service.createComment(userId, postId, commentDto);
     }
 
-    @PutMapping("/edit/{commentId}")
+    @PutMapping("/edit/{commentId}/{content}")
     public CommentDto editComment(
             @RequestBody CommentDto commentDto, @PathVariable long commentId, @PathVariable String content) {
         return service.editComment(commentDto, commentId, content);

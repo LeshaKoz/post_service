@@ -1,147 +1,113 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.config.context.UserContext;
-import faang.school.postservice.config.context.UserHeaderFilter;
 import faang.school.postservice.dto.comment.CommentDto;
-
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.service.CommentService;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
-@ContextConfiguration(classes = {UserContext.class, CommentService.class, CommentController.class})
-@WebMvcTest
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.any;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(CommentController.class)
 @AutoConfigureMockMvc
-@Slf4j
-public class CommentControllerTest {
-
-    private CommentDto commentDto;
-
-    private final String urlCreate = "/comments/create";
+class CommentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private CommentService service;
+    @MockBean
+    private CommentService commentService;
 
     @MockBean
-    private UserHeaderFilter userHeaderFilter;
+    private UserContext userContext;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    private CommentMapper mapper;
-
-    @BeforeEach
-    public void setUp() {
-        commentDto = CommentDto.builder()
-                .id(1)
-                .authorId(1)
-                .postId(1)
-                .content("content")
-                .build();
-    }
 
     @Test
     void positiveCreateComment() throws Exception {
         CommentDto inputDto = new CommentDto(1L, 1L, 1L, "Test", LocalDateTime.now());
         CommentDto outputDto = new CommentDto(1L, 1L, 1L, "Test", LocalDateTime.now());
 
-        when(service.createComment(1L, 1L, inputDto)).thenReturn(outputDto);
+        when(commentService.createComment(1L, 1L, inputDto)).thenReturn(outputDto);
 
-        mockMvc.perform(post("/comments/create")
-                        .param("userId", "1")
-                        .param("postId", "1")
+        mockMvc.perform(post("/comments/create/{userId}/{postId}", 1, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inputDto)))
-                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists());
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.content").value("Test"));
     }
 
     @Test
-    void editCommentValidRequestReturnsUpdatedComment() throws Exception {
-        // Подготовка данных
+    void positiveEditComment() throws Exception {
         long commentId = 1L;
         String newContent = "Updated content";
-        CommentDto inputDto = new CommentDto(commentId, 1L, 1L, "Old content", null);
-        CommentDto outputDto = new CommentDto(commentId, 1L, 1L, newContent, LocalDateTime.now());
+        CommentDto inputDto = new CommentDto(
+                commentId, 1L, 1L, "Old content", LocalDateTime.now());
+        CommentDto outputDto = new CommentDto(
+                commentId, 1L, 1L, newContent, LocalDateTime.now());
 
-        when(service.editComment(any(CommentDto.class), eq(commentId), eq(newContent)))
-                .thenReturn(outputDto);
+        when(commentService.editComment(any(CommentDto.class), eq(commentId), eq(newContent))).thenReturn(outputDto);
 
-        mockMvc.perform(put("/comments/edit/{commentId}", commentId)
+        mockMvc.perform(put("/comments/edit/{commentId}/{content}", 1, newContent)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(inputDto))
-                        .param("content", newContent))
+                        .content(objectMapper.writeValueAsString(inputDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(commentId))
                 .andExpect(jsonPath("$.content").value(newContent));
     }
 
     @Test
-    void getAllCommentsValidPostIdReturnsComments() throws Exception {
-
-        Long postId = 123L;
-        CommentDto comment = new CommentDto(
-                1L,
-                999L,
-                postId,
-                "Test comment",
-                LocalDateTime.now()
+    void positiveGetAllComments() throws Exception {
+        long postId = 1L;
+        List<CommentDto> mockComments = List.of(
+                new CommentDto(1L, postId, 1L, "First comment", LocalDateTime.now()),
+                new CommentDto(2L, postId, 1L, "Second comment", LocalDateTime.now())
         );
 
-        when(service.getAllComments(postId)).thenReturn(List.of(comment));
-        
+        when(commentService.getAllComments(postId)).thenReturn(mockComments);
+
         mockMvc.perform(get("/comments/{postId}", postId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].content").value("Test comment"));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].content").value("First comment"))
+                .andExpect(jsonPath("$[1].id").value(2L))
+                .andExpect(jsonPath("$[1].content").value("Second comment"));
     }
 
     @Test
-    void testDeleteComment_Simple() throws Exception {
-        mockMvc.perform(delete("/comments/delete/1"))
-                .andDo(print())
+    void positiveDeleteComment() throws Exception {
+        long commentId = 1L;
+        doNothing().when(commentService).deleteComment(commentId);
+
+        mockMvc.perform(delete("/comments/delete/{commentId}", commentId))
                 .andExpect(status().isNoContent());
+
+        verify(commentService, times(1)).deleteComment(commentId);
     }
-
-
-
-
-
-
 }
