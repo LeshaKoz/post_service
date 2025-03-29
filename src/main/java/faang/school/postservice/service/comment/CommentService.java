@@ -77,6 +77,4 @@ public class CommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID" + commentId));
         commentRepository.deleteById(commentId);
     }
-
-
 }
