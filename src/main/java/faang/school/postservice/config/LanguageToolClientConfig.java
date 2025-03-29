@@ -29,7 +29,8 @@ public class LanguageToolClientConfig {
                         .defaultIfEmpty("No error details")
                         .flatMap(errorBody -> Mono.error(
                                 new LanguageToolException(
-                                        "Error while accessing language tool client. " + errorBody
+                                        "Error while accessing language tool client. " + errorBody,
+                                        clientResponse.statusCode()
                                 )
                         ));
             }

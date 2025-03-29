@@ -28,7 +28,7 @@ public class LanguageToolClient {
     }
 
     private String correctText(String text, LanguageToolResponseDto response) {
-        if (response.getMatches() == null || response.getMatches().isEmpty()){
+        if (response.getMatches() == null || response.getMatches().isEmpty()) {
             return text;
         }
         response.getMatches().sort(Comparator.comparingInt(GrammarMatch::getOffset));

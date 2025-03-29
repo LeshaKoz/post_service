@@ -1,9 +1,7 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.client.LanguageToolClient;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
-import faang.school.postservice.exception.LanguageToolException;
 import faang.school.postservice.exception.PostNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
@@ -11,8 +9,6 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.utils.validationUtils.PostValidation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,7 +25,6 @@ public class PostService {
 
     private final PostMapper postMapper;
     private final PostRepository postRepository;
-    private final LanguageToolClient languageToolClient;
 
     public PostResponseDto createDraftPost(PostRequestDto postRequestDto) {
         PostValidation.validatePostAuthors(postRequestDto);
@@ -118,20 +113,6 @@ public class PostService {
             String message = String.format(NO_POST_FOUND, id);
             log.error(message);
             throw new PostNotFoundException(message);
-        }
-    }
-
-    @Retryable(
-            retryFor = {LanguageToolException.class},
-            maxAttempts = 4,
-            backoff = @Backoff(delay = 1500)
-    )
-    public void sendPostContentsChecking(List<Post> posts) {
-        for (Post post : posts) {
-            log.debug("Before correcting errors in the text: {}", post.getContent());
-            post.setContent(languageToolClient.getCorrectedText(
-                    post.getContent(), "auto").block());
-            log.debug("After correcting errors in the text: {}", post.getContent());
         }
     }
 }

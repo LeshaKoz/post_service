@@ -24,6 +24,10 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+  retry:
+    language-tool:
+      max-attempts: 4
+      backoff-delay: 500
 
 server:
   port: 8081
@@ -48,6 +52,6 @@ servers:
 
 posts:
   correction:
-    cron: "0/10 * * * * *"
-    batch-size: 1
-    thread-poop-size: 8
+    cron: "0 0 * * * *"
+    batch-size: 100000
+    thread-poop-size: 16
