@@ -1,7 +1,7 @@
-package faang.school.postservice.publisher.like;
+package faang.school.postservice.publisher.redis.like;
 
 import faang.school.postservice.event.LikeEvent;
-import faang.school.postservice.publisher.MessagePublisher;
+import faang.school.postservice.publisher.redis.MessagePublisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;

@@ -15,6 +15,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.publisher.kafka.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
@@ -46,6 +47,7 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
+    private final KafkaPostProducer kafkaPostProducer;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -79,7 +81,11 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        return postMapper.toDto(postRepository.save(post));
+
+        Post savedPost = postRepository.save(post);
+        kafkaPostProducer.sendPostPublishedEvent(savedPost);
+
+        return postMapper.toDto(postRepository.save(savedPost));
     }
 
     public PostReadDto updatePost(long id, PostUpdateDto dto) {
@@ -97,7 +103,6 @@ public class PostService {
                     .toList();
             post.setHashtags(hashtags);
         }
-
         return postMapper.toDto(postRepository.save(post));
     }
 

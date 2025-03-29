@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/post-service
+    url: jdbc:postgresql://localhost:5432/postgres
     username: user
     password: password
 
@@ -25,6 +25,12 @@ spring:
         calculations: calculations_channel
         comment_create: comment_create_channel
         likes: likes_channel
+
+  kafka:
+    bootstrap-servers: "localhost:9092"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
   cloud:
     openfeign:

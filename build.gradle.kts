@@ -62,6 +62,11 @@ dependencies {
     testImplementation("com.redis.testcontainers:testcontainers-redis-junit-jupiter:1.4.6")
 
     /**
+     * Kafka
+     */
+    implementation("org.springframework.kafka:spring-kafka")
+
+    /**
      * Tests
      */
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")

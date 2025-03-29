@@ -1,4 +1,4 @@
-package faang.school.postservice.publisher;
+package faang.school.postservice.publisher.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
