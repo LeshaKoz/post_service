@@ -9,7 +9,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -41,3 +41,13 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+servers:
+  language-tool:
+    base-url: https://api.languagetool.org/v2
+
+posts:
+  correction:
+    cron: "0/10 * * * * *"
+    batch-size: 1
+    thread-poop-size: 8

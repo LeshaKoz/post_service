@@ -3,7 +3,7 @@ package faang.school.postservice.PostService;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.exception.PostNotFoundException;
-import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
@@ -38,7 +38,7 @@ public class PostServiceTest {
     private PostRepository postRepository;
 
     @Spy
-    private PostMapper postMapper;
+    private PostMapperImpl postMapper;
 
     private PostRequestDto postRequestDto;
     private Post post;
