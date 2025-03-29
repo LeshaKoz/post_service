@@ -7,6 +7,7 @@ import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.kafka.PostEventPublisher;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Like;
@@ -60,6 +61,8 @@ public class PostServiceTest {
     private PostService postService;
     private ResourseService resourseService;
     private KafkaTemplate<String, Long> kafkaTemplate;
+    private PostEventPublisher postEventPublisher;
+
     @Captor
     private ArgumentCaptor<List<MultipartFile>> captor;
 
@@ -73,9 +76,11 @@ public class PostServiceTest {
         userMapper = Mappers.getMapper(UserMapper.class);
         postValidator = mock(PostValidator.class);
         resourseService = mock(ResourseService.class);
+        postEventPublisher = mock(PostEventPublisher.class);
         userServiceClient = mock(UserServiceClient.class);
+
         postService = new PostService(postRepository, cacheRepository, postAuthorCacheRepository, kafkaTemplate,
-                postMapper, userMapper, postValidator, resourseService, userServiceClient);
+                postMapper, userMapper, postValidator, resourseService, postEventPublisher, userServiceClient);
     }
 
     @Test
@@ -138,6 +143,7 @@ public class PostServiceTest {
         assertNotNull(actualResponse.getPublishedAt());
         verify(postRepository, times(1)).save(post);
         verify(cacheRepository, times(1)).save(any(PostCacheDto.class));
+        verify(userServiceClient, times(1)).getFollowers(post.getAuthorId());
         verify(postAuthorCacheRepository, times(1))
                 .save(userMapper.toAuthorCacheDto(userDto));
     }

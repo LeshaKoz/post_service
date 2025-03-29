@@ -1,7 +1,10 @@
 package faang.school.postservice.client;
 
 import faang.school.postservice.dto.user.UserDto;
+import feign.FeignException;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "user-service", url = "${user-service.host}:${user-service.port}/api/v1")
+@FeignClient(name = "user-service",
+        url = "${user-service.host}:${user-service.port}${user-service.path}")
 public interface UserServiceClient {
 
     @GetMapping("/users/{userId}")
@@ -17,4 +21,9 @@ public interface UserServiceClient {
 
     @PostMapping("/users")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
+
+    @Retryable(retryFor = FeignException.class,
+            backoff = @Backoff(delay = 1000, multiplier = 2))
+    @GetMapping("users/{userId}/followersIds")
+    List<Long> getFollowers(@PathVariable Long userId);
 }

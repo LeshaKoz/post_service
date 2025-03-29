@@ -33,7 +33,9 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class PostService {
     @Value("${spring.data.redis.properties.post-collection.hours-to-expire}")
-    public long postHoursToExpire;
+    private long postHoursToExpire;
+    @Value("${spring.kafka.topics.post.followers-batch-size:10000}")
+    private int followersBatchSize;
     @Value("${spring.data.redis.properties.author-collection.hours-to-expire}")
     private int postAuthorHoursToExpire;
 
@@ -41,13 +43,13 @@ public class PostService {
     private final RedisPostRepository postCacheRepository;
     private final RedisAuthorRepository postAuthorCacheRepository;
 
-    private final KafkaTemplate<String, Long> userBanKafkaTemplate;
-
+    private final KafkaTemplate<String, Long> authorBunKafkaTemplate;
     private final PostMapper postMapper;
     private final UserMapper userMapper;
 
     private final PostValidator postValidator;
     private final ResourseService resourseService;
+    private final PostEventPublisher postEventPublisher;
     private final UserServiceClient userServiceClient;
 
     @Value("${author.banner.rejected_posts_to_ban}")
@@ -80,6 +82,9 @@ public class PostService {
         AuthorCacheDto authorCacheDto = userMapper.toAuthorCacheDto(userDto);
         authorCacheDto.setHoursToExpire(postAuthorHoursToExpire);
         postAuthorCacheRepository.save(authorCacheDto);
+
+        List<Long> followersIds = userServiceClient.getFollowers(post.getAuthorId());
+        publishPostEvent(savedPost.getId(), followersIds);
 
         return postMapper.toResponseDto(savedPost);
     }
@@ -152,7 +157,7 @@ public class PostService {
         log.info("Start publishing authors to ban");
         for (Long authorIdToBan : authorIdsToBan) {
             log.debug("Publishing author {} to ban", authorIdToBan);
-            userBanKafkaTemplate.send(banTopic, authorIdToBan);
+            authorBunKafkaTemplate.send(banTopic, authorIdToBan);
         }
         log.info("Finish publishing authors to ban");
     }
@@ -180,5 +185,12 @@ public class PostService {
                 .sorted(Comparator.comparing(fieldToSortBy).reversed())
                 .map(postMapper::toResponseDto)
                 .toList();
+    }
+
+    private void publishPostEvent(Long postId, List<Long> followersIds) {
+        followersIds.stream()
+                .collect(Collectors.groupingBy(i -> i / followersBatchSize))
+                .values()
+                .forEach(batch -> postEventPublisher.publish(new PostEvent(postId, batch)));
     }
 }
