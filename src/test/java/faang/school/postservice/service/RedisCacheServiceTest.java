@@ -5,16 +5,19 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.cache.PostCache;
 import faang.school.postservice.model.cache.UserCache;
+import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.cache.RedisPostRepository;
 import faang.school.postservice.repository.cache.RedisUserRepository;
 import faang.school.postservice.service.cache.RedisCacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -25,9 +28,12 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SpringBootTest(classes = {RedisCacheService.class})
 @Testcontainers
 public class RedisCacheServiceTest {
 
@@ -36,23 +42,30 @@ public class RedisCacheServiceTest {
             new RedisContainer(DockerImageName.parse("redis/redis-stack:latest"));
 
     @DynamicPropertySource
-    static void postgresqlProperties(DynamicPropertyRegistry registry) {
-        REDIS_CONTAINER.start();
-        REDIS_CONTAINER.waitingFor(Wait.forListeningPort());
-        registry.add("spring.data.redis.port", () -> REDIS_CONTAINER.getMappedPort(6379));
+    static void redisProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.redis.host", REDIS_CONTAINER::getHost);
+        registry.add("spring.data.redis.port", () -> REDIS_CONTAINER.getMappedPort(6379));
     }
 
-    @Mock
+    @MockBean
     private RedisUserRepository redisUserRepository;
 
-    @Mock
+    @MockBean
     private RedisPostRepository redisPostRepository;
 
-    @Mock
+    @MockBean
     private UserServiceClient userServiceClient;
 
-    @InjectMocks
+    @MockBean
+    private RedissonClient redissonClient;
+
+    @MockBean
+    private PostRepository postRepository;
+
+    @MockBean
+    private PostMapper postMapper;
+
+    @Autowired
     private RedisCacheService redisCacheService;
 
     private Long authorId;
@@ -60,6 +73,9 @@ public class RedisCacheServiceTest {
 
     @BeforeEach
     public void setUp() {
+        REDIS_CONTAINER.start();
+        REDIS_CONTAINER.waitingFor(Wait.forListeningPort());
+
         authorId = 1L;
         postReadDto = PostReadDto.builder()
                 .id(1L)
