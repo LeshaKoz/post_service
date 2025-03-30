@@ -1,6 +1,5 @@
 package faang.school.postservice.config.kafka;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,7 +7,7 @@ import java.util.Map;
 
 @Setter
 @Getter
-@ConfigurationProperties(prefix = "spring.data.kafka")
+@ConfigurationProperties(prefix = "spring.kafka")
 public class KafkaProperties {
     private Map<String, Topic> topics;
     private String bootstrapServers;

@@ -33,34 +33,34 @@ spring:
         pageSize: 20
         ttl: 86400
 
-    kafka:
-      bootstrap-servers: localhost:9092
-      admin:
-        fail-fast: true
-      topics:
-        post:
-          name: post
-          partitions: 3
-          replicas: 1
-        delete-post:
-          name: delete-post
-          partitions: 3
-          replicas: 1
-      producer:
-        retries: 3
-        retry-backoff-ms: 1000
-      consumer:
-        auto-offset-reset: earliest
-        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-        properties:
-          spring.json.trusted.packages: 'faang.school.postservice.dto'
-          spring.json.use.type.headers: false
-        groups:
-          post: postGroup
-      listener:
-        missing-topics-fatal: false
-
+  kafka:
+    bootstrap-servers: localhost:9092
+    admin:
+      fail-fast: true
+    topics:
+      post:
+        name: post
+        partitions: 3
+        replicas: 1
+      delete-post:
+        name: delete-post
+        partitions: 3
+        replicas: 1
+    producer:
+      retries: 3
+      retry-backoff-ms: 1000
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: 'faang.school.postservice.dto.feed'
+      groups:
+        post: postGroup
+    listener:
+      ack-mode: MANUAL
+      retry-attempts: 3
+      retry-interval: 1000
 
   mvc:
     servlet:
@@ -118,8 +118,10 @@ comment:
   path-to-dictionary: /bad_words_list.txt
 
   schedule:
-    verify: "*/10 * * * * *"
-    user-ban: "*/30 * * * * *"
+    verify: "0 0 0 * * ?"
+    #"*/10 * * * * *"
+    user-ban: "0 0 0 * * ?"
+    #"*/30 * * * * *"
   batchSize: 100
   thread-pool-size: 4
   word-split-regex: "(?<=\\p{L})(?=\\p{P})|(?<=\\p{P})(?=\\p{L})|\\s+"
@@ -135,3 +137,4 @@ feed:
   kafka:
     subscribers-batch-size: 1000
     post-topic: post
+

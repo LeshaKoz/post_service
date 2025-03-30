@@ -28,18 +28,24 @@ public class FeedService {
     private final FeedGetPostService feedGetPostService;
 
     public void addPostToFeed(List<Long> subscribersIds, Long postId, LocalDateTime publishedAt) {
+        log.info("addPostToFeed subscribersIds {} Long postId {} publishedAt {} ", subscribersIds, postId, publishedAt);
         redisFeedRepository.addPost(subscribersIds, postId, publishedAt);
     }
 
     public void handlePostDeletion(Long postId) {
+        log.info("handlePostDeletion postId {}", postId);
         cacheService.handlePostDeletion(postId);
-        redisFeedRepository.deletePostFromAllFeeds(postId);
+        //redisFeedRepository.deletePostFromAllFeeds(postId);
     }
 
     public List<FeedPostDto> getFeed(Long userId, LocalDateTime lastSeenDate) {
+        log.info("getFeed userId {} lastSeenDate {} ", userId, lastSeenDate);
         List<PostResponseDto> postDtos = constructPostsForFeed(userId, lastSeenDate);
+        log.info("getFeed postDtos {} ", postDtos);
         Set<Long> userIds = prepareAuthorsIds(postDtos);
+        log.info("getFeed userIds {} ", userIds);
         Map<Long, UserDto> usersMap = cacheService.fetchUsers(userIds);
+        log.info("getFeed userMap {} ", usersMap);
 
         return assembleFeedPosts(postDtos, usersMap);
     }

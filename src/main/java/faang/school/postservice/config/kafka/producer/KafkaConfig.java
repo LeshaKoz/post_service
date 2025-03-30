@@ -1,7 +1,6 @@
-package faang.school.postservice.config.kafka;
+package faang.school.postservice.config.kafka.producer;
 
-import faang.school.postservice.dto.feed.FeedPostDeleteEvent;
-import faang.school.postservice.dto.feed.FeedPostEvent;
+import faang.school.postservice.config.kafka.KafkaProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClientConfig;

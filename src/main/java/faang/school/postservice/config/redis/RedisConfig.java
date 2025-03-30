@@ -29,22 +29,12 @@ public class RedisConfig {
     }
 
     @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return mapper;
-    }
-
-    @Bean
     public RedisTemplate<String, Object> cacheRedisTemplate() {
-        ObjectMapper objectMapper = objectMapper();
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer();
 
         return createRedisTemplate(connectionFactory(), serializer);
     }
-
 
     @Bean
     public RedisMessageListenerContainer redisContainer() {
