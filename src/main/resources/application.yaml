@@ -33,6 +33,8 @@ spring:
         name: notification_comment_topic
       user-ban-topic:
         name: user_ban_topic
+      publish-post-topic:
+        name: publish_post_topic
 
   data:
     redis:

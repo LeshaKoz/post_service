@@ -34,6 +34,7 @@ public class PostService {
     private final ExecutorService executorService;
     private final AsyncModerationService asyncModerationService;
     private final SpellCheckerService spellCheckerService;
+    private final KafkaPostProducer kafkaPostProducer;
     private final PostCacheService postCacheService;
 
     @Value("${moderation.threadSize}")
@@ -44,12 +45,15 @@ public class PostService {
                        ThreadPoolTaskExecutor publishingThreadPool,
                        AsyncModerationService asyncModerationService,
                        SpellCheckerService spellCheckerService,
+                       KafkaPostProducer kafkaPostProducer) {
+                       SpellCheckerService spellCheckerService,
                        PostCacheService postCacheService) {
         this.postRepository = postRepository;
         this.internalServices = internalServices;
         this.asyncModerationService = asyncModerationService;
         this.executorService = publishingThreadPool.getThreadPoolExecutor();
         this.spellCheckerService = spellCheckerService;
+        this.kafkaPostProducer = kafkaPostProducer;
         this.postCacheService = postCacheService;
     }
 
@@ -73,6 +77,9 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+        Post result = postRepository.save(post);
+        kafkaPostProducer.publishPostCreationEvent(result);
+        return result;
         Post result = postRepository.save(post);
 
         postCacheService.cachePost(result);
