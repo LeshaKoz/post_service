@@ -34,8 +34,8 @@ public record CustomKafkaProperties(
     public record Topic(
             String postsTopic,
             String postViewsTopic,
-            String likesTopic,
-            String commentsTopic
+            String postLikesTopic,
+            String postCommentsTopic
     ) {
     }
 

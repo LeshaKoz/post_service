@@ -2,9 +2,12 @@ package faang.school.postservice.broker.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.config.kafka.CustomKafkaProperties;
+import faang.school.postservice.dto.comment.PostCommentEvent;
+import faang.school.postservice.dto.post.PostLikeEvent;
 import faang.school.postservice.dto.post.PostPublicationEvent;
 import faang.school.postservice.dto.post.PostViewEvent;
 import faang.school.postservice.mapper.user.UserDtoAdapter;
+import faang.school.postservice.model.Comment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -57,7 +60,30 @@ public class PostEventProducer extends KafkaProducerService{
         log.info("Sending PostViewEvent to message broker. Post : {}", postId);
     }
 
+    public void produceLikePostEvent(long postId) {
 
+        PostLikeEvent postLikeEvent = PostLikeEvent.builder()
+                .postId(postId)
+                .build();
+
+        super.sendPostMessage(customKafkaProperties.topic().postLikesTopic(), postLikeEvent);
+        log.info("Sending PostLikeEvent to message broker. Post : {}", postId);
+    }
+
+    public void produceCommentPostEvent(Comment comment) {
+
+        long postId = comment.getPost().getId();
+        PostCommentEvent postCommentEvent = PostCommentEvent.builder()
+                .postId(postId)
+                .commentId(comment.getId())
+                .authorId(comment.getAuthorId())
+                .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
+                .build();
+
+        super.sendPostMessage(customKafkaProperties.topic().postCommentsTopic(), postCommentEvent);
+        log.info("Sending postCommentEvent to message broker. Post : {}", postId);
+    }
 
 
     /*

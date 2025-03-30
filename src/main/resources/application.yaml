@@ -59,8 +59,8 @@ spring:
     topic:
       posts-topic: posts
       post-views-topic: post_views
-      likes-topic: likes
-      comments-topic: comments
+      post-likes-topic: post_likes
+      post-comments-topic: post_comments
 
   mvc:
     servlet:

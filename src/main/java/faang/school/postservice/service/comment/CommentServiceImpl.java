@@ -1,5 +1,6 @@
 package faang.school.postservice.service.comment;
 
+import faang.school.postservice.broker.producer.PostEventProducer;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.comment.CommentEvent;
@@ -21,6 +22,7 @@ import faang.school.postservice.publisher.comment.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageService;
+import faang.school.postservice.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +59,8 @@ public class CommentServiceImpl implements CommentService {
     private final ModerationDictionary moderationDictionary;
     private final UsersBanPublisher usersBanPublisher;
     private final UserDtoAdapter userDtoAdapter;
+    private final PostEventProducer postEventProducer;
+    private final UserService userService;
 
     @Value("${comment.batchSize}")
     private int batchSize;
@@ -76,6 +80,7 @@ public class CommentServiceImpl implements CommentService {
                 savedComment.getPost().getId(),
                 savedComment.getId(),
                 savedComment.getCreatedAt());
+        postEventProducer.produceCommentPostEvent(savedComment);
         return commentMapper.toCommentResponseDto(savedComment);
     }
 
@@ -180,8 +185,8 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private void validateUser(Long authorId) {
-        UserDto user = userDtoAdapter.toUserDto(userServiceClient.getUser(authorId));
-        if (user == null) {
+        UserDto userDto = userService.getUserWithCache(authorId);
+        if (userDto == null) {
             throw new EntityNotFoundException(String.format("User with id %s not found", authorId));
         }
     }
