@@ -2,19 +2,17 @@ package faang.school.postservice.service.feed;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.feed.FeedPostDto;
-import faang.school.postservice.dto.feed.FeedPostEvent;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
-import faang.school.postservice.dto.project.ProjectDto;
-import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.project.ProjectResponseDto;
+import faang.school.postservice.dto.user.SubscriptionUserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.RedisFeedRepository;
 import faang.school.postservice.repository.RedisPostRepository;
 import faang.school.postservice.service.PostService;
-import faang.school.postservice.service.feed.FeedService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,24 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.test.EmbeddedKafkaBroker;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -100,12 +83,19 @@ class PostFeedIntegrationTest {
     @Spy
     private PostMapperImpl postMapper;
 
-    private final Long AUTHOR_ID = 1L;
-    private final Long FOLLOWER_ID = 2L;
-    private final List<Long> FOLLOWERS = List.of(FOLLOWER_ID, 3L, 4L);
-    private final Long PROJECT_ID = 5L;
-    private final UserDto AUTHOR_DTO = UserDto.builder().id(AUTHOR_ID).username("test_user").build();
-    private final ProjectDto projectDto = ProjectDto.builder().id(PROJECT_ID).build();
+    private final Long authorId = 1L;
+    private final Long followerId = 2L;
+    private final List<Long> followers = List.of(followerId, 3L, 4L);
+    private final Long projectId = 5L;
+    private final UserResponseDto authorDto = UserResponseDto.builder().id(authorId).username("test_user 1").build();
+    private final SubscriptionUserDto followerDto2 = SubscriptionUserDto.builder()
+            .id(followerId).username("test_user 2").build();
+    private final SubscriptionUserDto followerDto3 = SubscriptionUserDto.builder()
+            .id(3L).username("test_user 3").build();
+    private final SubscriptionUserDto followerDto4 = SubscriptionUserDto.builder()
+            .id(4L).username("test_user 4").build();
+    private final List<SubscriptionUserDto> followersDtos = List.of(followerDto2, followerDto3, followerDto4);
+    private final ProjectResponseDto projectDto = ProjectResponseDto.builder().id(projectId).build();
     private Long postId;
 
     @BeforeEach
@@ -113,17 +103,17 @@ class PostFeedIntegrationTest {
         postRepository.deleteAll();
         redisTemplate.getConnectionFactory().getConnection().flushAll();
 
-        when(userServiceClient.getFollowerIdsByFolloweeId(AUTHOR_ID)).thenReturn(FOLLOWERS);
-        when(userServiceClient.getUser(AUTHOR_ID)).thenReturn(AUTHOR_DTO);
+        when(userServiceClient.getFollowers(authorId)).thenReturn(followersDtos);
+        when(userServiceClient.getUser(authorId)).thenReturn(authorDto);
 
-        when(projectServiceClient.getProject(PROJECT_ID)).thenReturn(projectDto);
+        when(projectServiceClient.getProject(projectId)).thenReturn(projectDto);
     }
 
     @Test
     void testNewPostAddToFeed() {
         // 1. Create post draft
         PostCreateRequestDto createDto = PostCreateRequestDto.builder()
-                .authorId(AUTHOR_ID)
+                .authorId(authorId)
                 .content("Test content")
                 .build();
 
@@ -136,18 +126,18 @@ class PostFeedIntegrationTest {
         // 3. Verify DB
         Optional<Post> postFromDb = postRepository.findById(postId);
         assertTrue(postFromDb.isPresent());
-        assertEquals(AUTHOR_ID, postFromDb.get().getAuthorId());
+        assertEquals(authorId, postFromDb.get().getAuthorId());
         assertNotNull(postFromDb.get().getPublishedAt());
 
         // 5. Verify Redis Post cache
         Optional<PostResponseDto> postFromRedis = redisPostRepository.getPost(postId);
         assertTrue(postFromRedis.isPresent());
         assertEquals(postId, postFromRedis.get().id());
-        assertEquals(AUTHOR_ID, postFromRedis.get().authorId());
+        assertEquals(authorId, postFromRedis.get().authorId());
 
         sleep(5);
         // 6. Verify Redis Feed
-        List<Long> postIds = redisFeedRepository.getPostIds(FOLLOWER_ID, null, 10);
+        List<Long> postIds = redisFeedRepository.getPostIds(followerId, null, 10);
         assertNotNull(postIds);
         assertTrue(postIds.contains(postId));
 

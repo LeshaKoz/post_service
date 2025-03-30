@@ -2,6 +2,7 @@ package faang.school.postservice.repository;
 
 import faang.school.postservice.config.redis.CacheProperties;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,13 +21,13 @@ public class RedisUserRepository {
     private final CacheProperties properties;
     private static final String USER_KEY_PREFIX = "user:";
 
-    public void save(UserDto userDto) {
-        String key = USER_KEY_PREFIX + userDto.id();
+    public void save(UserResponseDto userDto) {
+        String key = USER_KEY_PREFIX + userDto.getId();
         cacheRedisTemplate.opsForValue().set(key, userDto, Duration.ofSeconds(properties.getTtl()));
         log.info("userDto was saved. key {} userDto {}", key, userDto);
     }
 
-    public void save(List<UserDto> userDtos) {
+    public void save(List<UserResponseDto> userDtos) {
 
         userDtos.forEach(this::save);
     }

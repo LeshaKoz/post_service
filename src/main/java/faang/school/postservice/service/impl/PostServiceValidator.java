@@ -3,8 +3,9 @@ package faang.school.postservice.service.impl;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
-import faang.school.postservice.dto.project.ProjectDto;
+import faang.school.postservice.dto.project.ProjectResponseDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import faang.school.postservice.model.Post;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,14 +65,14 @@ public class PostServiceValidator {
     }
 
     private void checkAuthorExists(Long authorId) {
-        UserDto userDto = userServiceClient.getUser(authorId);
-        if (!authorId.equals(userDto.id())) {
+        UserResponseDto userDto = userServiceClient.getUser(authorId);
+        if (!authorId.equals(userDto.getId())) {
             throw new IllegalArgumentException("Unable to find user with id = " + authorId);
         }
     }
 
     private void checkProjectExists(Long projectId) {
-        ProjectDto projectDto = projectServiceClient.getProject(projectId);
+        ProjectResponseDto projectDto = projectServiceClient.getProject(projectId);
         if (!projectId.equals(projectDto.id())) {
             throw new IllegalArgumentException("Unable to find project with id = " + projectId);
         }

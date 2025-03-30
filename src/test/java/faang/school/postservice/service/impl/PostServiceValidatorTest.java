@@ -4,7 +4,9 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.project.ProjectDto;
+import faang.school.postservice.dto.project.ProjectResponseDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import faang.school.postservice.model.Post;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,8 +30,8 @@ class PostServiceValidatorTest {
 
 
     PostCreateRequestDto validPostCreateRequestDto;
-    UserDto userDto;
-    ProjectDto projectDto;
+    UserResponseDto userDto;
+    ProjectResponseDto projectDto;
     Post post;
     Post postByOtherAuthor;
     Post postInOtherProject;
@@ -59,8 +61,15 @@ class PostServiceValidatorTest {
                 .authorId(111L)
                 .projectId(1231L)
                 .build();
-        userDto = new UserDto(111L, "Alice", "alice@mail.ru");
-        projectDto = new ProjectDto(222L, "New project");
+        userDto = UserResponseDto.builder()
+                .id(111L)
+                .username("Alice")
+                .email("alice@mail.ru")
+                .build();
+        projectDto = ProjectResponseDto.builder()
+                .id(222L)
+                .name("New project")
+                .build();
     }
 
     @Test
@@ -99,8 +108,10 @@ class PostServiceValidatorTest {
     @Test
     @DisplayName("Test author and project exist for post")
     void testValidateAuthorAndProjectPostDto() {
-        Mockito.when(userServiceClient.getUser(11111111L)).thenReturn(new UserDto(null, null, null));
-        Mockito.when(projectServiceClient.getProject(222222222L)).thenReturn(new ProjectDto(0, null));
+        Mockito.when(userServiceClient.getUser(11111111L)).thenReturn(UserResponseDto.builder().build());
+        Mockito.when(projectServiceClient.getProject(222222222L)).thenReturn(ProjectResponseDto.builder()
+                .id(0L)
+                .build());
         PostCreateRequestDto unknownAuthorPostDto = PostCreateRequestDto.builder()
                 .authorId(11111111L)
                 .content("test")

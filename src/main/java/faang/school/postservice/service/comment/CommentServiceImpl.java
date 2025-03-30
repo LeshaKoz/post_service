@@ -8,6 +8,7 @@ import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import faang.school.postservice.dto.user.UsersBanEvent;
 import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -178,7 +179,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private void validateUser(Long authorId) {
-        UserDto user = userServiceClient.getUser(authorId);
+        UserResponseDto user = userServiceClient.getUser(authorId);
         if (user == null) {
             throw new EntityNotFoundException(String.format("User with id %s not found", authorId));
         }

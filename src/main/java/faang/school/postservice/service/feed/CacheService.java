@@ -3,6 +3,7 @@ package faang.school.postservice.service.feed;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import faang.school.postservice.repository.RedisFeedRepository;
 import faang.school.postservice.repository.RedisPostRepository;
 import faang.school.postservice.repository.RedisUserRepository;
@@ -36,7 +37,7 @@ public class CacheService {
     }
 
     public void addUserToCache(Long authorId) {
-        UserDto userDto = userServiceClient.getUser(authorId);
+        UserResponseDto userDto = userServiceClient.getUser(authorId);
         log.info("addUserToCache userDto {}", userDto);
         redisUserRepository.save(userDto);
     }

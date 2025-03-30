@@ -4,6 +4,7 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.FeedProperties;
 import faang.school.postservice.dto.feed.FeedPostDeleteEvent;
 import faang.school.postservice.dto.feed.FeedPostEvent;
+import faang.school.postservice.dto.user.SubscriptionUserDto;
 import faang.school.postservice.producer.KafkaPostDeleteProducer;
 import faang.school.postservice.producer.KafkaPostProducer;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +35,12 @@ public class FeedEventService {
     private void createAndSendFeedPostEvent(Long postId, Long authorId, LocalDateTime publishedAt, String topicName) {
         log.info("createAndSendFeedPostEvent postId {} authorId {} publishedAt {} topicName {}",
                 postId, authorId, publishedAt, topicName);
-        List<Long> subscribersIds = userServiceClient.getFollowerIdsByFolloweeId(authorId);
+        List< SubscriptionUserDto> userDtos = userServiceClient.getFollowers(authorId);
+        List<Long> subscribersIds = userDtos.stream()
+                .map(SubscriptionUserDto::id)
+                .toList();
         log.info("subscribersIds {} ", subscribersIds);
-        if (subscribersIds == null || subscribersIds.isEmpty()) {
+        if (subscribersIds.isEmpty()) {
             log.info("Author {} has no subscribers or failed to retrieve subscribers. No events will be sent.", authorId);
         } else if (subscribersIds.size() <= properties.getSubscribersBatchSize()) {
             kafkaPostProducer.sendEventToTopic(new FeedPostEvent(postId, authorId, publishedAt, subscribersIds), topicName);

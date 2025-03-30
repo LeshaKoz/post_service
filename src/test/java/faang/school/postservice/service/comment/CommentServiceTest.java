@@ -8,6 +8,7 @@ import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserResponseDto;
 import faang.school.postservice.dto.user.UsersBanEvent;
 import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -104,7 +105,7 @@ public class CommentServiceTest {
     private long postId;
     private Post post;
     private Comment comment;
-    private UserDto userDto;
+    private UserResponseDto userDto;
     private Like like1;
     private Like like2;
     private Like like3;
