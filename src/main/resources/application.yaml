@@ -137,6 +137,8 @@ schedulers:
       threadNamePrefix: "moderation-"
       cronExpression: "0 * * * * *"
   correct-posts: "0 0 12 * * ?"
+  post-cache:
+    cleanup-cron: "0 0 0 * * ?" # Run at midnight every day
 
 commenter-banner:
   cron: "0 0 12 * * ?"
@@ -157,3 +159,6 @@ app:
     retry:
       maxAttempts: 5
       backoffDelay: 1000
+  newsfeed:
+    cache:
+      post-ttl: 24h

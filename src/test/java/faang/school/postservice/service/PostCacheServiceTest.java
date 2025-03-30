@@ -1,13 +1,13 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostCacheRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
@@ -28,16 +28,14 @@ public class PostCacheServiceTest {
     private RedisTemplate<String, Post> redisTemplate;
 
     @Mock
-    private ValueOperations<String, Post> valueOperations;
+    private PostCacheRepository postCacheRepository;
 
     private static final long DEFAULT_TTL_HOURS = 24;
 
     @BeforeEach
     void setUp() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-
-        postCacheService = new PostCacheService(redisTemplate);
-        ReflectionTestUtils.setField(postCacheService, "postTtlHours", DEFAULT_TTL_HOURS);
+        postCacheService = new PostCacheService(postCacheRepository);
+        ReflectionTestUtils.setField(postCacheService, "postTtl", Duration.ofHours(DEFAULT_TTL_HOURS));
     }
 
     @Test
@@ -48,14 +46,14 @@ public class PostCacheServiceTest {
 
         postCacheService.cachePost(post);
 
-        verify(valueOperations).set(eq("post:1"), eq(post), eq(Duration.ofHours(DEFAULT_TTL_HOURS)));
+        verify(postCacheRepository).save(eq(post), eq(Duration.ofHours(DEFAULT_TTL_HOURS)));
     }
 
     @Test
     void shouldGetCachedPost() {
         Post post = new Post();
         post.setId(1L);
-        when(valueOperations.get("post:1")).thenReturn(post);
+        when(postCacheRepository.findById(1L)).thenReturn(Optional.of(post));
 
         Optional<Post> result = postCacheService.getCachedPost(1L);
 
@@ -65,7 +63,7 @@ public class PostCacheServiceTest {
 
     @Test
     void shouldReturnEmptyWhenPostNotCached() {
-        when(valueOperations.get("post:2")).thenReturn(null);
+        when(postCacheRepository.findById(2L)).thenReturn(Optional.empty());
 
         Optional<Post> result = postCacheService.getCachedPost(2L);
 
@@ -76,8 +74,8 @@ public class PostCacheServiceTest {
     void shouldRemovePostFromCache() {
         Long postId = 1L;
 
-        postCacheService.removeFromCache(postId);
+        postCacheService.removePostFromCache(postId);
 
-        verify(redisTemplate).delete("post:1");
+        verify(postCacheRepository).deleteById(postId);
     }
 }
