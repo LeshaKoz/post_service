@@ -2,10 +2,12 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.dto.resource.ResourceDtoRs;
 import faang.school.postservice.dto.resource.ResourceDtoRq;
+import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.ResourceRepository;
+import faang.school.postservice.service.image.ImageService;
 import faang.school.postservice.service.image.S3Service;
 import lombok.RequiredArgsConstructor;
 import net.coobird.thumbnailator.Thumbnails;
@@ -18,6 +20,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +31,7 @@ public class ResourceService {
     private final ResourceRepository resourceRepository;
     private final S3Service s3Service;
     private final ResourceMapper resourceMapper;
+    private final ImageService imageService;
 
     @Value("${app.posts.files.image-max-width}")
     private int imageMaxWidth;
@@ -48,7 +52,7 @@ public class ResourceService {
 
                 ByteArrayOutputStream byteArrayOutputStream;
                 if (width > imageMaxWidth || height > imageMaxHeight) {
-                    byteArrayOutputStream = resizeImage(files[i], imageMaxWidth);
+                    byteArrayOutputStream = imageService.resizeImage(files[i], imageMaxWidth);
                 } else {
                     byteArrayOutputStream = new ByteArrayOutputStream();
                     Thumbnails.of(files[i].getInputStream())
@@ -79,16 +83,14 @@ public class ResourceService {
         s3Service.uploadFile(byteArrayOutputStream.size(), contentType, key, byteArrayOutputStream.toByteArray());
         return resourceMapper.toResourceDtoResponse(savedResource);
     }
+    
+    public InputStream downloadResource(Long resourceId){
+        Resource resource = getResourceById(resourceId);
+        return s3Service.downloadFile(resource.getKey());
+    }
 
-    private ByteArrayOutputStream resizeImage(MultipartFile file, int targetSize) {
-        try (ByteArrayOutputStream thumbnailOutputStream = new ByteArrayOutputStream()) {
-            Thumbnails.of(file.getInputStream())
-                    .size(targetSize, targetSize)
-                    .keepAspectRatio(true)
-                    .toOutputStream(thumbnailOutputStream);
-            return thumbnailOutputStream;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to resize image", e);
-        }
+    private Resource getResourceById(Long resourceId) {
+        return resourceRepository.findById(resourceId).orElseThrow(
+                () -> new EntityNotFoundException("Resource with id [%d] not found in database".formatted(resourceId)));
     }
 }

@@ -25,10 +25,6 @@ spring:
         calculations_channel:
           name: calculations_channel
 
-  mvc:
-    servlet:
-      path: /api/v1
-
   servlet:
     multipart:
       enabled: true

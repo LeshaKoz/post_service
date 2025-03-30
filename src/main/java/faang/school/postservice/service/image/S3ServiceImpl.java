@@ -3,7 +3,9 @@ package faang.school.postservice.service.image;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import faang.school.postservice.config.AwsProperties;
+import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.UploadFileException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +53,13 @@ public class S3ServiceImpl implements S3Service {
 
     @Override
     public InputStream downloadFile(String key) {
-        return null;
+        try {
+            S3Object s3Object = s3Client.getObject(awsProperties.getBucketName(), key);
+            return s3Object.getObjectContent();
+        }catch (Exception e){
+            log.error(e.getMessage());
+            throw new EntityNotFoundException("Requested file with key %s in bucket with bucketName %s not found"
+                    .formatted(key, awsProperties.getBucketName()));
+        }
     }
-
 }

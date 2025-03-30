@@ -3,6 +3,7 @@ package faang.school.postservice.controller;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.ResourceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PostControllerTest {
     @Mock
     private PostService postServiceMock;
+    @Mock
+    private ResourceService resourceServiceMock;
     @InjectMocks
     private PostController postController;
     private PostCreateRequestDto validPostCreateRequestDto;
@@ -23,7 +26,7 @@ class PostControllerTest {
 
     @BeforeEach
     void setUp() {
-        postController = new PostController(postServiceMock);
+        postController = new PostController(postServiceMock, resourceServiceMock);
         validPostCreateRequestDto = PostCreateRequestDto.builder()
                 .content("test content")
                 .authorId(111L)

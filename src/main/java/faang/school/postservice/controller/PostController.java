@@ -6,11 +6,17 @@ import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.ResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -20,6 +26,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final ResourceService resourceService;
 
     @PostMapping("/")
     public PostResponseDto createPostDraft(@RequestBody PostCreateRequestDto postCreateRequestDto) {
@@ -60,8 +67,26 @@ public class PostController {
         return postService.findAllByFilter(postFilter);
     }
 
-    @PutMapping("/{postId}/images")
-    public List<ResourceDtoRs> uploadFile(@PathVariable long postId, @RequestPart("files") MultipartFile[] files) {
+    @PutMapping(value = "/{postId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public List<ResourceDtoRs> uploadFile(
+            @PathVariable long postId,
+            @RequestPart("files") MultipartFile[] files) {
+        log.info("Received a request to save a files for a post with id = {}", postId);
         return postService.uploadFiles(postId, files);
+    }
+
+    @GetMapping(value = "/resources/{resourceId}", produces = "application/octet-stream")
+    public ResponseEntity<byte[]> downloadResource(@PathVariable Long resourceId){
+        log.info("Received a request to download a file with resourceId = {}", resourceId);
+        byte[] imageBytes = null;
+        try {
+            imageBytes = resourceService.downloadResource(resourceId).readAllBytes();
+        }catch (IOException e) {
+            log.error("Error with downloading file with id {}", resourceId);
+            // выбросить кастомное исключение со всем трейсом
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+        return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
     }
 }
