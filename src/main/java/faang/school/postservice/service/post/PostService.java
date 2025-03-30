@@ -9,6 +9,7 @@ import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.event.kafka.KafkaPostEventDto;
+import faang.school.postservice.event.kafka.KafkaPostViewEventDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -17,6 +18,7 @@ import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.publisher.kafka.KafkaPostEventPublisher;
+import faang.school.postservice.publisher.kafka.KafkaPostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
@@ -25,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -49,6 +52,7 @@ public class PostService {
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
     private final KafkaPostEventPublisher kafkaPostEventPublisher;
+    private final KafkaPostViewEventPublisher kafkaPostViewEventPublisher;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -139,6 +143,14 @@ public class PostService {
     public Post getPostById(long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + id + " не найден"));
+    }
+
+    public Post viewPostById(long id) {
+        Post post = getPostById(id);
+        KafkaPostViewEventDto eventDto = new KafkaPostViewEventDto(post.getId());
+
+        kafkaPostViewEventPublisher.sendPostViewEvent(eventDto);
+        return post;
     }
 
     public List<PostReadDto> getPostsByHashtagId(long hashtagId) {
@@ -265,6 +277,16 @@ public class PostService {
         postSchedulerService.publishScheduledPosts(
                 postProperties.getSchedule().getBatchSize()
         );
+    }
+
+    @Transactional
+    public Long incrementPostView(long postId) {
+        Post post = getPostById(postId);
+        if (!post.isPublished()) {
+            return 0L;
+        }
+        post.setViews(post.getViews() + 1);
+        return postRepository.save(post).getViews();
     }
 
 }

@@ -80,6 +80,14 @@ public class NewsFeedService {
         redisPostRepository.save(postCache);
     }
 
+    public void updatePostCountView(Long postId, Long viewCount) {
+        PostCache postCache = redisPostRepository.findById(postId).orElse(null);
+        if (postCache != null) {
+            postCache.setViewsCount(viewCount);
+            redisPostRepository.save(postCache);
+        }
+    }
+
     public void addPostToFeed(KafkaPostEventDto postEventDto, long followerId) {
         String redisKey = newsFeedPrefix + followerId;
         String postId = String.valueOf(postEventDto.getPostId());

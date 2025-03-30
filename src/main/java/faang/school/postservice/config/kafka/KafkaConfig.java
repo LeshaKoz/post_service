@@ -31,6 +31,10 @@ public class KafkaConfig {
     @Value("${spring.data.kafka.topic.posts}")
     private String postTopic;
 
+    @Value("${spring.data.kafka.topic.post-views}")
+    private String postViewTopic;
+
+
     @Value("${spring.data.kafka.group-id}")
     private String groupId;
 
@@ -49,6 +53,11 @@ public class KafkaConfig {
     @Bean
     public NewTopic postTopic() {
         return new NewTopic(postTopic, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic postViewTopic() {
+        return new NewTopic(postViewTopic, 1, (short) 1);
     }
 
     @Bean

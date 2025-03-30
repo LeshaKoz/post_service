@@ -84,4 +84,7 @@ public class Post extends BaseEntity {
 
     @Column(name = "verified", nullable = false)
     private boolean verified;
+
+    @Column(name = "views")
+    private Long views;
 }

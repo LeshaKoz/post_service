@@ -33,8 +33,10 @@ spring:
       group-id: post-service-group
       topic:
         posts: posts
+        post-views: post-views
       keys:
         post: post
+        post-view: post-view
 
   cloud:
     openfeign:
