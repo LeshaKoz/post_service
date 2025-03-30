@@ -25,12 +25,20 @@ spring:
         calculations: calculations_channel
         comment_create: comment_create_channel
         likes: likes_channel
+      feed:
+        max-size: 500
+        ttl-days: 30
+        batch-size: 100
 
   kafka:
     bootstrap-servers: "localhost:9092"
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: "post-service-group"
+      auto-offset-reset: earliest
+      enable-auto-commit: false
 
   cloud:
     openfeign:
