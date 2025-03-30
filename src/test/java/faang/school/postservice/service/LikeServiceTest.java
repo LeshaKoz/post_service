@@ -60,7 +60,7 @@ public class LikeServiceTest {
 
     @BeforeEach
     public void init() {
-        likeDtoPost = LikeDto.builder().postId(1L).userId(1L).build();
+        likeDtoPost = LikeDto.builder().likeId(1L).postId(1L).userId(1L).build();
         likeDtoComment = LikeDto.builder().commentId(1L).userId(1L).build();
 
         userDto = UserDto.builder()

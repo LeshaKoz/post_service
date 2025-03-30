@@ -14,5 +14,5 @@ import java.util.List;
 public class PostEvent {
     private long authorId;
     private long postId;
-    private List<Long> subscribers;
+    private List<Long> subscribersId;
 }

@@ -11,9 +11,11 @@ import org.mapstruct.ReportingPolicy;
 public interface LikeMapper {
     @Mapping(source = "postId", target = "post.id")
     @Mapping(source = "commentId", target = "comment.id")
+    @Mapping(source = "likeId", target = "id")
     Like toEntity(LikeDto dto);
 
     @Mapping(source = "post.id", target = "postId")
     @Mapping(source = "comment.id", target = "commentId")
+    @Mapping(source = "id", target = "likeId")
     LikeDto toDto(Like like);
 }

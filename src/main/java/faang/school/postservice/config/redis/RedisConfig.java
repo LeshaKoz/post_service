@@ -1,6 +1,9 @@
 package faang.school.postservice.config.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +17,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.Map;
 
 @Configuration
 public class RedisConfig {
@@ -54,8 +58,20 @@ public class RedisConfig {
                                 .fromSerializer(new GenericJackson2JsonRedisSerializer())
                 );
 
+        RedisCacheConfiguration feedCacheConfig = cacheConfiguration.entryTtl(Duration.ZERO);
+
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(cacheConfiguration)
+                .withInitialCacheConfigurations(Map.of(
+                        "feed", feedCacheConfig))
                 .build();
+    }
+
+    @Bean
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        config.useSingleServer()
+                .setAddress("redis://" + redisHost + ":" + redisPort);
+        return Redisson.create(config);
     }
 }

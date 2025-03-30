@@ -20,9 +20,16 @@ spring:
   kafka:
     bootstrap-servers: "localhost:9092"
     pool-size: 3
+
     consumer:
       group-id: "group"
       auto-offset-reset: earliest
+      deserializer-trusted-packages: "java.util,java.lang,faang.school.postservice.event"
+
+    producer:
+      acks: 1
+      retries: 3
+
     topics:
       PostViewEvent:
         name: post_views
@@ -49,10 +56,26 @@ spring:
     redis:
       port: 6379
       host: localhost
+
+      feed-cache:
+       batch-size: 20
+       max-feed-size: 500
+       key: "feed:"
+       number-of-users-on-page: 3
+
+      post-cache:
+        comments-in-post: 3
+
       channels:
         calculations: calculations_channel
         comment_create: comment_create_channel
         likes: likes_channel
+
+      redisson-client:
+        name-version: version
+        key-for-version: versionedKey
+        start-num-for-version: 1
+        lock-cache-post: "lock:cachePost:"
 
   cloud:
     openfeign:
