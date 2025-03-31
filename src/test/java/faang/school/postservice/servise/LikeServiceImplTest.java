@@ -65,6 +65,7 @@ public class LikeServiceImplTest {
         like.setPost(post);
 
         Like savedLike = new Like();
+        savedLike.setPost(post);
 
         when(postRepositoryAdapter.findById(POST_ID)).thenReturn(post);
         when(likeRepositoryAdapter.findLikeByPostIdAndUserId(USER_ID, POST_ID)).thenReturn(null);
