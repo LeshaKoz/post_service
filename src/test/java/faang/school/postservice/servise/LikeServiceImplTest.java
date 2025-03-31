@@ -8,6 +8,7 @@ import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producer.KafkaLikeProducer;
 import faang.school.postservice.repository.CommentRepositoryAdapter;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.LikeRepositoryAdapter;
@@ -46,6 +47,8 @@ public class LikeServiceImplTest {
     private LikeMapper likeMapper;
     @Mock
     private UserServiceClient userServiceClient;
+    @Mock
+    private KafkaLikeProducer kafkaLikeProducer;
 
     private static final long USER_ID = 1L;
     private static final long POST_ID = 1L;
