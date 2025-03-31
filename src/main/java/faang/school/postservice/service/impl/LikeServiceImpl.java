@@ -134,6 +134,6 @@ public class LikeServiceImpl implements LikeService {
     private void sendEventToBroker(Like savedLike) {
         LikeEventDto likeEventDto = new LikeEventDto(savedLike.getId(), savedLike.getUserId(),
                 savedLike.getComment().getId(), savedLike.getPost().getId());
-        kafkaLikeProducer.sendEvent(likeEventDto, );
+        kafkaLikeProducer.sendEvent(likeEventDto);
     }
 }
