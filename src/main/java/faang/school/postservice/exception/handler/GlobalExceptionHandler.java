@@ -15,8 +15,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(LanguageToolException.class)
     public ResponseEntity<ErrorResponse> handleLanguageToolException(LanguageToolException exception) {
         ErrorResponse errorResponse = ErrorResponse.builder(exception, exception.getStatusCode(),
-                        exception.getMessage())
-                .title("LanguageTool service error")
+                        "We encountered an issue while checking your post text. Please try again later.")
+                .title("Text Validation Service Unavailable")
                 .property("service", "LanguageTool")
                 .build();
         return new ResponseEntity<>(errorResponse, exception.getStatusCode());
@@ -25,8 +25,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidPostAuthorsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidPostAuthorsException(InvalidPostAuthorsException exception) {
         ErrorResponse errorResponse = ErrorResponse.builder(exception, HttpStatus.BAD_REQUEST,
-                        exception.getMessage())
-                .title("Invalid post authors error")
+                        "A post cannot have both a user and a project as authors. Please specify only one author" +
+                                " (either a user or a project).")
+                .title("Invalid Post Author")
                 .property("service", "PostService")
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -34,9 +35,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity<ErrorResponse> handlePostNotFoundException(PostNotFoundException exception) {
-        ErrorResponse errorResponse = ErrorResponse.builder(exception, HttpStatus.BAD_REQUEST,
-                        exception.getMessage())
-                .title("Post not found")
+        ErrorResponse errorResponse = ErrorResponse.builder(exception, HttpStatus.NOT_FOUND,
+                        "The post you're looking for doesn't exist or may have been deleted.")
+                .title("Post Not Found")
                 .property("service", "PostService")
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
@@ -45,8 +46,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
         ErrorResponse errorResponse = ErrorResponse.builder(exception, HttpStatus.BAD_REQUEST,
-                        exception.getMessage())
-                .title("Invalid request data")
+                        "Your request contains invalid data. Please check your input and try again.")
+                .title("Invalid Request")
                 .property("service", "PostService")
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);

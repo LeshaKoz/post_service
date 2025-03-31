@@ -52,6 +52,6 @@ servers:
 
 posts:
   correction:
-    cron: "0 0 * * *"
+    cron: "0 0 * * * *"
     batch-size: 100000
     thread-poop-size: 16
