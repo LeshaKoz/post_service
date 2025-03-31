@@ -38,7 +38,6 @@ public class ResourceServiceImpl implements ResourceService {
     private final ImageResizeImpl imageResizeImpl;
 
     @Override
-    @Transactional()
     public ResponseEntity<List<ResourceResponseDto>> uploadImageResource(Long postId, MultipartFile file) {
         String fileContentType = file.getContentType();
         String fileName = file.getOriginalFilename();

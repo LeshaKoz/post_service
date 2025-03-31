@@ -31,7 +31,6 @@ public class S3ServiceImplTest {
 
     @Mock
     private S3Client s3Client;
-
     @InjectMocks
     private S3ServiceImpl s3ServiceImpl;
 

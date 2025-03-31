@@ -1,5 +1,6 @@
 package faang.school.postservice.service.thumbnails;
 
+import faang.school.postservice.exception.ImageResizeException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class ImageResizeImpl implements ImageResize {
                     .toOutputStream(outputStream);
         } catch (IOException e) {
             log.error("Error while resizing image", e);
-            throw new RuntimeException(e);
+            throw new ImageResizeException(e);
         }
 
         return outputStream.toByteArray();
@@ -59,7 +60,7 @@ public class ImageResizeImpl implements ImageResize {
             return ImageIO.read(bais);
         } catch (IOException e) {
             log.error("Error while reading image", e);
-            throw new RuntimeException(e);
+            throw new ImageResizeException(e);
         }
     }
 }

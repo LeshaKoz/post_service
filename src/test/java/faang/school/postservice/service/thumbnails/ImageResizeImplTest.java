@@ -1,5 +1,6 @@
 package faang.school.postservice.service.thumbnails;
 
+import faang.school.postservice.exception.ImageResizeException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,7 +29,7 @@ public class ImageResizeImplTest {
 
     @Test
     public void testGetResizedImagesThrowException() {
-        assertThrows(RuntimeException.class, () -> imageResizeImpl.getResizedImages(new byte[]{0}));
+        assertThrows(ImageResizeException.class, () -> imageResizeImpl.getResizedImages(new byte[]{0}));
     }
 
     @Test
