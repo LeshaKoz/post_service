@@ -28,6 +28,14 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+      cache:
+        post:
+          time-to-live: 86400
+          core-pool-size: 5
+          max-pool-size: 10
+          queue-capacity: 500
+          thread-name-prefix: cache-post-
+
   kafka:
     topics:
       comment_create_event: comment-create
