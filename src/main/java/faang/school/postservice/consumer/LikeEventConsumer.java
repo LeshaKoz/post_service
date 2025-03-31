@@ -28,16 +28,18 @@ public class LikeEventConsumer {
         PostCacheDto postCacheDto = redisPostRepository.findById(event.getPostId()).orElse(null);
 
         if (postCacheDto != null) {
+            log.info("The post {} was found in the redis cache.", postCacheDto);
             postCacheDto.setLikeCount(incrementCount(postCacheDto));
             redisPostRepository.save(postCacheDto);
         } else {
             Post post = repository.findById(event.getPostId())
                     .orElseThrow(() -> new EntityNotFoundException("Post with id {} not found" + event.getPostId()));
+            log.info("the post {} was found in the database", post);
             PostCacheDto cacheDto = postMapper.toCacheDto(post);
             cacheDto.setLikeCount(incrementCount(cacheDto));
             redisPostRepository.save(cacheDto);
         }
-        
+        acknowledgment.acknowledge();
     }
 
     private synchronized Long incrementCount(PostCacheDto postCacheDto) {
