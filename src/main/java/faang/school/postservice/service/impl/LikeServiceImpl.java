@@ -1,6 +1,7 @@
 package faang.school.postservice.service.impl;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.event.LikeEventDto;
 import faang.school.postservice.dto.likes.BaseFilterDto;
 import faang.school.postservice.dto.likes.LikeDto;
 import faang.school.postservice.dto.user.UserDto;
@@ -9,6 +10,7 @@ import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producer.KafkaAbstractProducer;
 import faang.school.postservice.repository.CommentRepositoryAdapter;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.LikeRepositoryAdapter;
@@ -35,6 +37,7 @@ public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final LikeMapper likeMapper;
     private final UserServiceClient userServiceClient;
+    private final KafkaAbstractProducer kafkaLikeProducer;
 
     private static final int BATCH_SIZE = 100;
 
@@ -49,7 +52,9 @@ public class LikeServiceImpl implements LikeService {
         postLike = new Like();
         postLike.setUserId(userId);
         postLike.setPost(post);
-        return likeMapper.toDto(likeRepository.save(postLike));
+        Like savedLike = likeRepository.save(postLike);
+        sendEventToBroker(savedLike);
+        return likeMapper.toDto(savedLike);
     }
 
     @Transactional
@@ -124,5 +129,11 @@ public class LikeServiceImpl implements LikeService {
             users.addAll(userServiceClient.getUsersByIds(ids));
         }
         return users;
+    }
+
+    private void sendEventToBroker(Like savedLike) {
+        LikeEventDto likeEventDto = new LikeEventDto(savedLike.getId(), savedLike.getUserId(),
+                savedLike.getComment().getId(), savedLike.getPost().getId());
+        kafkaLikeProducer.sendEvent(likeEventDto, );
     }
 }

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
@@ -22,7 +21,7 @@ public class KafkaTopicConfiguration {
 
     @Bean
     public NewTopic likes() {
-        return TopicBuilder.name(kafkaConfigurationProperties.getLikeTopic()).build();
+        return TopicBuilder.name(kafkaConfigurationProperties.getLikePostTopic()).build();
     }
 
     @Bean
