@@ -1,7 +1,7 @@
 package faang.school.postservice.exception;
 
 public class ForbiddenException extends RuntimeException {
-    public ForbiddenException(long userId) {
-        super("User with ID " + userId + " can not do this action");
+    public ForbiddenException(long userId, String action) {
+        super(MessageError.FORBIDDEN_EXCEPTION.getMessage(userId, action));
     }
 }
