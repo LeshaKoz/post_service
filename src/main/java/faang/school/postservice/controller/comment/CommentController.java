@@ -25,7 +25,7 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @PostMapping("/post/{postId}")
+    @PostMapping("/{postId}")
     public ResponseEntity<CommentDto> createComment(
             @PathVariable Long postId,
             @Valid @RequestBody CommentDto commentDto) {
@@ -40,7 +40,7 @@ public class CommentController {
         return ResponseEntity.ok(commentService.updateComment(commentId, commentDto));
     }
 
-    @GetMapping("/posts/{postId}")
+    @GetMapping("/{postId}")
     public ResponseEntity<List<CommentDto>> getCommentPostId(
             @PathVariable Long postId) {
         return ResponseEntity.ok(commentService.getAllComments(postId));
@@ -50,6 +50,6 @@ public class CommentController {
     public ResponseEntity<String> deleteComment(
             @PathVariable Long id) {
         commentService.deleteComment(id);
-        return ResponseEntity.ok("Comment is deleted succesfully");
+        return ResponseEntity.noContent().build();
     }
 }

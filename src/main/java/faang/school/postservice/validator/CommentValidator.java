@@ -26,7 +26,7 @@ public class CommentValidator {
         );
     }
 
-    public static void validateCommentDto(CommentDto commentDto) {
+    public void validateCommentDto(CommentDto commentDto) {
         if(commentDto.getContent() == null && commentDto.getContent().isBlank()) {
             throw new IllegalArgumentException("Comment cannot be empty or null");
         }

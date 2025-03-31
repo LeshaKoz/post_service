@@ -35,23 +35,19 @@ public class CommentService {
 
 
     public CommentDto createComment(Long postId, CommentDto commentDto) {
-        CommentValidator.validateCommentDto(commentDto);
+        commentValidator.validateCommentDto(commentDto);
 
-        Post post = postValidator.getPostById(postId);
-        UserDto userDto = userServiceClient.getUser(commentDto.getAuthorId());
+        postValidator.getPostById(postId);
 
-        Comment comment = Comment.builder()
-                .content(commentDto.getContent())
-                .authorId(commentDto.getAuthorId())
-                .post(post)
-                .createdAt(LocalDateTime.now())
-                .build();
+        validateUserId(commentDto.getAuthorId());
+
+        Comment comment = commentMapper.toComment(commentDto);
 
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
     public CommentDto updateComment(Long commentId, CommentDto commentDto) {
-        CommentValidator.validateCommentDto(commentDto);
+        commentValidator.validateCommentDto(commentDto);
         Comment comment = commentRepository
                 .findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment with ID " + commentId + " not found"));
@@ -76,5 +72,9 @@ public class CommentService {
                 .findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID" + commentId));
         commentRepository.deleteById(commentId);
+    }
+
+    private void validateUserId(long userId) {
+        userServiceClient.getUser(userId);
     }
 }
