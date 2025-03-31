@@ -32,6 +32,12 @@ logging:
   level:
     root: info
 
+services:
+  minio:
+    endpoint: http://localhost:9000
+    access-key: user
+    secret-key: password
+    bucket-name: imagebucket
 user-service:
   host: localhost
   port: 8080
@@ -41,3 +47,8 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+  spring:
+    messages:
+      basename: messages
+      encoding: UTF-8
