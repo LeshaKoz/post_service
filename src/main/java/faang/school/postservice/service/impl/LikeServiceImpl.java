@@ -10,7 +10,6 @@ import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.producer.KafkaAbstractProducer;
 import faang.school.postservice.producer.KafkaLikeProducer;
 import faang.school.postservice.repository.CommentRepositoryAdapter;
 import faang.school.postservice.repository.LikeRepository;
@@ -57,7 +56,8 @@ public class LikeServiceImpl implements LikeService {
         postLike.setUserId(userId);
         postLike.setPost(post);
         Like savedLike = likeRepository.save(postLike);
-        LikeEventDto likeEventDto = new LikeEventDto(savedLike.getId(), savedLike.getUserId(), savedLike.getPost().getId());
+        LikeEventDto likeEventDto = new LikeEventDto(savedLike.getId(), savedLike.getUserId(),
+                savedLike.getPost().getId());
         kafkaLikeProducer.sendEvent(likeEventDto);
         log.info("Like event with id {} was sent to Kafka", likeEventDto.getId());
         return likeMapper.toDto(savedLike);

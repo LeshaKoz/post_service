@@ -6,7 +6,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class KafkaLikeProducer extends KafkaAbstractProducer<LikeEventDto>{
+public class KafkaLikeProducer extends KafkaAbstractProducer<LikeEventDto> {
 
     public KafkaLikeProducer(KafkaTemplate<String, Object> kafkaTemplate, NewTopic likes) {
         super(kafkaTemplate, likes);
