@@ -1,0 +1,42 @@
+package faang.school.postservice.config;
+
+import faang.school.postservice.exception.CommentAnalyzerException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+@Configuration
+public class CommentAnalyzerWebConfig {
+    @Value("${services.comment-analyzer.endpoint}")
+    String baseUrl;
+
+    @Value("${services.comment-analyzer.api-key}")
+    String apiKey;
+
+    @Bean
+    public WebClient commentAnalyzerWebClient() {
+        return WebClient.builder()
+                .baseUrl(baseUrl)
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
+
+    private ExchangeFilterFunction errorHandlingFilter() {
+        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
+            if (clientResponse.statusCode().isError()) {
+                return clientResponse
+                        .bodyToMono(String.class)
+                        .defaultIfEmpty("No error details")
+                        .flatMap(errorBody -> Mono.error(
+                                new CommentAnalyzerException(
+                                        "Comment analyzer API error", clientResponse.statusCode()
+                                )
+                        ));
+            }
+            return Mono.just(clientResponse);
+        });
+    }
+}
