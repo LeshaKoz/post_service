@@ -76,7 +76,7 @@ class PostControllerTest {
         Long postId = 123L;
         postController.getPost(postId);
         Mockito.verify(postServiceMock, Mockito.times(1))
-                .getPost(postId);
+                .getPostWithCache(postId);
     }
 
     @Test

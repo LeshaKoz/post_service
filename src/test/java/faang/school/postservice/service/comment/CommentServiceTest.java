@@ -1,5 +1,6 @@
 package faang.school.postservice.service.comment;
 
+import faang.school.postservice.broker.producer.PostEventProducer;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.comment.CommentEvent;
@@ -24,6 +25,7 @@ import faang.school.postservice.publisher.comment.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageService;
+import faang.school.postservice.service.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,6 +90,11 @@ public class CommentServiceTest {
     @Spy
     private UserDtoAdapter userDtoAdapterImpl;
 
+    @Mock
+    private PostEventProducer postEventProducer;
+    @Mock
+    private UserService userService;
+
     private long authorId;
     private long commentId;
     private long postId;
@@ -147,7 +154,9 @@ public class CommentServiceTest {
                 null,
                 null,
                 usersBanPublisher,
-                userDtoAdapterImpl);
+                userDtoAdapterImpl,
+                postEventProducer,
+                userService);
 
     }
 

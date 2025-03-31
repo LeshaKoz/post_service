@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.post.PostResponseDto;
 import lombok.Builder;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
@@ -18,7 +18,11 @@ public record FeedItemResponseDto(
         //long postId,
         //LocalDateTime publishedAt,
 
-        Post post,
+        @JsonSerialize(as = PostResponseDto.class)
+        @JsonDeserialize(as = PostResponseDto.class)
+        @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+        PostResponseDto postResponseDto,
+        //Post post,
 
         @JsonSetter(nulls = Nulls.SKIP)
         @JsonSerialize(contentAs = LikeDto.class)
@@ -34,7 +38,7 @@ public record FeedItemResponseDto(
         List<LikeDto> commentLikes,
         long commentLikesCounter
 ) {
-    @JsonSerialize(as = Post.class)
+ /*   @JsonSerialize(as = Post.class)
     @JsonDeserialize(as = Post.class)
     @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
     public record Post (
@@ -42,7 +46,7 @@ public record FeedItemResponseDto(
             String content,
             LocalDateTime publishedAt,
             long authorId
-            ) {}
+            ) {}*/
 
 /*    public FeedItemResponseDto {
         postLikes = (postLikes != null) ? postLikes : List.of();

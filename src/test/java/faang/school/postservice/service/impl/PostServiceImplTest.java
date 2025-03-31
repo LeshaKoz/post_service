@@ -2,6 +2,8 @@ package faang.school.postservice.service.impl;
 
 import faang.school.postservice.broker.producer.PostEventProducer;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.config.redis.RedisProperties;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
@@ -23,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,6 +49,12 @@ class PostServiceImplTest {
     private PostEventProducer postEventProducer;
     @Mock
     private UserServiceClient userServiceClient;
+    @Mock
+    private RedisProperties redisProperties;
+    @Mock
+    private UserContext userContext;
+    @Mock
+    private RedisTemplate<String, PostResponseDto> postRedisTemplate;
 
     private PostCreateRequestDto postCreateRequestDto;
     private PostUpdateRequestDto postUpdateRequestDto;
@@ -70,7 +79,10 @@ class PostServiceImplTest {
                 postSpecificationFilters,
                 executorService,
                 postEventProducer,
-                userServiceClient
+                userServiceClient,
+                postRedisTemplate,
+                redisProperties,
+                userContext
         );
 
         postCreateRequestDto = PostCreateRequestDto.builder()
@@ -165,7 +177,7 @@ class PostServiceImplTest {
     void testGetPost() {
         Long postId = 123L;
         Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.of(new Post()));
-        postService.getPost(postId);
+        postService.getPostWithCache(postId);
         Mockito.verify(postRepositoryMock, Mockito.times(1)).findById(postId);
     }
 

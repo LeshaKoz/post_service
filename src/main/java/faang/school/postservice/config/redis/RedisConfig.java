@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import faang.school.postservice.dto.feed.FeedItemResponseDto;
+import faang.school.postservice.dto.feed.FeedItemDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.user.UserResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -71,10 +71,22 @@ public class RedisConfig {
 
         return template;
     }
-    @Bean
+/*    @Bean
     public RedisTemplate<String, FeedItemResponseDto> feedItemRedisTemplate(RedisConnectionFactory connectionFactory,
                                                                             ObjectMapper redisObjectMapper) {
         RedisTemplate<String, FeedItemResponseDto> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer(redisObjectMapper));
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer(redisObjectMapper));
+
+        return template;
+    }*/
+
+    @Bean
+    public RedisTemplate<String, FeedItemDto> feedItemRedisTemplate(RedisConnectionFactory connectionFactory,
+                                                                    ObjectMapper redisObjectMapper) {
+        RedisTemplate<String, FeedItemDto> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer(redisObjectMapper));

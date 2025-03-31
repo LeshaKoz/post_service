@@ -1,20 +1,19 @@
 package faang.school.postservice.service.impl;
 
 import faang.school.postservice.broker.producer.PostEventProducer;
-import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.config.redis.RedisProperties;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
-import faang.school.postservice.dto.subscription.SubscriptionUserDto;
 import faang.school.postservice.exception.DataFetchException;
 import faang.school.postservice.filter.post.PostSpecificationFilter;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.user.UserService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +45,7 @@ public class PostServiceImpl implements PostService {
     private final List<PostSpecificationFilter> postSpecificationFilters;
     private final ExecutorService executorService;
     private final PostEventProducer postEventProducer;
-    private final UserServiceClient userServiceClient;
+    private final UserService userService;
     private final RedisTemplate<String, PostResponseDto> postRedisTemplate;
     private final RedisProperties redisProperties;
     private final UserContext userContext;
@@ -81,14 +80,7 @@ public class PostServiceImpl implements PostService {
                 TimeUnit.MINUTES
         );
 
-        //TODO надо в асинк перевести
-        List<SubscriptionUserDto> followers = userServiceClient.getFollowers(publishedPost.getAuthorId());
-
-        List<Long> followersIds = followers.stream()
-                .map(SubscriptionUserDto::id)
-                .toList();
-
-        postEventProducer.producePublishPostEventAsync(postId, followersIds);
+        postEventProducer.producePublishPostEventAsync(userContext.getUserId(), publishedPost);
 
         return postMapper.toPostResponseDto(publishedPost);
     }
@@ -131,12 +123,6 @@ public class PostServiceImpl implements PostService {
                 TimeUnit.MINUTES
         );
 
-/*        try {
-            postRedisRepository.save(updatedPost);
-        }catch (Exception e) {
-            log.error("Error updating cache for post {}",updatedPost.getId());
-        }*/
-
         log.info("Post is updated, id = {}", updatedPost.getId());
         return postMapper.toPostResponseDto(updatedPost);
     }
@@ -153,28 +139,19 @@ public class PostServiceImpl implements PostService {
         postRedisTemplate.delete(cacheKey);
         log.info("Evicted cache for post id: {}", postId);
 
-/*        try {
-            postRedisRepository.deleteById(postId);
-        }catch (Exception e) {
-            log.error("Error clearing cache for post {}", postId);
-        }*/
-
     }
 
     @Override
-    public PostResponseDto getPost(Long postId) {
+    public PostResponseDto getPostWithCache(Long postId) {
 
         String cacheKey = redisProperties.cache().postCacheName() + postId;
         PostResponseDto cachedPost = postRedisTemplate.opsForValue().get(cacheKey);
-        Long userId = userContext.getUserId();
 
         if (cachedPost != null) {
             log.info("Returning cached post for id: {}", postId);
-            postEventProducer.produceViewPostEvent(postId, userId);
             return cachedPost;
         }
 
-        // 2. Если нет в кеше - запрос через Feign
         log.info("Cache miss for post id: {}. Fetching from external service...", postId);
         try {
             Optional<Post> optionalPost = postRepository.findById(postId);
@@ -186,42 +163,19 @@ public class PostServiceImpl implements PostService {
                         redisProperties.cache().postTtlMinutes(),
                         TimeUnit.MINUTES
                 );
-                postEventProducer.produceViewPostEvent(postId, userId);
                 return postResponseDto;
-            }else {
+            } else {
                 return null;
             }
 
-            } catch (FeignException e) {
+        } catch (FeignException e) {
             log.error("Error fetching post from repository for id: {}", postId, e);
             throw new DataFetchException("Failed to fetch post for id: " + postId);
         }
 
-
-
-        /*
-        Optional<Post> cachedPost = postRedisRepository.findById(postId);
-        if (cachedPost.isPresent()) {
-            log.info("Post {} get from cache", postId);
-            return postMapper.toPostResponseDto(cachedPost.get());
-        }
-        Post post = getPostById(postId);
-        log.info("Post {} get from database", postId);
-        if (post != null) {
-            postRedisRepository.save(post);
-            log.info("Post {} updated in cache", postId);
-        }
-        return post != null ? postMapper.toPostResponseDto(post) : null;*/
     }
 
-/*    private Post getPostById(Long postId) {
-        try {
-            return postRepository.findById(postId).orElse(null);
-        } catch (Exception e) {
-            log.error("Error fetching post from DB with id: {}", postId, e);
-            return null;
-        }
-    }*/
+
 
     private Post getPostById(Long postId) {
         Optional<Post> optionalPost = postRepository.findById(postId);
@@ -249,7 +203,6 @@ public class PostServiceImpl implements PostService {
         Specification<Post> specification = getPostSpecification(filter);
         return postRepository.findAll(specification);
     }
-
 
 
     private Post copyPostData(Post sourcePost, Post targetPost) {

@@ -1,7 +1,9 @@
 package faang.school.postservice.repository.feed;
 
 import faang.school.postservice.config.feed.NewsFeedProperties;
-import faang.school.postservice.dto.feed.FeedItemResponseDto;
+import faang.school.postservice.dto.feed.FeedItemDto;
+import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.mapper.post.PostMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,10 +21,11 @@ public class FeedRepository {
     private final NewsFeedProperties newsFeedProperties;
 
     //private final RedisTemplate<String, Object> redisTemplate;
-    private final RedisTemplate<String, FeedItemResponseDto> FeedItemRedisTemplate;
+    private final RedisTemplate<String, FeedItemDto> FeedItemRedisTemplate;
+    private final PostMapper postMapper;
 
 
-    public Set<FeedItemResponseDto> feedItems(Long userId, int pageNum) {
+    public Set<FeedItemDto> feedItems(Long userId, int pageNum) {
 
         long pageSize = newsFeedProperties.pageSize();
         String prefix = newsFeedProperties.prefix();
@@ -30,7 +33,7 @@ public class FeedRepository {
                 prefix + ":" + userId,
                 pageNum * pageSize,
                 -(pageNum + 1) * pageSize - 1);*/
-        Set<FeedItemResponseDto> result = FeedItemRedisTemplate.opsForZSet().range(
+        Set<FeedItemDto> result = FeedItemRedisTemplate.opsForZSet().range(
                 prefix + ":" + userId,
                 0,
                 -1);
@@ -39,23 +42,33 @@ public class FeedRepository {
         return result;
     }
 
-    public void addPostToFollowersFeeds(List<Long> followersIds, FeedItemResponseDto feedItemResponseDto) {
-        followersIds.forEach(userId -> addPost(userId, feedItemResponseDto));
+    public void addPostToFollowersFeeds(List<Long> followersIds, PostResponseDto post) {
+        FeedItemDto feedItem = FeedItemDto.builder()
+                .postLikesCounter(0)
+                //.post(new FeedItemResponseDto.Post(post.id(), post.content(), post.publishedAt(), post.authorId()))
+                .postId(post.id())
+                .build();
+
+        followersIds.forEach(userId -> addPost(userId, post));
     }
 
-    private void addPost(long userId, FeedItemResponseDto feedItemResponseDto) {
-        log.info("Adding feed item for user {}, post {}", userId, feedItemResponseDto.post().postId());
+    private void addPost(long userId, PostResponseDto post) {
+        long postId = post.id();
+        log.info("Adding feed item for user {}, post {}", userId, postId);
         //log.info("Adding feed item for user {}, post {}", userId, feedItemResponseDto.postId());
         int setSize = newsFeedProperties.maxPosts();
         String prefix = newsFeedProperties.prefix();
-        double score = feedItemResponseDto.post().publishedAt().toInstant(ZoneOffset.UTC).toEpochMilli();
+        double score = post.publishedAt().toInstant(ZoneOffset.UTC).toEpochMilli();
         //double score = feedItemResponseDto.publishedAt().toInstant(ZoneOffset.UTC).toEpochMilli();
+        FeedItemDto feedItemDto = FeedItemDto.builder()
+                .postId(postId)
+                .build();
         FeedItemRedisTemplate.opsForZSet().add(
                 prefix + ":" + userId,
-                feedItemResponseDto,
+                feedItemDto,
                 score);
 
-        Set<FeedItemResponseDto> result = FeedItemRedisTemplate.opsForZSet()
+        Set<FeedItemDto> result = FeedItemRedisTemplate.opsForZSet()
                 .range(prefix + ":" + userId, 0, -1);
 
         FeedItemRedisTemplate.opsForZSet().removeRange(
@@ -65,7 +78,7 @@ public class FeedRepository {
         result = FeedItemRedisTemplate.opsForZSet()
                 .range(prefix + ":" + userId, 0, -1);
 
-        log.info("Post {} saved to newsfeed for user {}", feedItemResponseDto.post().postId(), userId);
+        log.info("Post {} saved to newsfeed for user {}", postId, userId);
         //log.info("Post {} saved to newsfeed for user {}", feedItemResponseDto.postId(), userId);
     }
 

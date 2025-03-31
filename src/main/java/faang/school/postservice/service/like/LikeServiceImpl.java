@@ -1,10 +1,10 @@
 package faang.school.postservice.service.like;
 
-import faang.school.postservice.broker.producer.PostEventProducer;
+import faang.school.postservice.broker.producer.PostLikeProducer;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
-import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.like.LikeEventDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.like.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
@@ -13,16 +13,14 @@ import faang.school.postservice.publisher.like.LikeEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-
-import jakarta.annotation.PostConstruct;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,8 +36,9 @@ public class LikeServiceImpl implements LikeService {
     private final CommentRepository commentRepository;
     private final LikeServiceValidator likeServiceValidator;
     private final UserServiceClient userServiceClient;
-    private final PostEventProducer postEventProducer;
-
+    private final PostLikeProducer postLikeProducer;
+    private final LikeEventPublisher likeEventPublisher;
+    private final LikeMapper likeMapper;
     @Value("${like-service.batch-size}")
     private int batchSize;
 
@@ -47,10 +46,6 @@ public class LikeServiceImpl implements LikeService {
     public void init() {
         log.info("Batch size from configuration: {}", batchSize);
     }
-
-    private final LikeEventPublisher likeEventPublisher;
-    private final LikeMapper likeMapper;
-
 
     @Override
     @Transactional
@@ -68,7 +63,7 @@ public class LikeServiceImpl implements LikeService {
 
         LikeEventDto likeEventDto = likeMapper.toLikeEventDto(savedLike);
         likeEventPublisher.publish(likeEventDto);
-        postEventProducer.produceLikePostEvent(postId);
+        postLikeProducer.produceLikePostEventAsync(postId);
 
         log.info("UserId = {} successfully liked postId = {} with {} ", userId, postId, savedLike);
     }

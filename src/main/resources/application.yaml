@@ -133,6 +133,6 @@ comment:
   number-bad-comments: 5
 
 newsfeed:
-  prefix: newsfeed8
+  prefix: newsfeed9
   max-posts: 10
   page-size: 5

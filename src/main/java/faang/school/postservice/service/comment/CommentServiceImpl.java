@@ -1,6 +1,6 @@
 package faang.school.postservice.service.comment;
 
-import faang.school.postservice.broker.producer.PostEventProducer;
+import faang.school.postservice.broker.producer.PostCommentProducer;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.comment.CommentEvent;
@@ -59,7 +59,7 @@ public class CommentServiceImpl implements CommentService {
     private final ModerationDictionary moderationDictionary;
     private final UsersBanPublisher usersBanPublisher;
     private final UserDtoAdapter userDtoAdapter;
-    private final PostEventProducer postEventProducer;
+    private final PostCommentProducer postCommentProducer;
     private final UserService userService;
 
     @Value("${comment.batchSize}")
@@ -80,7 +80,7 @@ public class CommentServiceImpl implements CommentService {
                 savedComment.getPost().getId(),
                 savedComment.getId(),
                 savedComment.getCreatedAt());
-        postEventProducer.produceCommentPostEvent(savedComment);
+        postCommentProducer.produceCommentPostEventAsync(savedComment);
         return commentMapper.toCommentResponseDto(savedComment);
     }
 

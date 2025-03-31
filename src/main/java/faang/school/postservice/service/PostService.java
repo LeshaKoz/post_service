@@ -18,7 +18,7 @@ public interface PostService {
 
     void deletePost(Long postId);
 
-    PostResponseDto getPost(Long Id);
+    PostResponseDto getPostWithCache(Long Id);
 
     List<PostResponseDto> findAllByFilter(PostFilterDto filter);
 }

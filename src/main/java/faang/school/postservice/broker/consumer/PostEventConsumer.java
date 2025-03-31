@@ -24,19 +24,29 @@ public class PostEventConsumer {
             groupId = "${spring.kafka.consumer.group-id}")
     public void consume(PostPublicationEvent postPublicationEvent, Acknowledgment acknowledgment) {
         CompletableFuture<Void> result = CompletableFuture.runAsync(() ->
-                feedService.processNewPost(
-                        postPublicationEvent.postId(),
-                        postPublicationEvent.followersIds()),
-                asyncTaskExecutor);
-
+                                feedService.processNewPost(
+                                        postPublicationEvent.postId(),
+                                        postPublicationEvent.followersIds()),
+                        asyncTaskExecutor)
+                .thenAccept(res -> {
+                    log.info("Post {} processed", postPublicationEvent.postId());
+                    acknowledgment.acknowledge();
+                })
+                .exceptionally(exception -> {
+                    log.error("Error consuming message with post id {}. Error: {}",
+                            postPublicationEvent.postId(), exception.getMessage());
+                    return null;
+                });
+/*
         result.whenComplete((res, exception) -> {
             if (exception != null) {
-                log.error("Error consuming message with post id {}", postPublicationEvent.postId());
+                log.error("Error consuming message with post id {}. Error: {}",
+                        postPublicationEvent.postId(), exception.getMessage());
             }else {
                 feedService.processNewPost(postPublicationEvent.postId(), postPublicationEvent.followersIds());
                 log.info("### User published the post {}", postPublicationEvent.postId());
                 acknowledgment.acknowledge();
             }
-        });
+        });*/
     }
 }
