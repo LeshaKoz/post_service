@@ -32,23 +32,4 @@ public class RedisUserRepository {
         log.info("get userDto for userId. key {} userId {}", key, userId);
         return (UserDto) cacheRedisTemplate.opsForValue().get(key);
     }
-
-    public List<UserDto> multiGet(Set<Long> userIds) {
-        List<String> keys = userIds.stream()
-                .map(userId -> USER_KEY_PREFIX + userId)
-                .toList();
-
-        List<Object> userDtos = cacheRedisTemplate.opsForValue().multiGet(keys);
-
-        log.info("multiGet userDtos {} for userIds {}", userDtos, userIds);
-
-        if (userDtos == null) {
-            return Collections.emptyList();
-        }
-
-        return userDtos.stream()
-                .filter(Objects::nonNull)
-                .map(UserDto.class::cast)
-                .toList();
-    }
 }
