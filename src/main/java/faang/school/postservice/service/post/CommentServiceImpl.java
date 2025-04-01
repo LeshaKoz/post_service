@@ -52,8 +52,8 @@ public class CommentServiceImpl implements CommentService {
         }
         Comment createdComment = commentRepository.save(buildComment(dto, post));
         kafkaMessageService.sendMessage(commentTopic,
-                new CommentEvent(dto.postId(), post.getAuthorId(), createdComment.getId(), createdComment.getContent(),
-                        LocalDateTime.now()));
+                new CommentEvent(author.getId(), dto.postId(), post.getAuthorId(), createdComment.getId(),
+                        createdComment.getContent(), LocalDateTime.now()));
         authorCacheService.cacheAuthor(author.getId(), author);
         return commentMapper.toDto(createdComment);
     }

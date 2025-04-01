@@ -1,8 +1,8 @@
 package faang.school.postservice.kafka.listener;
 
-import faang.school.postservice.dto.kafka.PostPublishedEvent;
+import faang.school.postservice.dto.kafka.PostEvent;
 import faang.school.postservice.mapper.event.EventMapper;
-import faang.school.postservice.service.post.PostPublishedService;
+import faang.school.postservice.service.event.PostEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PostPublishedEventListenerImpl implements KafkaEventListener {
+public class KafkaPostEventListenerImpl implements KafkaEventListener {
 
-    private final EventMapper<PostPublishedEvent> eventMapper;
-    private final PostPublishedService postPublishedService;
+    private final EventMapper<PostEvent> eventMapper;
+    private final PostEventService postEventService;
 
     @Value("${feed.max-size}")
     private int maxFeedSize;
@@ -27,9 +27,9 @@ public class PostPublishedEventListenerImpl implements KafkaEventListener {
     @Override
     public void listen(@Payload String message, Acknowledgment ack) {
         try {
-            PostPublishedEvent postPublishedEvent = eventMapper.mapMessageToEvent(message, PostPublishedEvent.class);
-            log.info("Received post event: {}", postPublishedEvent);
-            postPublishedService.addPostsToFeed(postPublishedEvent);
+            PostEvent postEvent = eventMapper.mapMessageToEvent(message, PostEvent.class);
+            log.info("Received post event: {}", postEvent);
+            postEventService.addPostsToFeed(postEvent);
         } finally {
             ack.acknowledge();
         }

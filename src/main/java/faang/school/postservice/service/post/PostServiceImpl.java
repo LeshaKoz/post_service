@@ -2,7 +2,7 @@ package faang.school.postservice.service.post;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
-import faang.school.postservice.dto.kafka.PostPublishedEvent;
+import faang.school.postservice.dto.kafka.PostEvent;
 import faang.school.postservice.dto.kafka.PostViewsEvent;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
@@ -18,14 +18,17 @@ import faang.school.postservice.service.cache.PostCacheService;
 import faang.school.postservice.service.kafka.KafkaMessageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +39,7 @@ import static java.util.stream.Collectors.groupingBy;
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
+
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserBanRedisProperties userBanRedisProperties;
@@ -53,7 +57,6 @@ public class PostServiceImpl implements PostService {
     @Value("${kafka.post.views.topic}")
     private String postViewsTopic;
 
-    @SneakyThrows
     @Override
     public PostResponseDto getPostById(long postId) {
         UserDto user = Optional.ofNullable(userServiceClient.getUser(userContext.getUserId()))
@@ -69,6 +72,22 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Post with id = %d not found", postId)));
         return postMapper.toDto(post);
+    }
+
+    @Override
+    public List<PostResponseDto> getLatestPosts(List<String> authorIds, int limit) {
+        if (authorIds == null || authorIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<PostResponseDto> cachedPosts = postCacheService.getCachedPosts(authorIds, limit);
+        if (cachedPosts.size() >= limit) {
+            return cachedPosts.subList(0, limit);
+        }
+        List<PostResponseDto> dbPosts = getPostsFromDatabase(authorIds, limit - cachedPosts.size());
+        List<PostResponseDto> result = new ArrayList<>(cachedPosts);
+        result.addAll(dbPosts);
+        postCacheService.cachePosts(dbPosts);
+        return result.size() > limit ? result.subList(0, limit) : result;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -96,9 +115,13 @@ public class PostServiceImpl implements PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         Post savedPost = postRepository.save(post);
-        sendPublishPostEventToKafka(user, savedPost);
+        List<Long> followersIds = userServiceClient.getFollowersByUserId(user.getId()).stream()
+                .map(UserDto::getId)
+                .toList();
+        kafkaMessageService.sendMessage(postEventTopic, new PostEvent(
+                savedPost.getId(), savedPost.getAuthorId(), LocalDateTime.now(), followersIds, List.of()));
         postCacheService.cachePost(postMapper.toDto(savedPost));
-        authorCacheService.cacheAuthor(savedPost.getAuthorId(), user);
+        authorCacheService.cacheAuthor(savedPost.getId(), user);
         return postMapper.toDto(savedPost);
     }
 
@@ -144,11 +167,15 @@ public class PostServiceImpl implements PostService {
         }
     }
 
-    private void sendPublishPostEventToKafka(UserDto user, Post savedPost) {
-        List<Long> followersIds = userServiceClient.getFollowersByUserId(user.getId()).stream()
-                .map(UserDto::getId)
+
+    private List<PostResponseDto> getPostsFromDatabase(List<String> authorIds, int limit) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        }
+        List<Post> posts = postRepository.findLatestByAuthorIds(authorIds,
+                PageRequest.of(0, limit, Sort.by("createdAt").descending()));
+        return posts.stream()
+                .map(postMapper::toDto)
                 .toList();
-        kafkaMessageService.sendMessage(postEventTopic, new PostPublishedEvent(
-                postMapper.toDto(savedPost), savedPost.getAuthorId(), LocalDateTime.now(), followersIds, List.of()));
     }
 }

@@ -2,9 +2,6 @@ package faang.school.postservice.service.post;
 
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
@@ -19,4 +16,6 @@ public interface PostService {
     void banUsersWithManyUnverifiedPosts();
 
     PostResponseDto getPostById(long postId);
+
+    List<PostResponseDto> getLatestPosts(List<String> followers, int limit);
 }

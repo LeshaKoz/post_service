@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public interface AuthorCacheService {
 
-    void cacheAuthor(Long authorId, UserDto user);
+    void cacheAuthor(long postId, UserDto user);
 
     Optional<UserDto> getCachedAuthor(Long authorId);
 }

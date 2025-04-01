@@ -1,13 +1,11 @@
 package faang.school.postservice.dto.kafka;
 
-import faang.school.postservice.dto.post.PostResponseDto;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record PostPublishedEvent(
+public record PostEvent(
 
-        PostResponseDto postDto,
+        Long postId,
 
         Long authorId,
 

@@ -2,7 +2,7 @@ package faang.school.postservice.kafka.listener;
 
 import faang.school.postservice.dto.event.CommentEvent;
 import faang.school.postservice.mapper.event.EventMapper;
-import faang.school.postservice.service.CommentEventService;
+import faang.school.postservice.service.event.CommentEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CommentEventListener implements KafkaEventListener {
+public class KafkaCommentEventListener implements KafkaEventListener {
 
     private final EventMapper<CommentEvent> eventMapper;
     private final CommentEventService commentEventService;

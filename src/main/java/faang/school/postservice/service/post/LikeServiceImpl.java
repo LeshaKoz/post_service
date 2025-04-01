@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class LikeServiceImpl implements LikeService {
@@ -40,7 +42,7 @@ public class LikeServiceImpl implements LikeService {
         like.setUserId(user.getId());
         like.setPost(post);
         likeRepository.save(like);
-        kafkaMessageService.sendMessage(likeTopic, new LikeEvent(user.getId(), postId));
-        return new LikeDto(user.getId(), postId);
+        kafkaMessageService.sendMessage(likeTopic, new LikeEvent(like.getId(), user.getId(), postId, LocalDateTime.now()));
+        return new LikeDto(user.getId(), postId, LocalDateTime.now());
     }
 }

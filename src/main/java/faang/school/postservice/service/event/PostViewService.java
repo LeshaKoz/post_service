@@ -1,4 +1,4 @@
-package faang.school.postservice.service;
+package faang.school.postservice.service.event;
 
 import faang.school.postservice.dto.kafka.PostViewsEvent;
 

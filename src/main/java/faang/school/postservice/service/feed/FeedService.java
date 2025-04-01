@@ -1,9 +1,9 @@
 package faang.school.postservice.service.feed;
 
+import faang.school.postservice.dto.feed.FeedResponse;
+
 public interface FeedService {
 
-    void cacheHeat();
-
-    void getNewsFeed();
+    FeedResponse getNewsFeed(long userId, long after);
 
 }

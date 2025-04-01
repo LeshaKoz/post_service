@@ -1,4 +1,4 @@
-package faang.school.postservice.service;
+package faang.school.postservice.service.event;
 
 import faang.school.postservice.dto.kafka.PostViewsEvent;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PostViewServiceImpl implements PostViewService {
+public class PostViewEventServiceImpl implements PostViewService {
 
     private static final String VIEW_KEY_PREFIX = "post::views:";
 
