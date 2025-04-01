@@ -1,6 +1,7 @@
 package faang.school.postservice.util.service.post;
 
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.AsyncPostPublishPerformer;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ public class AsyncPostPublishPerformerTest {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private PostCacheRepository postCacheRepository;
+
     @InjectMocks
     private AsyncPostPublishPerformer performer;
 
@@ -52,7 +56,7 @@ public class AsyncPostPublishPerformerTest {
 
             ArgumentCaptor<List<Post>> captor = ArgumentCaptor.forClass(List.class);
             verify(postRepository, times(1)).saveAll(captor.capture());
-
+            verify(postCacheRepository, times(1)).saveAll(captor.capture());
             List<Post> savedPosts = captor.getValue();
 
             assertEquals(2, savedPosts.size());
