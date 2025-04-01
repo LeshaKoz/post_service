@@ -1,24 +1,30 @@
 package faang.school.postservice.service.impl;
 
+import faang.school.postservice.dto.resource.ResourceDtoRs;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
+import faang.school.postservice.exception.EntityNotFoundException;
+import faang.school.postservice.exception.UploadFileException;
 import faang.school.postservice.filter.post.PostSpecificationFilter;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.ResourceService;
+import faang.school.postservice.service.validator.FileValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -34,6 +40,8 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final List<PostSpecificationFilter> postSpecificationFilters;
     private final ExecutorService executorService;
+    private final ResourceService resourceService;
+    private final FileValidator fileValidator;
 
     @Override
     public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
@@ -103,6 +111,16 @@ public class PostServiceImpl implements PostService {
         return postMapper.toPostResponseDtos(findAllPostsByFilter(filter));
     }
 
+    @Override
+    public List<ResourceDtoRs> uploadFiles(long postId, MultipartFile... files) {
+        if (Objects.isNull(files) || files.length == 0) {
+            throw new UploadFileException("File array to save is empty or null");
+        }
+        Post post = getPostById(postId);
+        fileValidator.validateFiles(post, files);
+        return resourceService.save(post, files);
+    }
+
     private List<Post> preparePostList(List<Post> posts) {
         return posts.stream()
                 .map(this::preparePostToPublish)
@@ -121,8 +139,8 @@ public class PostServiceImpl implements PostService {
     }
 
     private Post getPostById(Long postId) {
-        Optional<Post> optionalPost = postRepository.findById(postId);
-        return optionalPost.orElseThrow(() -> new IllegalArgumentException("Post not found, Id = " + postId));
+        return postRepository.findById(postId).orElseThrow(
+                () -> new EntityNotFoundException(String.format("There is no post with id: %s in database", postId)));
     }
 
     private Post copyPostData(Post sourcePost, Post targetPost) {

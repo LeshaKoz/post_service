@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 @Configuration
-@ConfigurationProperties(prefix = "aws")
+@ConfigurationProperties(prefix = "services.s3")
 public class AwsProperties {
-    private String url;
-    private String user;
-    private String password;
+    private String endpoint;
+    private String accessKey;
+    private String secretKey;
     private String bucketName;
 }

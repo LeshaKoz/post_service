@@ -22,9 +22,9 @@ public class AwsConfig {
     @Bean
     public AmazonS3 amazonS3() {
 
-        AWSCredentials awsCredentials = new BasicAWSCredentials(awsProperties.getUser(), awsProperties.getPassword());
+        AWSCredentials awsCredentials = new BasicAWSCredentials(awsProperties.getAccessKey(), awsProperties.getSecretKey());
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsProperties.getUrl(),
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsProperties.getEndpoint(),
                         null))
                 .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
                 .enablePathStyleAccess()

@@ -32,7 +32,7 @@ public class ImageServiceImpl implements ImageService {
         s3Service.uploadFile(byteArrayOutputStream.size(), contentType, key, byteArrayOutputStream.toByteArray());
     }
 
-    private ByteArrayOutputStream resizeImage(MultipartFile file, int targetSize) {
+    public ByteArrayOutputStream resizeImage(MultipartFile file, int targetSize) {
         try (ByteArrayOutputStream thumbnailOutputStream = new ByteArrayOutputStream()) {
             Thumbnails.of(file.getInputStream())
                     .size(targetSize, targetSize)

@@ -11,12 +11,13 @@ import faang.school.postservice.filter.post.PostPublishedSpecification;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.ResourceService;
+import faang.school.postservice.service.validator.FileValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -38,7 +39,10 @@ class PostServiceImplTest {
     private PostMapperImpl postMapper;
     @Mock
     ExecutorService executorService;
-    @InjectMocks
+    @Mock
+    ResourceService resourceService;
+    @Mock
+    FileValidator validator;
     private PostServiceImpl postService;
     private PostCreateRequestDto postCreateRequestDto;
     private PostUpdateRequestDto postUpdateRequestDto;
@@ -60,7 +64,9 @@ class PostServiceImplTest {
                 postServiceValidatorMock,
                 postMapper,
                 postSpecificationFilters,
-                executorService
+                executorService,
+                resourceService,
+                validator
         );
 
         postCreateRequestDto = PostCreateRequestDto.builder()

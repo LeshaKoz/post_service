@@ -4,6 +4,7 @@ import faang.school.postservice.dto.ErrorDto;
 import faang.school.postservice.exception.ApiError;
 import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.exception.DownloadFileException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.UploadFileException;
 import jakarta.validation.ConstraintViolationException;
@@ -92,5 +93,13 @@ public class GlobalExceptionHandler {
     public ErrorDto handleThrowable(Throwable t) {
         log.error(t.getMessage(), t);
         return new ErrorDto("Interaction failure", t.getMessage());
+    }
+
+    @ExceptionHandler(DownloadFileException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDto handleDownloadFileException(DownloadFileException ex) {
+        log.error(ex.getMessage(), ex);
+        return new ErrorDto("Download file exception",
+                ex.getMessage() + ": \n" + ex.getCause().getMessage());
     }
 }
