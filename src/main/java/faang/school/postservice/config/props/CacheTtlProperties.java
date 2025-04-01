@@ -9,7 +9,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "cache.ttl")
 @RequiredArgsConstructor
 @Getter
-public class CacheTTLProperties {
+public class CacheTtlProperties {
     private final Duration post;
     private final Duration author;
 }

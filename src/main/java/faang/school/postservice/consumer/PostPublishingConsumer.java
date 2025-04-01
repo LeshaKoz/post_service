@@ -1,8 +1,8 @@
 package faang.school.postservice.consumer;
 
-import faang.school.postservice.event.NewsFeedSubEvent;
+import faang.school.postservice.event.PostDistributionEvent;
 import faang.school.postservice.event.PostEvent;
-import faang.school.postservice.publisher.NewsFeedSubsProducer;
+import faang.school.postservice.publisher.NewsFeedPublicationProducer;
 import faang.school.postservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,10 +16,10 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Service
 @RequiredArgsConstructor
-public class PostConsumer {
+public class PostPublishingConsumer {
     private final UserService userService;
     private final ExecutorService executorService;
-    private final NewsFeedSubsProducer newsFeedSubsProducer;
+    private final NewsFeedPublicationProducer newsFeedPublicationProducer;
 
     @Value("${newsFeed.followersBatchSize:3}")
     private int followersBatchSize;
@@ -41,10 +41,10 @@ public class PostConsumer {
                 i / followersBatchSize,
                 followersBatchSize
         );
-        var event = NewsFeedSubEvent.builder()
+        var event = PostDistributionEvent.builder()
                 .postId(postId)
                 .followersIds(followersIds)
                 .build();
-        newsFeedSubsProducer.publish(event);
+        newsFeedPublicationProducer.publish(event);
     }
 }

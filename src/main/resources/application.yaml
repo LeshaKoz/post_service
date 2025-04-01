@@ -143,6 +143,10 @@ cache:
     post: 1d
     author: 1d
 
+news-feed:
+  max-count-visible-comments:  3
+
+
 ---
 
 spring:

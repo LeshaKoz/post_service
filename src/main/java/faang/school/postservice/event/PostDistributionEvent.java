@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class NewsFeedSubEvent {
+public class PostDistributionEvent {
     private Long postId;
     private List<Long> followersIds;
 }
