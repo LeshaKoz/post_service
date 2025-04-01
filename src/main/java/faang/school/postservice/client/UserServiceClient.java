@@ -21,9 +21,12 @@ public interface UserServiceClient {
     @PostMapping("/users")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
 
-    @PostMapping("users/page")
+    @PostMapping("/users/page")
     Page<UserDto> getUsersByIds(
-            @RequestParam("ids") List<Long> ids, // Передача списка
+            @RequestParam("ids") List<Long> ids,
             Pageable pageable
     );
+
+    @GetMapping("/api/v1/users")
+    List<UserDto> getAllUsers();
 }
