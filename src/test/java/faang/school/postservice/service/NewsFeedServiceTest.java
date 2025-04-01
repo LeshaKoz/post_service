@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.config.props.CacheTTLProperties;
+import faang.school.postservice.config.props.CacheTtlProperties;
 import faang.school.postservice.mapper.NewsFeedMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -50,7 +50,7 @@ public class NewsFeedServiceTest {
     private UserService userService;
 
     @Spy
-    private CacheTTLProperties cacheTTLProperties = new CacheTTLProperties(
+    private CacheTtlProperties cacheTTLProperties = new CacheTtlProperties(
             Duration.ofDays(1),
             Duration.ofDays(1)
     );
@@ -91,7 +91,7 @@ public class NewsFeedServiceTest {
         newsFeedService.cacheCommentForPost(comment);
 
         ArgumentCaptor<CacheComment> captor = ArgumentCaptor.forClass(CacheComment.class);
-        int maxComments = (Integer) ReflectionTestUtils.getField(newsFeedService, "MAX_COMMENTS");
+        int maxComments = (Integer) ReflectionTestUtils.getField(newsFeedService, "maxComments");
         verify(listOperations).leftPush(eq(cacheKey), captor.capture());
         verify(listOperations).trim(
                 cacheKey,

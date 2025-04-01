@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.config.props.CacheTTLProperties;
+import faang.school.postservice.config.props.CacheTtlProperties;
 import faang.school.postservice.mapper.NewsFeedMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -10,6 +10,7 @@ import faang.school.postservice.model.cache.CachePost;
 import faang.school.postservice.repository.cache.CacheAuthorRepository;
 import faang.school.postservice.repository.cache.CachePostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,15 +23,16 @@ import static faang.school.postservice.model.cache.CacheComment.COMMENT_PREFIX;
 @Service
 @RequiredArgsConstructor
 public class NewsFeedService {
-    private static final int MAX_COMMENTS = 3;
-
     private final CachePostRepository cachePostRepository;
     private final NewsFeedMapper newsFeedMapper;
     private final CacheAuthorRepository cacheAuthorRepository;
     private final UserService userService;
-    private final CacheTTLProperties cacheTTLProperties;
+    private final CacheTtlProperties cacheTTLProperties;
     private final ProjectService projectService;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${news-feed.max-count-visible-comments:3}")
+    private int maxComments;
 
 
     public void cacheCommentForPost(Comment comment) {
@@ -42,7 +44,7 @@ public class NewsFeedService {
         String cacheKey = COMMENT_PREFIX + comment.getPost().getId();
 
         redisTemplate.opsForList().leftPush(cacheKey, cacheComment);
-        redisTemplate.opsForList().trim(cacheKey, 0, MAX_COMMENTS - 1);
+        redisTemplate.opsForList().trim(cacheKey, 0, maxComments - 1);
     }
 
     public CachePost cachePost(Post post) {
