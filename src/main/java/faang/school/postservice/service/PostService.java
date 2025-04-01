@@ -145,7 +145,6 @@ public class PostService {
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
         long total = postRepository.count();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
-        AtomicBoolean hasErrors = new AtomicBoolean(false);
 
         for (int start = 0; start < total; start += batchSize) {
             int end = Math.min(start + batchSize - 1, (int) total);
@@ -154,17 +153,13 @@ public class PostService {
             futures.add(CompletableFuture.runAsync(() -> {
                 Pageable pageable = PageRequest.of((finalStart + size - 1) / size, size);
                 Page<Post> postContents = postRepository.findPosts(pageable);
-                sendPostContentsChecking(postContents.getContent(), hasErrors);
+                sendPostContentsChecking(postContents.getContent());
             }, executor));
         }
 
         try {
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(TIMEOUT_HOURS, TimeUnit.HOURS);
-            if (hasErrors.get()) {
-                log.warn("Not all posts have been corrected");
-            } else {
-                log.info("Submitting posts for review completed successfully");
-            }
+            log.info("Submitting posts for review completed");
         } catch (TimeoutException e) {
             log.error("Submitting posts for review haven't completed on time");
         } catch (InterruptedException e) {
@@ -182,22 +177,18 @@ public class PostService {
             maxAttemptsExpression = "${spring.retry.language-tool.max-attempts}",
             backoff = @Backoff(delayExpression = "${spring.retry.language-tool.backoff-delay}")
     )
-    private void sendPostContentsChecking(List<Post> posts, AtomicBoolean hasErrors) {
+    private void sendPostContentsChecking(List<Post> posts) {
         for (Post post : posts) {
-            try {
-                log.debug("Before correcting errors in the text: {}", post.getContent());
-                post.setContent(languageToolClient.getCorrectedText(post.getContent(), "auto").block());
-                postRepository.save(post);
-                log.debug("After correcting errors in the text: {}", post.getContent());
-            } catch (LanguageToolException e) {
-                hasErrors.set(true);
-                log.error("Error while correcting error. ", e);
-            }
+            log.debug("Before correcting errors in the text: {}", post.getContent());
+            post.setContent(languageToolClient.getCorrectedText(post.getContent(), "auto").block());
+            postRepository.save(post);
+            log.debug("After correcting errors in the text: {}", post.getContent());
         }
     }
 
     @Recover
-    private void recoverSendPostContentsChecking(LanguageToolException e) {
+    private void recoverSendPostContentsChecking(LanguageToolException e, List<Post> posts) {
         log.error("Failed to correct text after retries. ", e);
+        posts.forEach(post -> log.error("Post with ID could not be corrected: {}", post.getId()));
     }
 }
