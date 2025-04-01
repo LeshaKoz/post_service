@@ -81,10 +81,9 @@ public class CommentServiceImpl implements CommentService {
     private void moderateComment(Comment comment) {
         ToxicityScoreDto toxicityScore = commentAnalyzer.analyzeComment(comment.getContent());
         boolean moderationFailed = toxicityScore.getAttributeScores().values().stream()
-                .anyMatch(attributeScore ->
-                        attributeScore.getSummaryScore().getValue() >= TOXICITY_THRESHOLD ||
-                                attributeScore.getSpanScores().stream().anyMatch(spanScore ->
-                                        spanScore.getScore().getValue() >= TOXICITY_THRESHOLD));
+                .anyMatch(attributeScore -> attributeScore.getSummaryScore().getValue()
+                        >= TOXICITY_THRESHOLD || attributeScore.getSpanScores().stream().anyMatch(
+                        spanScore -> spanScore.getScore().getValue() >= TOXICITY_THRESHOLD));
 
         log.debug("Comment with ID {} and content '{}' {} moderation",
                 comment.getId(), comment.getContent(), moderationFailed ? "failed" : "passed");
