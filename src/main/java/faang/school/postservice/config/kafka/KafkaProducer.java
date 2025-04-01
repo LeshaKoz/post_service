@@ -1,14 +1,10 @@
 package faang.school.postservice.config.kafka;
 
-import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.model.Post;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Slf4j
 @Component

@@ -38,18 +38,18 @@ public class KafkaFeedPostProducer {
             List<Long> currentFollowersBatch = followersIds.stream().limit(postFollowersBatchMaxSize).toList();
             followersIds = followersIds.stream().filter(id -> !currentFollowersBatch.contains(id)).toList();
             event = new CreatePostEvent(post.getId(), currentFollowersBatch);
-            send(topicCreatePostName, event);
+            send(topicCreatePostName, event.postId(), event);
         }
 
         if (followersIds.size() > 0) {
             event = new CreatePostEvent(post.getId(), followersIds);
-            send(topicCreatePostName, event);
+            send(topicCreatePostName, event.postId(), event);
         }
     }
 
-    private void send(String topicName, Object object) {
+    private void send(String topicName, Object key, Object data) {
         try {
-            kafkaTemplate.send(topicName, objectMapper.writeValueAsString(object));
+            kafkaTemplate.send(topicName, objectMapper.writeValueAsString(key), objectMapper.writeValueAsString(data));
         } catch (JsonProcessingException e) {
             log.error("couldn't convert object to json: " + e);
         }
