@@ -1,10 +1,10 @@
 package faang.school.postservice.repository.redis;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -12,30 +12,33 @@ public class RedisFeedRepository {
     @Value("${news-feed.keys.feed}")
     private String FEED_KEY;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public RedisFeedRepository(
-        @Qualifier("feedRedis") RedisTemplate<String, Object> redisTemplate) {
+        @Qualifier("feedRedis") RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
-    public List<Long> getFeedPostIds(Long userId, Long afterPostId, int limit) {
-        String feedKey = FEED_KEY + userId;
-        ZSetOperations<String, Object> zSet = redisTemplate.opsForZSet();
+    public List<Long> getPostsAfterTimeStamp(Long userId, Long timeStamp, int amountPosts) {
+        return redisTemplate.opsForZSet()
+            .reverseRangeByScore(feedPrefix(userId), timeStamp, Double.MAX_VALUE, 1, amountPosts)
+            .stream()
+            .map(Long::valueOf)
+            .collect(Collectors.toList());
+    }
 
-        if (afterPostId == null) {
-            return zSet.reverseRange(feedKey, 0, limit - 1).stream()
-                .map(id -> (Long) id)
-                .toList();
-        }
+    public List<Long> getLatestPosts(Long userId, int amountPosts) {
+        return redisTemplate.opsForZSet().reverseRange(feedPrefix(userId), 0, amountPosts - 1)
+            .stream()
+            .map(Long::valueOf)
+            .collect(Collectors.toList());
+    }
 
-        Double score = zSet.score(feedKey, afterPostId.toString());
-        if (score == null) {
-            return List.of();
-        }
+    public void savePostIdToUserFeed(Long userId, Long postId, Long publishedAt) {
+        redisTemplate.opsForZSet().add(feedPrefix(userId), postId.toString(), publishedAt);
+    }
 
-        return zSet.reverseRangeByScore(feedKey, 0, score, 0, limit).stream()
-            .map(id -> (Long) id)
-            .toList();
+    private String feedPrefix(Long userId) {
+        return String.format("%s:%d", FEED_KEY, userId);
     }
 }

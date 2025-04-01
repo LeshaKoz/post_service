@@ -11,8 +11,10 @@ import faang.school.postservice.repository.redis.RedisFeedRepository;
 import faang.school.postservice.repository.redis.RedisPostRepository;
 import faang.school.postservice.repository.redis.RedisUserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,38 +31,55 @@ public class FeedService {
     private static final int PAGE_SIZE = 20;
 
     public List<FeedResponseDto> getUserFeed(Long userId, Long afterPostId) {
-        if (redisUserRepository.checkUserExist(userId)) {
+        if (!redisUserRepository.checkUserExist(userId)) {
             throw new EntityNotFoundException("user not found " + userId);
         }
 
-        List<Long> feedPostIds = redisFeedRepository.getFeedPostIds(userId, afterPostId, PAGE_SIZE);
+        List<Long> feedPostIds = getFeedPostIds(userId, afterPostId);
+        List<PostRedisDto> postsInRedis = redisPostRepository.getPosts(feedPostIds);
 
-        List<PostRedisDto> posts = redisPostRepository.getPosts(feedPostIds);
-        int postSize = posts.size();
-
-        if (postSize < PAGE_SIZE) {
-            List<Long> missingPost = posts.stream()
+        if (postsInRedis.size() < PAGE_SIZE) {
+            List<Long> postInRedisIds = postsInRedis.stream()
                 .map(PostRedisDto::getId)
-                .filter(id -> !feedPostIds.contains(id))
                 .toList();
+            feedPostIds.removeAll(postInRedisIds);
 
-            List<Post> allById = postRepository.findAllById(missingPost);
+            List<Post> allById = postRepository.findAllById(feedPostIds);
             List<PostRedisDto> postRedisDto = postMapper.toRedisEntityList(allById);
-            posts.addAll(postRedisDto);
-            redisPostRepository.cachePosts(postRedisDto);
+            postsInRedis.addAll(postRedisDto);
         }
 
-        List<Long> authorIds = posts.stream()
-            .map(PostRedisDto::getAuthorId)
-            .toList();
-
-        List<UserRedisDto> users = redisUserRepository.getUsers(authorIds);
-
+        redisPostRepository.cachePosts(postsInRedis);
+        List<UserRedisDto> users = redisUserRepository.getUsers(getAuthorIds(postsInRedis));
         Map<Long, UserRedisDto> userMap = users.stream()
             .collect(Collectors.toMap(UserRedisDto::id, user -> user));
 
-        return posts.stream()
+        return postsInRedis.stream()
             .map(post -> feedMapper.toFeedResponseDto(post, userMap.get(post.getAuthorId())))
+            .collect(Collectors.toList());
+    }
+
+    private List<Long> getFeedPostIds(Long userId, Long afterPostId) {
+        if (afterPostId == null) {
+            return redisFeedRepository.getLatestPosts(userId, PAGE_SIZE);
+        }
+
+        PostRedisDto postById = redisPostRepository.findPostById(afterPostId);
+        if (postById != null) {
+            return redisFeedRepository.getPostsAfterTimeStamp(userId,
+                postById.getPublishedAt().toEpochSecond(ZoneOffset.UTC), PAGE_SIZE);
+        }
+
+        Post post = postRepository.findById(afterPostId)
+            .orElseThrow(() -> new NoSuchElementException("Post not found"));
+        return redisFeedRepository.getPostsAfterTimeStamp(userId,
+            post.getPublishedAt().toEpochSecond(ZoneOffset.UTC), PAGE_SIZE);
+    }
+
+    private List<Long> getAuthorIds(List<PostRedisDto> postsInRedis) {
+        return postsInRedis.stream()
+            .map(PostRedisDto::getAuthorId)
+            .distinct()
             .collect(Collectors.toList());
     }
 }

@@ -23,7 +23,7 @@ public class FeedController {
         @RequestParam(name = "after", required = false) Long afterPostId
     ) {
         Long userId = userContext.getUserId();
-        List<FeedResponseDto> feed = feedService.getUserFeed(userId, afterPostId); // Запрашиваем фид
+        List<FeedResponseDto> feed = feedService.getUserFeed(userId, afterPostId);
         return ResponseEntity.ok(feed);
     }
 }

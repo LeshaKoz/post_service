@@ -117,3 +117,4 @@ news-feed:
     user: user
     feed: feed
     post: posts
+  ttl: 600
