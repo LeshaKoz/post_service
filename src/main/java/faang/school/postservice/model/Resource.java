@@ -10,12 +10,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.io.File;
 import java.time.LocalDateTime;
 
 @Data
@@ -50,4 +52,13 @@ public class Resource {
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
+
+    @Transient
+    private File tempFile;
+
+    public void cleanup() {
+        if (tempFile != null && tempFile.exists()) {
+            tempFile.delete();
+        }
+    }
 }

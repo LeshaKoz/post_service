@@ -1,18 +1,37 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.config.image.ImageDimensions;
+import faang.school.postservice.config.image.ImageProcessingProperties;
+import faang.school.postservice.config.image.ImageResizeProperties;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.dto.ResourceDto;
 import faang.school.postservice.exception.NotFoundException;
 import faang.school.postservice.mapper.PostMapperImpl;
+import faang.school.postservice.mapper.ResourceMapperImpl;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.ResourceRepository;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +47,18 @@ class PostServiceTest {
 
     @Spy
     private PostMapperImpl postMapper;
+
+    @Spy
+    private ResourceMapperImpl resourceMapper;
+
+    @Mock
+    private ResourceRepository resourceRepository;
+
+    @Mock
+    private MinioClient minioClient;
+
+    @Mock
+    private ImageProcessingProperties properties;
 
     @InjectMocks
     private PostService postService;
@@ -220,5 +251,150 @@ class PostServiceTest {
         assertEquals(postDto.getContent(), result.get(0).getContent());
         verify(postRepository).findByProjectId(1L);
         verify(postMapper).toDto(post);
+    }
+
+    @Test
+    public void testUploadImageToPostWithWrongPostId() throws Exception {
+        Long postId = 1L;
+        MultipartFile file1 = mock(MultipartFile.class);
+        MultipartFile file2 = mock(MultipartFile.class);
+        List<MultipartFile> files = List.of(file1, file2);
+        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> postService.uploadImageToPost(1L, files));
+        verify(resourceRepository, never()).save(any());
+        verify(minioClient, never()).putObject(any());
+    }
+
+    @Test
+    public void testUploadImageToPostHandleProceedFileException() throws Exception {
+        Long postId = 1L;
+        MultipartFile invalidFile = mock(MultipartFile.class);
+        List<MultipartFile> files = List.of(invalidFile);
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(properties.getAllowedContentTypes()).thenReturn(List.of("image/jpeg"));
+        when(invalidFile.getContentType()).thenReturn("image/jpeg");
+        when(invalidFile.getInputStream()).thenThrow(new IOException("Test error"));
+
+        assertThrows(RuntimeException.class, () -> postService.uploadImageToPost(postId, files));
+
+        verify(resourceRepository, never()).save(any());
+        verify(minioClient, never()).putObject(any());
+    }
+
+    @Test
+    public void testUploadImageToPostRollbackWhenMinioUploadFails() throws Exception {
+        Long postId = 1L;
+        ReflectionTestUtils.setField(postService, "bucketName", "test-bucket");
+
+        BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+        File imageFile = File.createTempFile("test", ".jpg");
+        ImageIO.write(image, "jpg", imageFile);
+        imageFile.deleteOnExit();
+
+        MultipartFile file = new MockMultipartFile(
+                "test.jpg", "test.jpg", "image/jpeg", new FileInputStream(imageFile)
+        );
+        List<MultipartFile> files = List.of(file);
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(properties.getAllowedContentTypes()).thenReturn(List.of("image/jpeg"));
+
+        ImageResizeProperties resizeProps = createProperties();
+        when(properties.getResize()).thenReturn(resizeProps);
+
+        Resource savedResource = createResource();
+        when(resourceRepository.save(any())).thenReturn(savedResource);
+
+        doThrow(new RuntimeException("MinIO error"))
+                .when(minioClient).putObject(any(PutObjectArgs.class));
+
+        assertThrows(RuntimeException.class, () -> postService.uploadImageToPost(postId, files));
+        verify(resourceRepository).delete(savedResource);
+        verify(minioClient).removeObject(any(RemoveObjectArgs.class));
+    }
+
+    @Test
+    public void testUploadImageToPostSuccessfullyUploadMultipleFiles() throws Exception {
+        Long postId = 1L;
+        ReflectionTestUtils.setField(postService, "bucketName", "test-bucket");
+
+        BufferedImage image1 = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image2 = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
+
+        File tempFile1 = File.createTempFile("test1", ".jpg");
+        File tempFile2 = File.createTempFile("test2", ".jpg");
+        ImageIO.write(image1, "jpg", tempFile1);
+        ImageIO.write(image2, "jpg", tempFile2);
+        tempFile1.deleteOnExit();
+        tempFile2.deleteOnExit();
+
+        MultipartFile file1 = new MockMultipartFile("image1.jpg",
+                "image1.jpg", "image/jpeg", new FileInputStream(tempFile1));
+        MultipartFile file2 = new MockMultipartFile("image2.jpg",
+                "image2.jpg", "image/jpeg", new FileInputStream(tempFile2));
+        List<MultipartFile> files = List.of(file1, file2);
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(properties.getAllowedContentTypes()).thenReturn(List.of("image/jpeg"));
+
+        ImageResizeProperties resizeProps = createProperties();
+        when(properties.getResize()).thenReturn(resizeProps);
+
+        Resource resource1 = createResource();
+        Resource resource2 = createResource();
+        resource1.setKey("posts/uuid1.jpg");
+        resource2.setKey("posts/uuid2.jpg");
+        resource1.setTempFile(File.createTempFile("res1", ".tmp"));
+        resource2.setTempFile(File.createTempFile("res2", ".tmp"));
+
+        when(resourceRepository.save(any(Resource.class)))
+                .thenReturn(resource1)
+                .thenReturn(resource2);
+
+        ResourceDto dto1 = resourceMapper.toDto(resource1);
+        ResourceDto dto2 = resourceMapper.toDto(resource2);
+        when(resourceMapper.toDto(resource1)).thenReturn(dto1);
+        when(resourceMapper.toDto(resource2)).thenReturn(dto2);
+
+        List<ResourceDto> result = postService.uploadImageToPost(postId, files);
+
+        assertEquals(2, result.size());
+        assertEquals("posts/uuid1.jpg", result.get(0).getKey());
+        assertEquals("posts/uuid2.jpg", result.get(1).getKey());
+
+        verify(postRepository).findById(postId);
+        verify(resourceRepository, times(2)).save(any(Resource.class));
+        verify(minioClient, times(2)).putObject(any(PutObjectArgs.class));
+
+        ArgumentCaptor<Resource> resourceCaptor = ArgumentCaptor.forClass(Resource.class);
+        verify(resourceRepository, times(2)).save(resourceCaptor.capture());
+
+        List<Resource> savedResources = resourceCaptor.getAllValues();
+        assertEquals(2, savedResources.size());
+    }
+
+    private ImageResizeProperties createProperties() {
+        ImageResizeProperties resizeProps = new ImageResizeProperties();
+        ImageDimensions square = new ImageDimensions();
+        ImageDimensions horizontal = new ImageDimensions();
+        square.setHeight(800);
+        square.setWidth(800);
+        horizontal.setWidth(1200);
+        horizontal.setHeight(900);
+        resizeProps.setSquare(square);
+        resizeProps.setHorizontal(horizontal);
+        return resizeProps;
+    }
+
+    private Resource createResource() throws IOException {
+        Resource resource = new Resource();
+        resource.setId(1L);
+        resource.setKey("posts/test.jpg");
+        resource.setTempFile(File.createTempFile("resource", ".tmp"));
+        resource.setPost(post);
+        resource.getTempFile().deleteOnExit();
+        return resource;
     }
 }

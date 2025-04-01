@@ -2,30 +2,62 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.image.ImageDimensions;
+import faang.school.postservice.config.image.ImageProcessingProperties;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.dto.ResourceDto;
 import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.NotFoundException;
+import faang.school.postservice.exception.ResourceProcessingException;
 import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.ResourceMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.ResourceRepository;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostService {
 
     private static final String POST_NOT_EXIST = "Post doesn't exist";
 
     private final PostRepository postRepository;
+    private final ResourceRepository resourceRepository;
     private final PostMapper postMapper;
+    private final ResourceMapper resourceMapper;
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
+    private final ImageProcessingProperties properties;
+    private final ImageResizer imageResizer;
+    private final MinioClient minioClient;
+    @Value("${minio.bucket-name}")
+    private String bucketName;
 
     public PostDto createDraft(PostDto postDto) {
 //        validatePostDto(postDto); TODO: remove the // when UserController and ProjectController are ready
@@ -106,6 +138,48 @@ public class PostService {
                 .toList();
     }
 
+    public List<ResourceDto> uploadImageToPost(Long postId, List<MultipartFile> files) {
+        log.info("Starting image upload for postId: {}, files count: {}", postId, files.size());
+        Post post = postRepository.findById(postId).orElseThrow(() -> new NotFoundException("Post doesn't exist"));
+        List<Resource> savedResources = new ArrayList<>();
+        try {
+            for (MultipartFile file : files) {
+                log.debug("Processing file: {} (size: {} bytes)", file.getOriginalFilename(), file.getSize());
+                Resource processedResource = proceedFile(file);
+                processedResource.setPost(post);
+
+                Resource savedResource = resourceRepository.save(processedResource);
+                log.debug("Saved resource to DB with id: {}, key: {}",
+                        savedResource.getId(), savedResource.getKey());
+                savedResources.add(savedResource);
+
+                uploadToMinio(savedResource);
+                log.info("Successfully uploaded to MinIO: {}", savedResource.getKey());
+            }
+        } catch (Exception e) {
+            log.error("Error during image upload. Rolling back changes", e);
+            savedResources.forEach(resource -> {
+                try {
+                    if (resource.getKey() != null) {
+                        minioClient.removeObject(
+                                RemoveObjectArgs.builder()
+                                        .bucket(bucketName)
+                                        .object(resource.getKey())
+                                        .build());
+                    }
+                } catch (Exception ex) {
+                    log.error("Failed to cleanup MinIO object: {}", resource.getKey(), ex);
+                }
+                resourceRepository.delete(resource);
+            });
+            throw new RuntimeException("Failed to upload images");
+        } finally {
+            savedResources.forEach(Resource::cleanup);
+        }
+        log.info("Successfully uploaded {} images for postId: {}", savedResources.size(), postId);
+        return savedResources.stream().map(resourceMapper::toDto).toList();
+    }
+
     private void validatePostDto(PostDto postDto) {
         if (postDto.getAuthorId() != null && postDto.getProjectId() != null) {
             throw new IllegalArgumentException("Post can have only one author: either user or project");
@@ -121,6 +195,83 @@ public class PostService {
             if (projectDto == null) {
                 throw new NotFoundException("Project doesn't exist");
             }
+        }
+    }
+
+    private Resource proceedFile(MultipartFile file) {
+        if (!properties.getAllowedContentTypes().contains(file.getContentType())) {
+            log.error("Sent photo with ContentType: {}", file.getContentType());
+            throw new DataValidationException("Illegal type of the image");
+        }
+        BufferedImage image;
+        try {
+            image = ImageIO.read(file.getInputStream());
+        } catch (IOException e) {
+            log.error("Image can't be read by the application when uploading");
+            throw new DataValidationException("Can't read the image");
+        }
+        if (image == null) {
+            log.error("File can't be read because it's not an image");
+            throw new DataValidationException("The file is not an image");
+        }
+
+        int width = image.getWidth();
+        int height = image.getHeight();
+        ImageDimensions targetDimensions = (width > height) ?
+                properties.getResize().getHorizontal() : properties.getResize().getSquare();
+
+        if (width > targetDimensions.getWidth() || height > targetDimensions.getHeight()) {
+            try {
+                image = imageResizer.resize(image, targetDimensions.getWidth(), targetDimensions.getHeight());
+            } catch (IOException e) {
+                log.error("Image can't be resized: {}", file.getName());
+                throw new DataValidationException("Wrong image size. Can't be resized");
+            }
+        }
+        return createResource(file, image);
+    }
+
+    private Resource createResource(MultipartFile originalFile, BufferedImage processedImage) {
+        Resource resource = new Resource();
+        resource.setName(generateFileName(originalFile));
+        resource.setType("image");
+        resource.setSize(processedImage.getData().getDataBuffer().getSize());
+        String extension = getFileExtension(originalFile);
+        if (extension == null || extension.isEmpty()) {
+            throw new ResourceProcessingException("File extension not detected for: " + originalFile.getOriginalFilename());
+        }
+        resource.setKey("posts/" + UUID.randomUUID() + "." + extension);
+        try {
+            File tempFile = File.createTempFile("img-", ".tmp");
+            ImageIO.write(processedImage, "jpg", tempFile);
+            resource.setTempFile(tempFile);
+        } catch (IOException e) {
+            log.error("Can't create the new tempFile");
+            throw new ResourceProcessingException("Failed to create image resource", e);
+        }
+        return resource;
+    }
+
+    private String generateFileName(MultipartFile file) {
+        return StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+    }
+
+    private String getFileExtension(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        return originalFilename != null
+                ? StringUtils.getFilenameExtension(originalFilename)
+                : "";
+    }
+
+    private void uploadToMinio(Resource resource) throws Exception {
+        try (InputStream fileStream = new FileInputStream(resource.getTempFile())) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(resource.getKey())
+                            .stream(fileStream, resource.getTempFile().length(), -1)
+                            .contentType("image/jpeg")
+                            .build());
         }
     }
 }
