@@ -168,10 +168,12 @@ public class PostService {
         } catch (TimeoutException e) {
             log.error("Submitting posts for review haven't completed on time");
         } catch (InterruptedException e) {
-            log.error("Submitting posts for review was interrupted. {}", e.getMessage());
+            log.error("Submitting posts for review was interrupted. ", e);
             Thread.currentThread().interrupt();
         } catch (ExecutionException e) {
-            log.error("Execution exception while submitting posts for review. {}", e.getMessage());
+            log.error("Execution exception while submitting posts for review. ", e);
+        } finally {
+            executor.shutdown();
         }
     }
 
@@ -182,20 +184,20 @@ public class PostService {
     )
     private void sendPostContentsChecking(List<Post> posts, AtomicBoolean hasErrors) {
         for (Post post : posts) {
-            log.debug("Before correcting errors in the text: {}", post.getContent());
             try {
+                log.debug("Before correcting errors in the text: {}", post.getContent());
                 post.setContent(languageToolClient.getCorrectedText(post.getContent(), "auto").block());
                 postRepository.save(post);
                 log.debug("After correcting errors in the text: {}", post.getContent());
             } catch (LanguageToolException e) {
                 hasErrors.set(true);
-                throw e;
+                log.error("Error while correcting error. ", e);
             }
         }
     }
 
     @Recover
     private void recoverSendPostContentsChecking(LanguageToolException e) {
-        log.error("Failed to correct text after retries. {}", e.getMessage());
+        log.error("Failed to correct text after retries. ", e);
     }
 }
