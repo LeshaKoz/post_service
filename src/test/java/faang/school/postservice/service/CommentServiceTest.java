@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.cache.CommentAuthorCacheService;
 import faang.school.postservice.dto.comment.CommentCreateEventDto;
 import faang.school.postservice.dto.comment.CommentResponse;
 import faang.school.postservice.dto.comment.CommentUpdateRequest;
@@ -27,10 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -55,25 +53,25 @@ class CommentServiceTest {
 
     @Mock
     private KafkaService kafkaService;
-    
+
     @Mock
     private PostService postService;
+
+    @Mock
+    private CommentAuthorCacheService commentAuthorCacheService;
 
     @InjectMocks
     private CommentService commentService;
 
     @Captor
     private ArgumentCaptor<CommentCreateEventDto> commentCreateCaptor;
-    
+
     @Test
     void create_Success() {
         CreateCommentRequest request = new CreateCommentRequest(1L, "Текст", 2L);
         Post post = new Post();
-
         Long postId = 2L;
-
         post.setId(postId);
-
         Long authorId = 1L;
         Long commentId = 1L;
 
@@ -86,8 +84,8 @@ class CommentServiceTest {
 
         doNothing().when(validateService).validateUser(request.userId());
         doNothing().when(validateService).validatePost(request.postId());
-        doNothing().when(kafkaService)
-                .sendCommentCreateMessage(any());
+        doNothing().when(kafkaService).sendCommentCreateMessage(any());
+        doNothing().when(commentAuthorCacheService).cacheCommentAuthor(anyLong());
 
         when(commentRepository.save(any(Comment.class))).thenReturn(commentSaved);
         when(postService.getPostById(request.postId())).thenReturn(post);
@@ -103,6 +101,7 @@ class CommentServiceTest {
         verify(commentRepository).save(any(Comment.class));
         verify(commentMapper).toCommentResponse(commentSaved);
         verify(kafkaService).sendCommentCreateMessage(commentCreateCaptor.capture());
+        verify(commentAuthorCacheService).cacheCommentAuthor(authorId);
 
         assertEquals(commentCreateCaptor.getValue().getAuthorId(), authorId);
         assertEquals(commentCreateCaptor.getValue().getPostId(), postId);

@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.cache.CommentAuthorCacheService;
 import faang.school.postservice.config.kafka.KafkaProducer;
 import faang.school.postservice.dto.comment.CommentCreateEventDto;
 import faang.school.postservice.dto.comment.CommentResponse;
@@ -40,6 +41,7 @@ public class CommentService {
     private final KafkaService kafkaService;
     private final PostService postService;
     private final KafkaProducer kafkaProducer;
+    private final CommentAuthorCacheService commentAuthorCacheService;
 
     @Transactional
     public CommentResponse create(@Valid CreateCommentRequest createCommentRequest) {
@@ -55,7 +57,9 @@ public class CommentService {
                 .date(LocalDateTime.now())
                 .build();
         kafkaService.sendCommentCreateMessage(eventDto);
-        return commentMapper.toCommentResponse(commentRepository.save(comment));
+        Comment savedComment = commentRepository.save(comment);
+        commentAuthorCacheService.cacheCommentAuthor(savedComment.getAuthorId());
+        return commentMapper.toCommentResponse(savedComment);
     }
 
     @Transactional

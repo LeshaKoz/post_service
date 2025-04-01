@@ -24,17 +24,6 @@ public class AsyncConfig {
     @Value("${spring.data.redis.cache.post.thread-name-prefix}")
     private String cachePostThreadNamePrefix;
 
-    @Bean(name = "cachePostExecutor")
-    public Executor cachePostExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(cachePostCorePoolSize);
-        executor.setMaxPoolSize(cachePostMaxPoolSize);
-        executor.setQueueCapacity(cachePostQueueCapacity);
-        executor.setThreadNamePrefix(cachePostThreadNamePrefix);
-        executor.initialize();
-        return executor;
-    }
-
     @Value("${cache.authors.corePoolSize}")
     private int corePoolSize;
 
@@ -47,6 +36,16 @@ public class AsyncConfig {
     @Value("${cache.authors.threadNamePrefix}")
     private String threadNamePrefix;
 
+    @Bean(name = "cachePostExecutor")
+    public Executor cachePostExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(cachePostCorePoolSize);
+        executor.setMaxPoolSize(cachePostMaxPoolSize);
+        executor.setQueueCapacity(cachePostQueueCapacity);
+        executor.setThreadNamePrefix(cachePostThreadNamePrefix);
+        executor.initialize();
+        return executor;
+    }
 
     @Bean(name = "commentAuthorCacheExecutor")
     public Executor commentAuthorCacheExecutor() {
@@ -58,5 +57,4 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
-
 }

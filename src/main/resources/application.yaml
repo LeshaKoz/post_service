@@ -93,5 +93,5 @@ cache:
     corePoolSize: 5
     maxPoolSize: 10
     queueCapacity: 500
-    threadNamePrefix: "post-author-cache-"
+    threadNamePrefix: "comment-author-cache-"
 
