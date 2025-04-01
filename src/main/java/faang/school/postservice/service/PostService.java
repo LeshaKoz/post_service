@@ -152,7 +152,7 @@ public class PostService {
             futures.add(CompletableFuture.runAsync(() -> {
                 Pageable pageable = PageRequest.of((finalStart + size - 1) / size, size);
                 Page<Post> postContents = postRepository.findPosts(pageable);
-                postContents.forEach(this::sendPostContentsChecking);
+                postContents.forEach(this::sendPostContentChecking);
             }, executor));
         }
 
@@ -176,7 +176,7 @@ public class PostService {
             maxAttemptsExpression = "${spring.retry.language-tool.max-attempts}",
             backoff = @Backoff(delayExpression = "${spring.retry.language-tool.backoff-delay}")
     )
-    private void sendPostContentsChecking(Post post) {
+    private void sendPostContentChecking(Post post) {
         log.debug("Before correcting errors in the text: {}", post.getContent());
         post.setContent(languageToolClient.getCorrectedText(post.getContent(), "auto"));
         postRepository.save(post);
@@ -184,7 +184,7 @@ public class PostService {
     }
 
     @Recover
-    private void recoverSendPostContentsChecking(LanguageToolException e, Post post) {
+    private void recoverSendPostContentChecking(LanguageToolException e, Post post) {
         log.error("Failed to correct text after retries. ", e);
         log.error("Post with ID could not be corrected: {}", post.getId());
     }
