@@ -61,4 +61,11 @@ public class Comment {
 
     @Column(name = "small_image_file_key")
     private String smallImageFileKey;
+
+    @Column(name = "verified", nullable = false)
+    private boolean verified;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "verified_date")
+    private LocalDateTime verifiedDate;
 }
