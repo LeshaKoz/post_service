@@ -9,7 +9,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -48,7 +48,7 @@ services:
 
 comments:
   moderation:
-    cron: "0/10 * * * * *"
-    batch-size: 100000
+    cron: "0/15 * * * * *"
+    batch-size: 100
     thread-pool-size: 24
     backoff-delay: 1000

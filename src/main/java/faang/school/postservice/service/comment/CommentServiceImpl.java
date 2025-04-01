@@ -1,5 +1,7 @@
 package faang.school.postservice.service.comment;
 
+import faang.school.postservice.client.CommentAnalyzerClient;
+import faang.school.postservice.dto.commentAnalyzer.response.ToxicityScoreDto;
 import faang.school.postservice.exception.CommentAnalyzerException;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
@@ -29,8 +31,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
     private static final int TIMEOUT_HOURS = 3;
+    private static final double TOXICITY_THRESHOLD = 0.4;
 
     private final CommentRepository commentRepository;
+    private final CommentAnalyzerClient commentAnalyzerClient;
 
     @Value("${comments.moderation.batch-size}")
     private int batchSize;
@@ -39,10 +43,10 @@ public class CommentServiceImpl implements CommentService {
     private int threadPoolSize;
 
     public void moderateComments() {
+        log.info("Comment moderation started");
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
         long commentsCount = commentRepository.count();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
-        AtomicBoolean hasErrors = new AtomicBoolean(false);
 
         for (int start = 0; start < commentsCount; start += batchSize) {
             int end = Math.min(start + batchSize - 1, (int) commentsCount);
@@ -51,16 +55,13 @@ public class CommentServiceImpl implements CommentService {
             futures.add(CompletableFuture.runAsync(() -> {
                 Pageable pageable = PageRequest.of((finalStart + size - 1) / size, size);
                 Page<Comment> comments = commentRepository.findComments(pageable);
-                moderateCommentsBatch(comments.getContent());
+                comments.forEach(this::moderateComment);
             }, executor));
         }
+
         try {
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(TIMEOUT_HOURS, TimeUnit.HOURS);
-            if (!hasErrors.get()) {
-                log.info("Comment moderation completed successfully");
-            } else {
-                log.info("Not all comments passed moderation");
-            }
+            log.info("Comment moderation completed");
         } catch (ExecutionException e) {
             log.error("ExecutionException while moderating comments", e);
         } catch (InterruptedException e) {
@@ -77,12 +78,27 @@ public class CommentServiceImpl implements CommentService {
             retryFor = {CommentAnalyzerException.class},
             backoff = @Backoff(delayExpression = "${comments.moderation.backoff-delay}")
     )
-    private void moderateCommentsBatch(List<Comment> comments) {
+    private void moderateComment(Comment comment) {
+        ToxicityScoreDto toxicityScore = commentAnalyzerClient.analyzeComment(comment.getContent());
+        boolean moderationFailed = toxicityScore.getAttributeScores().values().stream()
+                .anyMatch(attributeScore ->
+                        attributeScore.getSummaryScore().getValue() >= TOXICITY_THRESHOLD ||
+                                attributeScore.getSpanScores().stream().anyMatch(spanScore ->
+                                        spanScore.getScore().getValue() >= TOXICITY_THRESHOLD));
 
+        if (moderationFailed) {
+            log.info("Comment with ID {} and content {} failed moderation",
+                    comment.getId(), comment.getContent());
+        } else {
+            log.info("Comment with ID {} and content {} passed moderation",
+                    comment.getId(), comment.getContent());
+        }
+        comment.setVerified(!moderationFailed);
     }
 
     @Recover
-    private void recoverModerateCommentsBatch(CommentAnalyzerException e) {
-
+    private void recoverModerateComment(CommentAnalyzerException e, Comment comment) {
+        log.error("Failed to moderate comment after retries", e);
+        log.error("Comment with ID {} could not be moderated", comment.getId());
     }
 }

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class SummaryScoreDto {
-    private float value;
+    private double value;
     private String type;
 }

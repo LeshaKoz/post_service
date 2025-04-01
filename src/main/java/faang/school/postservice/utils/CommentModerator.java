@@ -15,7 +15,6 @@ public class CommentModerator {
 
     @Scheduled(cron = "${comments.moderation.cron}")
     public void moderateComments() {
-        log.info("Comment moderation started");
         commentServiceImpl.moderateComments();
     }
 }
