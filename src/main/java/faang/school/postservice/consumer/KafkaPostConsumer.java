@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -17,10 +18,10 @@ import org.springframework.stereotype.Component;
 public class KafkaPostConsumer {
     private final FeedService feedService;
 
+    @Async("taskExecutor")
     @KafkaListener(
             topics = "${spring.kafka.topics.post.name}",
-            groupId = "${spring.kafka.consumer.groups.post}",
-            containerFactory = "kafkaListenerContainerFactory")
+            groupId = "${spring.kafka.consumer.groups.post}")
     public void consume(FeedPostEvent event, Acknowledgment acknowledgment) {
         Long postId = event.getPostId();
         log.info("Received FeedPostEvent for post ID: {}", postId);
@@ -34,10 +35,10 @@ public class KafkaPostConsumer {
         }
     }
 
+    @Async("taskExecutor")
     @KafkaListener(
             topics = "${spring.kafka.topics.delete-post.name}",
-            groupId = "${spring.kafka.consumer.groups.post}",
-            containerFactory = "kafkaListenerContainerFactory")
+            groupId = "${spring.kafka.consumer.groups.post}")
 
     public void consumeDelete(FeedPostDeleteEvent deleteEvent, Acknowledgment acknowledgment) {
         Long postId = deleteEvent.getPostId();

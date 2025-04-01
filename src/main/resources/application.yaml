@@ -61,6 +61,7 @@ spring:
       ack-mode: MANUAL
       retry-attempts: 3
       retry-interval: 1000
+      concurrency: 3
 
   mvc:
     servlet:
@@ -139,6 +140,12 @@ feed:
   kafka:
     subscribers-batch-size: 1000
     post-topic: post
+
+async:
+  thread:
+    pool:
+      poolSize: 5
+      queueCapacity: 100
 
 feign:
   client:

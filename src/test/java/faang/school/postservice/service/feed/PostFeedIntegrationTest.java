@@ -27,6 +27,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -70,6 +72,9 @@ class PostFeedIntegrationTest {
 
     @Autowired
     private UsersBanPublisher usersBanPublisher;
+
+    @Autowired
+    private Executor taskExecutor;
 
     private final Long authorId = 1L;
     private final Long followerId = 2L;

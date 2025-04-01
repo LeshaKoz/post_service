@@ -25,7 +25,8 @@ public class FeedEventService {
     private final KafkaPostDeleteProducer kafkaPostDeleteProducer;
     private final FeedProperties properties;
 
-    @Async()
+    //@Async()
+    @Async("taskExecutor")
     public void createAndSendFeedPostEventForNewPost(Long postId, Long authorId, LocalDateTime publishedAt) {
         createAndSendFeedPostEvent(postId, authorId, publishedAt, properties.getPostTopic());
     }
@@ -57,7 +58,8 @@ public class FeedEventService {
         }
     }
 
-    @Async()
+    //@Async()
+    @Async("taskExecutor")
     public void createAndSendFeedPostDeletedEvent(long postId) {
         kafkaPostDeleteProducer.sendEvent(new FeedPostDeleteEvent(postId));
     }
