@@ -58,7 +58,7 @@ public class KafkaFeedPostProducerTest {
 
         kafkaFeedPostProducer.sendCreatePostEvent(post);
 
-        verify(kafkaTemplate, times(3)).send(any(String.class), any(String.class));
+        verify(kafkaTemplate, times(3)).send(any(String.class), any(String.class), any(String.class));
     }
 
     @Test
@@ -78,7 +78,7 @@ public class KafkaFeedPostProducerTest {
 
         kafkaFeedPostProducer.sendCreatePostEvent(post);
 
-        verify(kafkaTemplate, times(1)).send(any(String.class), any(String.class));
+        verify(kafkaTemplate, times(1)).send(any(String.class), any(String.class), any(String.class));
     }
 
     @Test
