@@ -175,6 +175,44 @@ public class PostServiceImpl implements PostService {
 
     }
 
+    public void incrementPostLikesCounter(long postId) {
+        updatePostLikesCounter(postId, 1L);
+    }
+
+    public void decrementPostLikesCounter(long postId) {
+        updatePostLikesCounter(postId, -1L);
+    }
+
+    private void updatePostLikesCounter(long postId, long delta) {
+        String cacheKey = redisProperties.cache().postCacheName() + postId;
+        //PostResponseDto postResponseDto = getPostWithCache(postId);
+        PostResponseDto postResponseDto = postRedisTemplate.opsForValue().get(cacheKey);
+
+        if (postResponseDto != null) {
+            log.info("Returning cached post for id: {}", postId);
+            long likesCounter = postResponseDto.postLikesCounter();
+            likesCounter += delta;
+            if (likesCounter < 0) {
+                likesCounter = 0;
+            }
+            PostResponseDto incrementedPostResponseDto = PostResponseDto.builder()
+                    .postLikesCounter(likesCounter)
+                    .id(postResponseDto.id())
+                    .content(postResponseDto.content())
+                    .createdAt(postResponseDto.createdAt())
+                    .authorId(postResponseDto.authorId())
+                    .projectId(postResponseDto.projectId())
+                    .isPublished(postResponseDto.isPublished())
+                    .build();
+
+            postRedisTemplate.opsForValue().set(
+                    cacheKey,
+                    incrementedPostResponseDto,
+                    redisProperties.cache().postTtlMinutes(),
+                    TimeUnit.MINUTES);
+            log.info("For post {} updated likes counter to {}", postId, likesCounter);
+        }
+    }
 
 
     private Post getPostById(Long postId) {

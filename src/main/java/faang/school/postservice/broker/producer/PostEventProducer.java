@@ -9,6 +9,7 @@ import faang.school.postservice.mapper.user.UserDtoAdapter;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,14 @@ public class PostEventProducer extends KafkaProducerService {
     private final UserDtoAdapter userDtoAdapter;
     private final UserContext userContext;
 
-    public PostEventProducer(KafkaTemplate<String, String> kafkaTemplate,
+    public PostEventProducer(KafkaTemplate<String, PostPublicationEvent> kafkaTemplate,
                              CustomKafkaProperties customKafkaProperties,
-                             ObjectMapper objectMapper, UserService userService,
-                             UserDtoAdapter userDtoAdapter, UserContext userContext) {
-        super(kafkaTemplate, objectMapper);
+                             ObjectMapper objectMapper,
+                             UserService userService,
+                             UserDtoAdapter userDtoAdapter,
+                             UserContext userContext,
+                             @Value("${spring.kafka.topic.posts-topic}") String topic) {
+        super(kafkaTemplate, objectMapper, topic);
         this.customKafkaProperties = customKafkaProperties;
         this.userService = userService;
         this.userDtoAdapter = userDtoAdapter;
@@ -54,7 +58,7 @@ public class PostEventProducer extends KafkaProducerService {
                 .postId(postId)
                 .followersIds(followersIds)
                 .build();
-        super.sendPostMessage(customKafkaProperties.topic().postsTopic(), postPublicationEvent);
-        log.info("Sending PublishPostEvent to message broker. Post : {}", postId);
+        super.sendMessage(postPublicationEvent);
+        log.info("Sending PostPublicationEvent to message broker. Post : {}", postId);
     }
 }

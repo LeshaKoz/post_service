@@ -28,7 +28,7 @@ class KafkaProducerServiceTest {
     void testSendMessage() {
         String topic = "test";
         String message = "Hello";
-        kafkaProducerService.sendMessage(topic, message);
+        kafkaProducerService.sendSerializedMessage(topic, message);
 
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
             SendResult<String, String> result = kafkaTemplate.send(topic, message).get();

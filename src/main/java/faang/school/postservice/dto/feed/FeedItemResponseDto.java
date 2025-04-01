@@ -28,7 +28,7 @@ public record FeedItemResponseDto(
         @JsonSerialize(contentAs = LikeDto.class)
         @JsonDeserialize(contentAs = LikeDto.class)
         List<LikeDto> postLikes,
-        long postLikesCounter,
+        //long postLikesCounter,
 
 //        @JsonSetter(nulls = Nulls.SKIP)
 

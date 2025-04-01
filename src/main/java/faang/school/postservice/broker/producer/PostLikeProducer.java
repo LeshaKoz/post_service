@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.config.kafka.CustomKafkaProperties;
 import faang.school.postservice.dto.post.PostLikeEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -14,8 +15,11 @@ public class PostLikeProducer extends KafkaProducerService{
     private final CustomKafkaProperties customKafkaProperties;
 
 
-    public PostLikeProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper, CustomKafkaProperties customKafkaProperties) {
-        super(kafkaTemplate, objectMapper);
+    public PostLikeProducer(KafkaTemplate<String, PostLikeEvent> kafkaTemplate,
+                            ObjectMapper objectMapper,
+                            CustomKafkaProperties customKafkaProperties,
+                            @Value("${spring.kafka.topic.post-likes-topic}") String topic) {
+        super(kafkaTemplate, objectMapper, topic);
         this.customKafkaProperties = customKafkaProperties;
     }
 
@@ -31,7 +35,7 @@ public class PostLikeProducer extends KafkaProducerService{
                 .postId(postId)
                 .build();
 
-        super.sendPostMessage(customKafkaProperties.topic().postLikesTopic(), postLikeEvent);
+        super.sendMessage(postLikeEvent);
         log.info("Sending PostLikeEvent to message broker. Post : {}", postId);
     }
 }

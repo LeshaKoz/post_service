@@ -1,5 +1,9 @@
 package faang.school.postservice.config.kafka;
 
+import faang.school.postservice.dto.post.PostCommentEvent;
+import faang.school.postservice.dto.post.PostLikeEvent;
+import faang.school.postservice.dto.post.PostPublicationEvent;
+import faang.school.postservice.dto.post.PostViewEvent;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -20,19 +24,69 @@ public class KafkaProducerConfig {
 
     private final KafkaProperties kafkaProperties;
 
-    @Bean
-    public ProducerFactory<String, String> producerFactory() {
+
+    private Map<String, Object> producerConfigs() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, kafkaProperties.getProducer().getKeySerializer());
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, kafkaProperties.getProducer().getValueSerializer());
         configProps.put(ProducerConfig.ACKS_CONFIG, kafkaProperties.getProducer().getAcks());
         configProps.put(ProducerConfig.RETRIES_CONFIG, kafkaProperties.getProducer().getRetries());
-        return new DefaultKafkaProducerFactory<>(configProps);
+        return configProps;
+    }
+
+
+    // ProducerFactory для PostViewEvent
+    @Bean
+    public ProducerFactory<String, PostViewEvent> postViewEventProducerFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfigs());
+    }
+
+    // ProducerFactory для PostLikeEvent
+    @Bean
+    public ProducerFactory<String, PostLikeEvent> postLikeEventProducerFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfigs());
+    }
+
+    // ProducerFactory для PostCommentEvent
+    @Bean
+    public ProducerFactory<String, PostCommentEvent> postCommentEventProducerFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfigs());
+    }
+
+    // ProducerFactory для PostPublicationEvent
+    @Bean
+    public ProducerFactory<String, PostPublicationEvent> postPublishEventProducerFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfigs());
+    }
+
+/*    @Bean
+    public KafkaTemplate<String, String> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
+    }*/
+
+    @Bean
+    public KafkaTemplate<String, PostViewEvent> postViewEventKafkaTemplate(
+            ProducerFactory<String, PostViewEvent> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, PostLikeEvent> postLikeEventKafkaTemplate(
+            ProducerFactory<String, PostLikeEvent> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
+
+    @Bean
+    public KafkaTemplate<String, PostPublicationEvent> postPublishEventKafkaTemplate(
+            ProducerFactory<String, PostPublicationEvent> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
+    }
+
+    @Bean
+    public KafkaTemplate<String, PostCommentEvent> postCommentEventKafkaTemplate(
+            ProducerFactory<String, PostCommentEvent> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
+    }
+
 }

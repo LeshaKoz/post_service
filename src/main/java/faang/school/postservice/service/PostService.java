@@ -19,6 +19,8 @@ public interface PostService {
     void deletePost(Long postId);
 
     PostResponseDto getPostWithCache(Long Id);
+    void incrementPostLikesCounter(long postId);
+    void decrementPostLikesCounter(long postId);
 
     List<PostResponseDto> findAllByFilter(PostFilterDto filter);
 }

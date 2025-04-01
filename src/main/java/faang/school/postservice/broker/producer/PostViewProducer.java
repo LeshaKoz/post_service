@@ -5,6 +5,7 @@ import faang.school.postservice.config.kafka.CustomKafkaProperties;
 import faang.school.postservice.dto.post.PostViewEvent;
 import faang.school.postservice.mapper.user.UserDtoAdapter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,12 @@ public class PostViewProducer extends KafkaProducerService{
 
     private final CustomKafkaProperties customKafkaProperties;
 
-    public PostViewProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper,
-                            CustomKafkaProperties customKafkaProperties, UserDtoAdapter userDtoAdapter) {
-        super(kafkaTemplate, objectMapper);
+    public PostViewProducer(KafkaTemplate<String, PostViewEvent> kafkaTemplate,
+                            ObjectMapper objectMapper,
+                            CustomKafkaProperties customKafkaProperties,
+                            UserDtoAdapter userDtoAdapter,
+                            @Value("${spring.kafka.topic.post-views-topic}") String topic) {
+        super(kafkaTemplate, objectMapper, topic);
         this.customKafkaProperties = customKafkaProperties;
     }
 
@@ -33,7 +37,7 @@ public class PostViewProducer extends KafkaProducerService{
                 .userId(visitorId)
                 .build();
 
-        super.sendPostMessage(customKafkaProperties.topic().postViewsTopic(), postViewEvent);
+        super.sendMessage(postViewEvent);
         log.info("Sending PostViewEvent to message broker. Post : {}", postId);
     }
 }

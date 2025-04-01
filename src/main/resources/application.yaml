@@ -39,28 +39,35 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
     consumer:
-      group-id: newsfeed
+      group-id: newsfeed1
       auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "faang.school.postservice.dto.post"  # Пакет с DTO
-        spring.json.value.default.type: faang.school.postservice.dto.post.PostPublicationEvent
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      acks: all
-      retries: 3
+        #spring.json.value.default.type: ""
+        #spring.json.use.type.headers: true  # Использовать информацию о типе из заголовков
+        spring.json.type.mapping: >
+          commentEvent:faang.school.postservice.dto.post.PostCommentEvent,
+          postEvent:faang.school.postservice.dto.post.PostPublicationEvent,
+          likeEvent:faang.school.postservice.dto.post.PostLikeEvent,
+          viewEvent:faang.school.postservice.dto.post.PostViewEvent
     listener:
       ack-mode: manual
       retry-attempts: 3 # Количество попыток повтора
       retry-interval: 1000 # Интервал между попытками
-      default-retryable: false # Отправка в DLQ после неудачных попыток
+      #default-retryable: false # Отправка в DLQ после неудачных попыток
     topic:
-      posts-topic: posts
-      post-views-topic: post_views
-      post-likes-topic: post_likes
-      post-comments-topic: post_comments
+      posts-topic: posts1
+      post-views-topic: post_views1
+      post-likes-topic: post_likes1
+      post-comments-topic: post_comments1
 
   mvc:
     servlet:
@@ -133,6 +140,6 @@ comment:
   number-bad-comments: 5
 
 newsfeed:
-  prefix: newsfeed9
+  prefix: newsfeed11
   max-posts: 10
   page-size: 5

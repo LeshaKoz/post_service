@@ -1,6 +1,5 @@
 package faang.school.postservice.broker.producer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,32 +12,35 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public abstract class KafkaProducerService {
+public abstract class KafkaProducerService<T> {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, T> kafkaTemplate;
     protected final ObjectMapper objectMapper;
+    protected final String topicName;
 
-    protected void sendMessage(String topic, String message) {
-
-        CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(topic, message);
-
-        future.whenComplete((result, ex) -> {
-            if (ex != null) {
-                log.error("Failed to send message {} to kafka topic {}. Error: {}",
-                        message, topic, ex.getMessage());
-            } else {
-                log.info("Successfully sent message {} to kafka topic {}, partition {}. Result: {}",
-                        message, topic, result.getRecordMetadata().partition(), result.getRecordMetadata().offset());
-            }
-        });
-    }
-
-    protected void sendPostMessage(String topic, Object event) {
+    protected void sendMessage(T event) {
         try {
-            sendMessage(topic, objectMapper.writeValueAsString(event));
-        } catch (JsonProcessingException e) {
+            sendSerializedMessage(event);
+        } catch (Exception e) {
             log.error("Error serializing post message: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
+
+    protected void sendSerializedMessage(T message) {
+
+        CompletableFuture<SendResult<String, T>> future = kafkaTemplate.send(topicName, message);
+
+        future.whenComplete((result, ex) -> {
+            if (ex != null) {
+                log.error("Failed to send message {} to kafka topic {}. Error: {}",
+                        message, topicName, ex.getMessage());
+            } else {
+                log.info("Successfully sent message {} to kafka topic {}, partition {}. Result: {}",
+                        message, topicName, result.getRecordMetadata().partition(), result.getRecordMetadata().offset());
+            }
+        });
+    }
+
+
 }

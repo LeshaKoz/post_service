@@ -10,6 +10,7 @@ public record PostResponseDto(
         String content,
         Long authorId,
         Long projectId,
+        long postLikesCounter,
         boolean isPublished,
         LocalDateTime createdAt,
         LocalDateTime publishedAt) {
