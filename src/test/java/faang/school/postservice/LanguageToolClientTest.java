@@ -61,7 +61,7 @@ public class LanguageToolClientTest {
         when(responseSpec.bodyToMono(LanguageToolResponseDto.class))
                 .thenReturn(Mono.just(response));
 
-        String result = languageToolClient.getCorrectedText(text, language).block();
+        String result = languageToolClient.getCorrectedText(text, language);
 
         assertEquals(text, result);
         verify(webClient, times(1)).post();
@@ -81,7 +81,7 @@ public class LanguageToolClientTest {
         when(responseSpec.bodyToMono(LanguageToolResponseDto.class))
                 .thenReturn(Mono.just(response));
 
-        String result = languageToolClient.getCorrectedText(text, language).block();
+        String result = languageToolClient.getCorrectedText(text, language);
 
         assertEquals("This is text", result);
         verify(webClient, times(1)).post();
@@ -102,7 +102,7 @@ public class LanguageToolClientTest {
         when(responseSpec.bodyToMono(LanguageToolResponseDto.class))
                 .thenReturn(Mono.just(response));
 
-        String result = languageToolClient.getCorrectedText(text, language).block();
+        String result = languageToolClient.getCorrectedText(text, language);
 
         assertEquals("This is text", result);
         verify(webClient, times(1)).post();

@@ -17,14 +17,15 @@ import java.util.Comparator;
 public class LanguageToolClient {
     private final WebClient languageToolWebClient;
 
-    public Mono<String> getCorrectedText(String text, String language) {
+    public String getCorrectedText(String text, String language) {
         return languageToolWebClient.post()
                 .uri("/check")
                 .body(BodyInserters.fromFormData("text", text)
                         .with("language", language))
                 .retrieve()
                 .bodyToMono(LanguageToolResponseDto.class)
-                .map(response -> correctText(text, response));
+                .map(response -> correctText(text, response))
+                .block();
     }
 
     private String correctText(String text, LanguageToolResponseDto response) {

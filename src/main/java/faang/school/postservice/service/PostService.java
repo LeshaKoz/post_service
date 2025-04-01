@@ -30,7 +30,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
@@ -153,7 +152,7 @@ public class PostService {
             futures.add(CompletableFuture.runAsync(() -> {
                 Pageable pageable = PageRequest.of((finalStart + size - 1) / size, size);
                 Page<Post> postContents = postRepository.findPosts(pageable);
-                sendPostContentsChecking(postContents.getContent());
+                postContents.forEach(this::sendPostContentsChecking);
             }, executor));
         }
 
@@ -177,18 +176,16 @@ public class PostService {
             maxAttemptsExpression = "${spring.retry.language-tool.max-attempts}",
             backoff = @Backoff(delayExpression = "${spring.retry.language-tool.backoff-delay}")
     )
-    private void sendPostContentsChecking(List<Post> posts) {
-        for (Post post : posts) {
-            log.debug("Before correcting errors in the text: {}", post.getContent());
-            post.setContent(languageToolClient.getCorrectedText(post.getContent(), "auto").block());
-            postRepository.save(post);
-            log.debug("After correcting errors in the text: {}", post.getContent());
-        }
+    private void sendPostContentsChecking(Post post) {
+        log.debug("Before correcting errors in the text: {}", post.getContent());
+        post.setContent(languageToolClient.getCorrectedText(post.getContent(), "auto"));
+        postRepository.save(post);
+        log.debug("After correcting errors in the text: {}", post.getContent());
     }
 
     @Recover
-    private void recoverSendPostContentsChecking(LanguageToolException e, List<Post> posts) {
+    private void recoverSendPostContentsChecking(LanguageToolException e, Post post) {
         log.error("Failed to correct text after retries. ", e);
-        posts.forEach(post -> log.error("Post with ID could not be corrected: {}", post.getId()));
+        log.error("Post with ID could not be corrected: {}", post.getId());
     }
 }
