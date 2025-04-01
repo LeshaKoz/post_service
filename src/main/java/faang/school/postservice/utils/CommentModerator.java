@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class CommentModerator {
     private final CommentServiceImpl commentServiceImpl;
 
-    @Scheduled(cron = "${comments.moderation.cron}")
+    @Scheduled(cron = "${moderation.comments.cron}")
     public void moderateComments() {
         commentServiceImpl.moderateComments();
     }

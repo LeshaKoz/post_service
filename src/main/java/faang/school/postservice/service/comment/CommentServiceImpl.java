@@ -1,6 +1,6 @@
 package faang.school.postservice.service.comment;
 
-import faang.school.postservice.client.CommentAnalyzerClient;
+import faang.school.postservice.client.CommentAnalyzer;
 import faang.school.postservice.dto.commentAnalyzer.response.ToxicityScoreDto;
 import faang.school.postservice.exception.CommentAnalyzerException;
 import faang.school.postservice.model.Comment;
@@ -16,6 +16,7 @@ import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -24,22 +25,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
     private static final int TIMEOUT_HOURS = 3;
-    private static final double TOXICITY_THRESHOLD = 0.4;
+    private static final double TOXICITY_THRESHOLD = 0.35;
 
     private final CommentRepository commentRepository;
-    private final CommentAnalyzerClient commentAnalyzerClient;
+    private final CommentAnalyzer commentAnalyzer;
 
-    @Value("${comments.moderation.batch-size}")
+    @Value("${moderation.comments.batch-size}")
     private int batchSize;
 
-    @Value("${comments.moderation.thread-pool-size}")
+    @Value("${moderation.comments.thread-pool-size}")
     private int threadPoolSize;
 
     public void moderateComments() {
@@ -79,21 +79,19 @@ public class CommentServiceImpl implements CommentService {
             backoff = @Backoff(delayExpression = "${comments.moderation.backoff-delay}")
     )
     private void moderateComment(Comment comment) {
-        ToxicityScoreDto toxicityScore = commentAnalyzerClient.analyzeComment(comment.getContent());
+        ToxicityScoreDto toxicityScore = commentAnalyzer.analyzeComment(comment.getContent());
         boolean moderationFailed = toxicityScore.getAttributeScores().values().stream()
                 .anyMatch(attributeScore ->
                         attributeScore.getSummaryScore().getValue() >= TOXICITY_THRESHOLD ||
                                 attributeScore.getSpanScores().stream().anyMatch(spanScore ->
                                         spanScore.getScore().getValue() >= TOXICITY_THRESHOLD));
 
-        if (moderationFailed) {
-            log.info("Comment with ID {} and content {} failed moderation",
-                    comment.getId(), comment.getContent());
-        } else {
-            log.info("Comment with ID {} and content {} passed moderation",
-                    comment.getId(), comment.getContent());
-        }
+        log.debug("Comment with ID {} and content '{}' {} moderation",
+                comment.getId(), comment.getContent(), moderationFailed ? "failed" : "passed");
+
         comment.setVerified(!moderationFailed);
+        comment.setVerifiedDate(LocalDateTime.now());
+        commentRepository.save(comment);
     }
 
     @Recover

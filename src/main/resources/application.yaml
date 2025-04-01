@@ -46,9 +46,9 @@ services:
     endpoint: https://commentanalyzer.googleapis.com/v1alpha1
     api-key: "AIzaSyDNS2DzSDuUQI_FLdY4dSmA5Bgj397kwK8"
 
-comments:
-  moderation:
-    cron: "0/15 * * * * *"
-    batch-size: 100
+moderation:
+  comments:
+    cron: "0 0 * * * *"
+    batch-size: 250000
     thread-pool-size: 24
     backoff-delay: 1000

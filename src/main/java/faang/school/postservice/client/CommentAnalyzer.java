@@ -9,14 +9,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
 @RequiredArgsConstructor
-public class CommentAnalyzerClient {
-    private final WebClient commentAnalyzerWebClient;
+public class CommentAnalyzer {
+    private final WebClient commentAnalyzerClient;
 
     @Value("${services.comment-analyzer.api-key}")
     String apiKey;
 
     public ToxicityScoreDto analyzeComment(String text) {
-        return commentAnalyzerWebClient.post()
+        return commentAnalyzerClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/comments:analyze")
                         .queryParam("key", apiKey)

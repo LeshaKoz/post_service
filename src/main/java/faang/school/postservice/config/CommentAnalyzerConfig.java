@@ -9,7 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Configuration
-public class CommentAnalyzerWebConfig {
+public class CommentAnalyzerConfig {
     @Value("${services.comment-analyzer.endpoint}")
     String baseUrl;
 
@@ -17,7 +17,7 @@ public class CommentAnalyzerWebConfig {
     String apiKey;
 
     @Bean
-    public WebClient commentAnalyzerWebClient() {
+    public WebClient commentAnalyzerClient() {
         return WebClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader("Content-Type", "application/json")
