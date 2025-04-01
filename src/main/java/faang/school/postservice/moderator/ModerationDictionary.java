@@ -22,7 +22,7 @@ public class ModerationDictionary {
     }
 
     public boolean containsWord(String word) {
-        return moderationConfig.getRudeWords().contains(word);
+        return moderationConfig.getRudeWords().contains(word.toLowerCase());
     }
 
     public Iterator<String> iterator() {
@@ -38,6 +38,6 @@ public class ModerationDictionary {
     }
 
     public boolean containsAll(Collection<String> collection) {
-        return moderationConfig.getRudeWords().containsAll(collection);
+        return moderationConfig.getRudeWords().containsAll(collection.stream().map(String::toLowerCase).toList());
     }
 }
