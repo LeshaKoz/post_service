@@ -62,8 +62,6 @@ public class CommentService {
                 .build();
         kafkaService.sendCommentCreateMessage(eventDto);
         Comment savedComment = commentRepository.save(comment);
-        commentAuthorCacheService.cacheCommentAuthor(savedComment.getAuthorId());
-
         try {
             retryableCacheCommentAuthor(savedComment.getAuthorId());
         } catch (Exception e) {
