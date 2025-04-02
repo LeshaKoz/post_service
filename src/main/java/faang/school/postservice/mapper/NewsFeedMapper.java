@@ -31,7 +31,8 @@ public interface NewsFeedMapper {
     @Mapping(target = "timeToLeave", source = "ttl")
     CacheAuthor toCache(ProjectDto projectDto, Long ttl);
 
-    @Mapping(target = "likes", source = "post.likesCount")
+    @Mapping(target = "likes", source = "likesCount")
     @Mapping(target = "authorId", ignore = true)
+    @Mapping(target = "id", source = "id")
     CacheComment toCache(Comment comment);
 }

@@ -98,6 +98,8 @@ public class NewsFeedServiceTest {
                 0,
                 maxComments - 1
         );
+        verify(redisTemplate).multi();
+        verify(redisTemplate).exec();
         CacheComment cacheComment = captor.getValue();
         assertEquals(comment.getContent(), cacheComment.getContent());
         assertEquals(comment.getLikesCount(), cacheComment.getLikes());

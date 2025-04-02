@@ -22,4 +22,8 @@ public class CachePost {
 
     @TimeToLive
     private Long timeToLive;
+
+    public static String getLikesFieldName() {
+        return "likes";
+    }
 }

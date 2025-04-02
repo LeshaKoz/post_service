@@ -11,7 +11,10 @@ import faang.school.postservice.repository.cache.CacheAuthorRepository;
 import faang.school.postservice.repository.cache.CachePostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
@@ -21,6 +24,7 @@ import java.util.function.Supplier;
 import static faang.school.postservice.model.cache.CacheAuthor.PROJECT_PREFIX;
 import static faang.school.postservice.model.cache.CacheAuthor.USER_PREFIX;
 import static faang.school.postservice.model.cache.CacheComment.COMMENT_PREFIX;
+import static faang.school.postservice.model.cache.CachePost.POST_PREFIX;
 
 @Service
 @RequiredArgsConstructor
@@ -50,8 +54,17 @@ public class NewsFeedService {
         cacheComment.setAuthorId(cacheUserAsAuthor(comment.getAuthorId()).getId());
         String cacheKey = COMMENT_PREFIX + comment.getPost().getId();
 
-        redisTemplate.opsForList().leftPush(cacheKey, cacheComment);
-        redisTemplate.opsForList().trim(cacheKey, 0, maxComments - 1);
+        redisTemplate.execute(new SessionCallback<>() {
+            @Override
+            public Object execute(RedisOperations operations) throws DataAccessException {
+                operations.multi();
+
+                operations.opsForList().leftPush(cacheKey, cacheComment);
+                operations.opsForList().trim(cacheKey, 0, maxComments - 1);
+
+                return operations.exec();
+            }
+        });
     }
 
     public CachePost cachePost(Post post) {
@@ -99,6 +112,19 @@ public class NewsFeedService {
                     redisTemplate.opsForZSet().add(cacheKey, postId, timestamp);
                     redisTemplate.opsForZSet().removeRange(cacheKey, 0, -maxPostsInFeed - 1);
                 });
+    }
+
+    public void addLikeToPost(long postId) {
+        var optionalPost = cachePostRepository.findById(postId);
+        if (optionalPost.isEmpty()) {
+            return;
+        }
+        CachePost cachePost = optionalPost.get();
+        redisTemplate.opsForHash().increment(
+                POST_PREFIX + cachePost.getId(),
+                CachePost.getLikesFieldName(),
+                1
+        );
     }
 
     private CacheAuthor cacheAuthor(String cacheAuthorId, Supplier<CacheAuthor> cacheAuthorSupplier) {
