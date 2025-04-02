@@ -27,7 +27,6 @@ spring:
           post-channel:
             name: post_channel_topic
 
-
   servlet:
     multipart:
       max-file-size: 5MB
@@ -40,11 +39,19 @@ logging:
   level:
     root: info
 
+kafka:
+  bootstrap-servers: localhost:9092
+  consumer:
+    trusted-packages: faang.school.postservice.event
+
 post:
   ad-remover:
     scheduler:
       cron: "0 0 0 * * ?"
     max-list-size: 50
+
+feed:
+  max-size: 500
 
 services:
   s3:
