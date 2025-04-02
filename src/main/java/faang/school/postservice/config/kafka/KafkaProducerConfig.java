@@ -1,7 +1,7 @@
 package faang.school.postservice.config.kafka;
 
-import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,31 +16,39 @@ import java.util.Map;
 
 @Configuration
 public class KafkaProducerConfig {
-    @Value("${spring.kafka.bootstrap_servers}")
+
+    @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-    @Value("${spring.kafka.producer.acks:1}")
+
+    @Value("${spring.kafka.producer.acks}")
     private String acks;
-    @Value("${spring.kafka.producer.retries:10}")
+
+    @Value("${spring.kafka.producer.retries}")
     private int retries;
 
-    @Bean
-    public Map<String, Object> producerConfig() {
-        Map<String, Object> configs = new HashMap<>();
-        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-
-        configs.put(ProducerConfig.ACKS_CONFIG, acks);
-        configs.put(ProducerConfig.RETRIES_CONFIG, retries);
-        return configs;
-    }
-    @Bean
-    public ProducerFactory<String, Object> producerFactory() {
-        return new DefaultKafkaProducerFactory<>(producerConfig());
+    private Map<String, Object> baseProps() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ProducerConfig.ACKS_CONFIG, acks);
+        props.put(ProducerConfig.RETRIES_CONFIG, retries);
+        return props;
     }
 
-    @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
-        return new KafkaTemplate<>(producerFactory);
+    @Bean(name = "stringKafkaTemplate")
+    public KafkaTemplate<String, Object> kafkaTemplateString() {
+        Map<String, Object> props = baseProps();
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        ProducerFactory<String, Object> factory = new DefaultKafkaProducerFactory<>(props);
+        return new KafkaTemplate<>(factory);
+    }
+
+    @Bean(name = "longKafkaTemplate")
+    public KafkaTemplate<Long, Object> kafkaTemplateLong() {
+        Map<String, Object> props = baseProps();
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        ProducerFactory<Long, Object> factory = new DefaultKafkaProducerFactory<>(props);
+        return new KafkaTemplate<>(factory);
     }
 }

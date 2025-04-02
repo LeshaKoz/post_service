@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class KafkaEventProducer {
 
-    @Value("${spring.kafka.topic-name.heat}")
+    @Value("${spring.kafka.topics.heat.name}")
     private String heatTopic;
 
     private final KafkaTemplate<Long, Object> kafkaTemplate;
