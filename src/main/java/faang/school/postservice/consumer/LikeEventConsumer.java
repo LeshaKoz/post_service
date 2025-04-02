@@ -22,27 +22,30 @@ public class LikeEventConsumer {
     private final PostRepository repository;
     private final PostMapper postMapper;
 
-    @KafkaListener(topics = "like_topic")
+    @KafkaListener(topics = "like_topic", containerFactory = "likeEventContainerFactory")
     public void likeEvent(LikeEvent event, Acknowledgment acknowledgment) {
         log.info("A like event has been received");
         PostCacheDto postCacheDto = redisPostRepository.findById(event.getPostId()).orElse(null);
 
         if (postCacheDto != null) {
             log.info("The post {} was found in the redis cache.", postCacheDto);
-            postCacheDto.setLikeCount(incrementCount(postCacheDto));
-            redisPostRepository.save(postCacheDto);
+            setAndSaveLikeCount(postCacheDto);
         } else {
             Post post = repository.findById(event.getPostId())
                     .orElseThrow(() -> new EntityNotFoundException("Post with id {} not found" + event.getPostId()));
             log.info("the post {} was found in the database", post);
             PostCacheDto cacheDto = postMapper.toCacheDto(post);
-            cacheDto.setLikeCount(incrementCount(cacheDto));
-            redisPostRepository.save(cacheDto);
+            setAndSaveLikeCount(cacheDto);
         }
         acknowledgment.acknowledge();
     }
 
     private synchronized Long incrementCount(PostCacheDto postCacheDto) {
         return postCacheDto.getLikeCount() + 1;
+    }
+
+    private void setAndSaveLikeCount(PostCacheDto cacheDto) {
+        cacheDto.setLikeCount(incrementCount(cacheDto));
+        redisPostRepository.save(cacheDto);
     }
 }
