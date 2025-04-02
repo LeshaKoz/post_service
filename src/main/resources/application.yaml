@@ -1,3 +1,9 @@
+app:
+  hashtags:
+    max-cached-posts-per-hashtag: 100
+    thread-pool-size: 8
+    top-hashtags-cache: 1000
+
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
