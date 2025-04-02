@@ -17,7 +17,7 @@ public class LikeController {
 
     private final LikeService likeService;
 
-    @PostMapping("/post/{postDto}")
+    @PostMapping("/post/{postId}")
     public LikeDto addLikeToPost(@PathVariable long postId) {
         return likeService.addLikeToPost(postId);
     }
