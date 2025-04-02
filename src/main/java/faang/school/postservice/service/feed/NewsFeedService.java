@@ -5,7 +5,6 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.event.kafka.KafkaPostEventDto;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.FeedMapper;
-import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.cache.FeedCache;
@@ -35,17 +34,18 @@ public class NewsFeedService {
     private int maxFeedSize;
     @Value("${news-feed.batch-size:20}")
     private int postBatchSize;
-    @Value("${news-feed.prefix-name}")
-    private String newsFeedPrefix;
+    @Value("${spring.data.kafka.key.post}")
+    private String postKey;
+    @Value("${spring.data.kafka.key.feed}")
+    private String feedKey;
 
     private final RedisTemplate<String, String> redisTemplate;
     private final FeedMapper feedMapper;
-    private final PostMapper postMapper;
     private final RedisUserRepository redisUserRepository;
     private final RedisPostRepository redisPostRepository;
     private final RedisFeedRepository redisFeedRepository;
     private final PostRepository postRepository;
-    private UserService userService;
+    private final UserService userService;
 
     public List<PostFeedReadDto> getFeed(long userId, Long lastPostId) {
         Optional<FeedCache> optionalFeedCache = redisFeedRepository.findById(userId);
@@ -60,13 +60,6 @@ public class NewsFeedService {
                 .toList();
     }
 
-    public void addAuthorToCacheByPost(Post post) {
-        long authorId = post.getAuthorId();
-        String username = userService.getUserDtoById(authorId).username();
-        UserCache userCache = new UserCache(authorId, username);
-        redisUserRepository.save(userCache);
-    }
-
     public void addAuthorToCacheByComment(Comment comment) {
         long authorId = comment.getId();
         String username = userService.getUserDtoById(authorId).username();
@@ -75,35 +68,22 @@ public class NewsFeedService {
         redisUserRepository.save(userCache);
     }
 
-    public void addPostToCache(Post post) {
-        PostCache postCache = postMapper.toCache(post);
-        redisPostRepository.save(postCache);
-    }
-
-    public void updatePostCountView(Long postId, Long viewCount) {
-        PostCache postCache = redisPostRepository.findById(postId).orElse(null);
-        if (postCache != null) {
-            postCache.setViewsCount(viewCount);
-            redisPostRepository.save(postCache);
-        }
+    public  void updatePostCountView(Long postId, Long viewCount) {
+        String key = postKey + ":viewCount:" + postId;
+        redisTemplate.opsForValue().increment(key, viewCount);
     }
 
     public void addPostToFeed(KafkaPostEventDto postEventDto, long followerId) {
-        String redisKey = newsFeedPrefix + followerId;
+        String redisKey = feedKey + ":" + followerId;
         String postId = String.valueOf(postEventDto.getPostId());
         long timestamp = System.currentTimeMillis();
         try {
             redisTemplate.opsForZSet().add(redisKey, postId, timestamp);
             redisTemplate.opsForZSet().removeRange(redisKey, 0, -maxFeedSize - 1);
-            log.info("Добавлен пост {} в Ленту новостей для пользователя [{}]", postEventDto.getPostId(), followerId);
+            log.info("Добавлен пост {} в Ленту новостей для пользователя {}", postEventDto.getPostId(), followerId);
         } catch (Exception e) {
             log.error("Ошибка добавления поста в Ленту новостей для пользователя {}: {}", followerId, e.getMessage(), e);
         }
-
-
-        FeedCache feedCache = feedMapper.toFeedCache(postEventDto);
-        feedCache.setUserId(followerId);
-        redisFeedRepository.save(feedCache);
     }
 
     private PostFeedReadDto getPostFeedDto(long postId) {

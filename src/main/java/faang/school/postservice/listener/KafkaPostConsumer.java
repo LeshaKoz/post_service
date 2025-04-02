@@ -18,13 +18,11 @@ public class KafkaPostConsumer {
     @KafkaListener(topics = "${spring.data.kafka.topic.posts}", groupId = "${spring.data.kafka.group-id}")
     public void handle(KafkaPostEventDto postEventDto, Acknowledgment ack) {
         try {
-            long postId = postEventDto.getPostId();
-
             postEventDto.getAuthorFollowersIds().forEach(followerId ->
                     newsFeedService.addPostToFeed(postEventDto, followerId));
             ack.acknowledge();
         } catch (Exception e) {
-            log.error("Ошибка обработки События в Kafka: {}", e.getMessage());
+            log.error("Ошибка обработки События в Kafka: {}", e.getMessage(), e);
         }
     }
 }

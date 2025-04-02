@@ -34,6 +34,11 @@ public class KafkaConfig {
     @Value("${spring.data.kafka.topic.post-views}")
     private String postViewTopic;
 
+    @Value("${spring.data.kafka.partitions}")
+    private int numPartitions;
+
+    @Value("${spring.data.kafka.replications}")
+    private short replicationFactor;
 
     @Value("${spring.data.kafka.group-id}")
     private String groupId;
@@ -52,12 +57,12 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic postTopic() {
-        return new NewTopic(postTopic, 1, (short) 1);
+        return new NewTopic(postTopic, numPartitions, replicationFactor);
     }
 
     @Bean
     public NewTopic postViewTopic() {
-        return new NewTopic(postViewTopic, 1, (short) 1);
+        return new NewTopic(postViewTopic, numPartitions, replicationFactor);
     }
 
     @Bean

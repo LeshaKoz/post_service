@@ -31,12 +31,15 @@ spring:
       address: localhost:9092
       acknowledgement: all
       group-id: post-service-group
+      partitions: 1
+      replications: 1
       topic:
         posts: posts
         post-views: post-views
       keys:
         post: post
         post-view: post-view
+        feed: feed
 
   cloud:
     openfeign:
@@ -142,7 +145,6 @@ task:
 news-feed:
   batch-size: 20
   max-feed-size: 500
-  prefix-name: News_feed
 
 ---
 

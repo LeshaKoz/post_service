@@ -1,2 +1,3 @@
 ALTER TABLE post
-    ADD COLUMN views bigint NOT NULL default 0;
+    ADD COLUMN IF NOT EXISTS views bigint NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS version bigint NOT NULL DEFAULT 0;
