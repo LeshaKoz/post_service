@@ -33,6 +33,9 @@ logging:
     root: info
     org.zalando.logbook: TRACE
 
+like:
+  batch: 100
+
 user-service:
   host: localhost
   port: 8080
