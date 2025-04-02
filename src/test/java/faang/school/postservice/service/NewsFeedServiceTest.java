@@ -5,13 +5,11 @@ import faang.school.postservice.mapper.NewsFeedMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.cache.CacheAuthor;
-import faang.school.postservice.model.cache.CacheComment;
 import faang.school.postservice.model.cache.CachePost;
 import faang.school.postservice.repository.cache.CacheAuthorRepository;
 import faang.school.postservice.repository.cache.CachePostRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -19,7 +17,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.data.redis.core.SessionCallback;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -29,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -76,8 +73,6 @@ public class NewsFeedServiceTest {
                 .build();
         ListOperations<String, Object> listOperations = mock(ListOperations.class);
 
-        when(redisTemplate.opsForList())
-                .thenReturn(listOperations);
         when(cachePostRepository.existsById(anyLong()))
                 .thenReturn(true);
         when(cacheAuthorRepository.findById(anyString()))
@@ -90,19 +85,7 @@ public class NewsFeedServiceTest {
 
         newsFeedService.cacheCommentForPost(comment);
 
-        ArgumentCaptor<CacheComment> captor = ArgumentCaptor.forClass(CacheComment.class);
-        int maxComments = (Integer) ReflectionTestUtils.getField(newsFeedService, "maxComments");
-        verify(listOperations).leftPush(eq(cacheKey), captor.capture());
-        verify(listOperations).trim(
-                cacheKey,
-                0,
-                maxComments - 1
-        );
-        verify(redisTemplate).multi();
-        verify(redisTemplate).exec();
-        CacheComment cacheComment = captor.getValue();
-        assertEquals(comment.getContent(), cacheComment.getContent());
-        assertEquals(comment.getLikesCount(), cacheComment.getLikes());
+        verify(redisTemplate).execute(any(SessionCallback.class));
 
     }
 

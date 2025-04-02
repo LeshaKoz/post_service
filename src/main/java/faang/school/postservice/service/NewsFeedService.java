@@ -11,7 +11,10 @@ import faang.school.postservice.repository.cache.CacheAuthorRepository;
 import faang.school.postservice.repository.cache.CachePostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Supplier;
@@ -43,10 +46,17 @@ public class NewsFeedService {
         cacheComment.setAuthorId(cacheUserAsAuthor(comment.getAuthorId()).getId());
         String cacheKey = COMMENT_PREFIX + comment.getPost().getId();
 
-        redisTemplate.multi();
-        redisTemplate.opsForList().leftPush(cacheKey, cacheComment);
-        redisTemplate.opsForList().trim(cacheKey, 0, maxComments - 1);
-        redisTemplate.exec();
+        redisTemplate.execute(new SessionCallback<>() {
+            @Override
+            public Object execute(RedisOperations operations) throws DataAccessException {
+                operations.multi();
+
+                operations.opsForList().leftPush(cacheKey, cacheComment);
+                operations.opsForList().trim(cacheKey, 0, maxComments - 1);
+
+                return operations.exec();
+            }
+        });
     }
 
     public CachePost cachePost(Post post) {
