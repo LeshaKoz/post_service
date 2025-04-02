@@ -50,8 +50,10 @@ public class NewsFeedService {
         cacheComment.setAuthorId(cacheUserAsAuthor(comment.getAuthorId()).getId());
         String cacheKey = COMMENT_PREFIX + comment.getPost().getId();
 
+        redisTemplate.multi();
         redisTemplate.opsForList().leftPush(cacheKey, cacheComment);
         redisTemplate.opsForList().trim(cacheKey, 0, maxComments - 1);
+        redisTemplate.exec();
     }
 
     public CachePost cachePost(Post post) {
