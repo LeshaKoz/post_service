@@ -1,8 +1,8 @@
-package faang.school.postservice.controller.comment;
+package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentViewDto;
-import faang.school.postservice.service.comment.CommentService;
+import faang.school.postservice.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

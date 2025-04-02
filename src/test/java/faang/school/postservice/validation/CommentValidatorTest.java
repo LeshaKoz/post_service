@@ -6,6 +6,7 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ public class CommentValidatorTest {
     private UserServiceClient userServiceClient;
 
     @Mock
+    private PostRepository postRepository;
+
+    @Mock
     private Comment comment;
 
     @Mock
@@ -47,25 +51,33 @@ public class CommentValidatorTest {
         @Test
         @DisplayName("Должен пройти успешно, когда комментарий принадлежит посту")
         void givenValidArguments_whenValidateCommentBelongsToPost_thenSuccess() {
-            when(comment.getPost()).thenReturn(post);
-            when(post.getId()).thenReturn(postId);
+            when(comment.belongsToPost(postId)).thenReturn(true);
 
             assertDoesNotThrow(() ->
                     commentValidator.validateCommentBelongsToPost(comment, postId, commentId)
             );
 
-            verify(comment, times(1)).getPost();
-            verify(post, times(1)).getId();
+            verify(comment, times(1)).belongsToPost(postId);
         }
 
         @Test
         @DisplayName("Должен выбросить исключение, когда комментарий не принадлежит посту")
         void givenInvalidArguments_whenValidateCommentBelongsToPost_thenThrowDataValidationException() {
-            when(comment.getPost()).thenReturn(post);
-            when(post.getId()).thenReturn(999L);
+            when(comment.belongsToPost(postId)).thenReturn(false);
 
             DataValidationException exception = assertThrows(DataValidationException.class,
                     () -> commentValidator.validateCommentBelongsToPost(comment, postId, commentId)
+            );
+
+            assertEquals("Comment with ID 1 doesn't belong to post with ID 1", exception.getMessage());
+            verify(comment, times(1)).belongsToPost(postId);
+        }
+
+        @Test
+        @DisplayName("Должен выбросить исключение, когда комментарий null")
+        void givenNullComment_whenValidateCommentBelongsToPost_thenThrowDataValidationException() {
+            DataValidationException exception = assertThrows(DataValidationException.class,
+                    () -> commentValidator.validateCommentBelongsToPost(null, postId, commentId)
             );
 
             assertEquals("Comment with ID 1 doesn't belong to post with ID 1", exception.getMessage());
@@ -100,5 +112,44 @@ public class CommentValidatorTest {
         );
 
         assertEquals("User with ID 1 not found", exception.getMessage());
+    }
+
+    @Nested
+    @DisplayName("validatePostExists()")
+    class ValidatePostExists {
+
+        @Test
+        @DisplayName("Должен пройти успешно, когда пост существует")
+        void givenExistingPostId_whenValidatePostExists_thenSuccess() {
+            when(postRepository.existsById(postId)).thenReturn(true);
+
+            assertDoesNotThrow(() ->
+                    commentValidator.validatePostExists(postId)
+            );
+
+            verify(postRepository, times(1)).existsById(postId);
+        }
+
+        @Test
+        @DisplayName("Должен выбросить исключение, когда пост не существует")
+        void givenNonExistingPostId_whenValidatePostExists_thenThrowEntityNotFoundException() {
+            when(postRepository.existsById(postId)).thenReturn(false);
+
+            EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                    () -> commentValidator.validatePostExists(postId)
+            );
+
+            assertEquals("Post with ID 1 not found", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("Должен выбросить исключение, когда postId равен null")
+        void givenNullPostId_whenValidatePostExists_thenThrowIllegalArgumentException() {
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> commentValidator.validatePostExists(null)
+            );
+
+            assertEquals("Post ID must not be null", exception.getMessage());
+        }
     }
 }

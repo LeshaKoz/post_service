@@ -10,7 +10,6 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.validation.CommentValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,22 +65,22 @@ public class CommentServiceTest {
     void setUp() {
         commentCreateDto = new CommentCreateDto();
         commentCreateDto.setContent("Test content");
-        commentCreateDto.setAuthorId(1L);
-        commentCreateDto.setPostId(1L);
+        commentCreateDto.setAuthorId(authorId);
+        commentCreateDto.setPostId(postId);
 
         commentViewDto = new CommentViewDto();
-        commentViewDto.setId(1L);
+        commentViewDto.setId(commentId);
         commentViewDto.setContent("Test content");
-        commentViewDto.setAuthorId(1L);
-        commentViewDto.setPostId(1L);
+        commentViewDto.setAuthorId(authorId);
+        commentViewDto.setPostId(postId);
 
         post = new Post();
-        post.setId(1L);
+        post.setId(postId);
 
         comment = new Comment();
-        comment.setId(1L);
+        comment.setId(commentId);
         comment.setContent("Test content");
-        comment.setAuthorId(1L);
+        comment.setAuthorId(authorId);
         comment.setPost(post);
         comment.setCreatedAt(LocalDateTime.now());
     }
@@ -116,12 +117,17 @@ public class CommentServiceTest {
         @Test
         @DisplayName("Ошибка при несуществующем авторе")
         void givenNonExistentAuthor_whenCreateComment_thenThrowEntityNotFoundException() {
-            when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-            doThrow(new EntityNotFoundException("User not found"))
+            doNothing().when(commentValidator).validatePostExists(postId);
+            doThrow(new EntityNotFoundException("User with ID " + authorId + " not found"))
                     .when(commentValidator).validateUserById(authorId);
 
-            assertThrows(EntityNotFoundException.class,
+            EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
                     () -> commentService.createComment(postId, commentCreateDto));
+
+            assertEquals("User with ID " + authorId + " not found", exception.getMessage());
+            verify(commentValidator).validatePostExists(postId);
+            verify(commentValidator).validateUserById(authorId);
+            verifyNoInteractions(postRepository);
         }
     }
 

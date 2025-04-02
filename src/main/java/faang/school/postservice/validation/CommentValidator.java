@@ -66,6 +66,9 @@ public class CommentValidator {
      * @throws IllegalArgumentException если переданный postId равен null
      */
     public void validatePostExists(Long postId) {
+        if (postId == null) {
+            throw new IllegalArgumentException("Post ID must not be null");
+        }
         if (!postRepository.existsById(postId)) {
             throw new EntityNotFoundException("Post with ID " + postId + " not found");
         }

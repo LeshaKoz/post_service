@@ -2,11 +2,10 @@ package faang.school.postservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.config.context.UserContext;
-import faang.school.postservice.controller.comment.CommentController;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentViewDto;
 import faang.school.postservice.exception.EntityNotFoundException;
-import faang.school.postservice.service.comment.CommentService;
+import faang.school.postservice.service.CommentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
