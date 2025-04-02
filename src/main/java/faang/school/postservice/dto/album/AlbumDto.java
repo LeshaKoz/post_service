@@ -8,6 +8,7 @@ import lombok.Setter;
 public class AlbumDto {
 
     private Long id;
+    private Long authorId;
     private String title;
     private String description;
 }

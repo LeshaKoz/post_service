@@ -68,7 +68,7 @@ public class AlbumController {
         return albumService.findFavoriteAlbumsByUserId(userId, albumFilterDto);
     }
 
-    @GetMapping(DELETE_ALBUM_FROM_FAVORITE)
+    @GetMapping(DELETE_ALBUM)
     public AlbumDto deleteAlbum(@RequestParam long albumId, @RequestParam long userId) {
         return albumService.deleteAlbum(albumId, userId);
     }

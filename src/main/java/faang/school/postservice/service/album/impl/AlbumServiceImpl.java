@@ -43,6 +43,7 @@ public class AlbumServiceImpl implements AlbumService {
             throw new RuntimeException("Album already exists");
         }
         Album album = albumMapper.toEntity(albumDto);
+        album.setAuthorId(userId);
         Album savedAlbum = albumRepository.save(album);
         return albumMapper.toDto(savedAlbum);
     }
