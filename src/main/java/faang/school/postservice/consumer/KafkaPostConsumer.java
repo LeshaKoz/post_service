@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 public class KafkaPostConsumer {
     private final FeedService feedService;
 
-    @Async("taskExecutor")
     @KafkaListener(
             topics = "${spring.kafka.topics.post.name}",
             groupId = "${spring.kafka.consumer.groups.post}")
@@ -35,7 +34,6 @@ public class KafkaPostConsumer {
         }
     }
 
-    @Async("taskExecutor")
     @KafkaListener(
             topics = "${spring.kafka.topics.delete-post.name}",
             groupId = "${spring.kafka.consumer.groups.post}")
