@@ -14,7 +14,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
@@ -27,7 +26,7 @@ public class FeedEventService {
 
     @Async("taskExecutor")
     public void createAndSendFeedPostEventForNewPost(Long postId, Long authorId, LocalDateTime publishedAt) {
-        createAndSendFeedPostEvent(postId, authorId, publishedAt, properties.getPostTopic());
+        createAndSendFeedPostEvent(postId, authorId, publishedAt, properties.getName());
     }
 
     private void createAndSendFeedPostEvent(Long postId, Long authorId, LocalDateTime publishedAt, String topicName) {

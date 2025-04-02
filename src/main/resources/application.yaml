@@ -42,6 +42,7 @@ spring:
         name: post
         partitions: 3
         replicas: 1
+        subscribers-batch-size: 1000
       delete-post:
         name: delete-post
         partitions: 3
@@ -135,11 +136,6 @@ retry:
   backoff:
     delay: 1000
     multiplier: 2.0
-
-feed:
-  kafka:
-    subscribers-batch-size: 1000
-    post-topic: post
 
 async:
   thread:
