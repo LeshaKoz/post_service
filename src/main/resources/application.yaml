@@ -86,6 +86,8 @@ post:
     scheduler:
       cron: "0 0/1 * 1/1 * ?" # every minute
   max-images-per-post: 10
+  subscribers:
+    chunk-size: 100
 
 resources:
   file:

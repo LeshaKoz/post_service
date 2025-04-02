@@ -29,4 +29,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
 
+    @Query(nativeQuery = true, value = "SELECT follower_id FROM subscription WHERE followee_id = :authorId")
+    List<Long> findFollowerIdsByFolloweeId(long authorId);
 }

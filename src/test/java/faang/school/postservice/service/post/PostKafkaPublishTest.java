@@ -21,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
@@ -30,8 +31,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = PostServiceApp.class)
 @ActiveProfiles("test")
@@ -65,11 +64,13 @@ class PostKafkaPublishTest extends BaseContextTest {
         });
     }
 
+    @Sql(scripts = {
+            "/db/add_users_test_data.sql",
+            "/db/add_subscribers_test_data.sql"
+    }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "/db/cleanup_test_data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     void shouldPublishKafkaEventWhenPostIsPublished() {
-        when(userServiceClient.getFollowerIds(anyLong()))
-                .thenReturn(List.of(101L, 102L, 103L));
-
         Post post = new Post();
         post.setAuthorId(1L);
         post.setContent("test content");
@@ -90,7 +91,7 @@ class PostKafkaPublishTest extends BaseContextTest {
             PostCreatedEvent event = (PostCreatedEvent) record.value();
             assertThat(event.postId()).isEqualTo(post.getId());
             assertThat(event.authorId()).isEqualTo(1L);
-            assertThat(event.subscriberIds()).containsExactly(101L, 102L, 103L);
+            assertThat(event.subscriberIds()).containsExactly(2L, 3L, 4L);
         });
 
         postRepository.delete(post);
