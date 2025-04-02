@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Formula;
 
 import java.util.List;
 
@@ -33,6 +34,9 @@ public class Comment extends BaseEntity {
 
     @OneToMany(mappedBy = "comment", orphanRemoval = true)
     private List<Like> likes;
+
+    @Formula("(SELECT COUNT(*) FROM likes l WHERE l.comment_id = id)")
+    private Long likesCount;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)

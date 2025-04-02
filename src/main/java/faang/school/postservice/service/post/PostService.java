@@ -18,11 +18,13 @@ import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
+import faang.school.postservice.service.NewsFeedService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -46,6 +48,7 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
+    private final NewsFeedService newsFeedService;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -72,6 +75,7 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    @Transactional
     public PostReadDto publishPost(long id) {
         Post post = getPostById(id);
         if (post.isPublished()) {
@@ -79,7 +83,9 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        return postMapper.toDto(postRepository.save(post));
+        Post savedPost = postRepository.save(post);
+        newsFeedService.cachePost(savedPost);
+        return postMapper.toDto(savedPost);
     }
 
     public PostReadDto updatePost(long id, PostUpdateDto dto) {

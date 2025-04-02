@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,6 +45,9 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     @Builder.Default
     private List<Like> likes = new ArrayList<>();
+
+    @Formula("(SELECT COUNT(*) FROM likes l WHERE l.comment_id = id)")
+    private Long likesCount;
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Comment> comments;

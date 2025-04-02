@@ -19,6 +19,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.GrammarService;
 import faang.school.postservice.service.HashtagService;
+import faang.school.postservice.service.NewsFeedService;
 import faang.school.postservice.service.PaginationService;
 import faang.school.postservice.service.s3.S3Service;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,6 +84,9 @@ public class PostServiceTest {
     private ResourceRepository resourceRepository;
     @Mock
     private PostImageService postImageService;
+    @Mock
+    private NewsFeedService newsFeedService;
+
     private Post post;
 
     @BeforeEach
@@ -166,6 +170,7 @@ public class PostServiceTest {
         postService.publishPost(postId);
 
         verify(postRepository, atLeastOnce()).save(postArgumentCaptor.capture());
+        verify(newsFeedService).cachePost(any());
         Post capturedPost = postArgumentCaptor.getValue();
         assertTrue(capturedPost.isPublished());
     }

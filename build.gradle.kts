@@ -52,6 +52,7 @@ dependencies {
     implementation("dev.mccue:imgscalr:2023.09.03")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
+    implementation("org.springframework.retry:spring-retry:2.0.11")
 
     /**
      * Test containers

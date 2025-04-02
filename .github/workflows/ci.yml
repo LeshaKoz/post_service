@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - phoenix-master-stream8
+      - phoenix-master-stream8-stas
 
 jobs:
   test:

@@ -127,6 +127,15 @@ task:
       max-size: 8
       keep-alive: 60
 
+cache:
+  ttl:
+    post: 1d
+    author: 1d
+
+news-feed:
+  max-count-visible-comments:  3
+
+
 ---
 
 spring:

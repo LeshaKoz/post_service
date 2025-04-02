@@ -14,6 +14,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.FileRepository;
+import faang.school.postservice.service.NewsFeedService;
 import faang.school.postservice.service.UserService;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.s3.S3Service;
@@ -36,13 +37,15 @@ public class CommentService {
     private final S3Service s3Service;
     private final FileRepository fileRepository;
     private final CommentCreateMessagePublisher commentCreateMessagePublisher;
+    private final NewsFeedService newsFeedService;
     @Value("${services.s3.max_image_size}")
     private int maxImageSize;
 
     public CommentReadDto create(CommentCreateDto createDto) {
         validateCommentCreation(createDto);
-        Comment newComment = commentMapper.toEntity(createDto);
-        newComment = commentRepository.save(newComment);
+        Comment comment = commentMapper.toEntity(createDto);
+        Comment newComment = commentRepository.save(comment);
+        newsFeedService.cacheCommentForPost(newComment);
         commentCreateMessagePublisher.publish(
                 commentMapper.toEvent(newComment, CommentEventType.CREATE)
         );

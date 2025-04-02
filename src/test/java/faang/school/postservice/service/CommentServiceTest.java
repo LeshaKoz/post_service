@@ -24,6 +24,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
@@ -48,6 +51,9 @@ public class CommentServiceTest {
     @Mock
     private PostService postService;
 
+    @Mock
+    private NewsFeedService newsFeedService;
+
     @InjectMocks
     private CommentService commentService;
 
@@ -61,12 +67,15 @@ public class CommentServiceTest {
                 .deleted(false)
                 .build();
 
-        Mockito.when(postService.getPostById(POST_ID)).thenReturn(post);
+        when(postService.getPostById(POST_ID)).thenReturn(post);
+        when(commentRepository.save(any(Comment.class)))
+                .thenReturn(Comment.builder().authorId(AUTHOR_ID).build());
 
         commentService.create(createDto);
-        Mockito.verify(commentRepository, Mockito.times(1)).save(Mockito.any());
-        Mockito.verify(commentCreateMessagePublisher, Mockito.times(1))
-                .publish(Mockito.any());
+        verify(commentRepository, Mockito.times(1)).save(any());
+        verify(newsFeedService).cacheCommentForPost(any());
+        verify(commentCreateMessagePublisher, Mockito.times(1))
+                .publish(any());
     }
 
     @Test
@@ -78,7 +87,7 @@ public class CommentServiceTest {
                 .published(false)
                 .build();
 
-        Mockito.when(postService.getPostById(POST_ID)).thenReturn(post);
+        when(postService.getPostById(POST_ID)).thenReturn(post);
 
         assertThrows(BusinessException.class, () -> commentService.create(createDto));
     }
@@ -93,7 +102,7 @@ public class CommentServiceTest {
                 .deleted(true)
                 .build();
 
-        Mockito.when(postService.getPostById(POST_ID)).thenReturn(post);
+        when(postService.getPostById(POST_ID)).thenReturn(post);
 
         assertThrows(BusinessException.class, () -> commentService.create(createDto));
     }
@@ -105,12 +114,12 @@ public class CommentServiceTest {
                 .build();
 
         Comment comment = Comment.builder().id(COMMENT_ID).authorId(AUTHOR_ID).build();
-        Mockito.when(commentRepository.findById(COMMENT_ID)).thenReturn(Optional.ofNullable(comment));
+        when(commentRepository.findById(COMMENT_ID)).thenReturn(Optional.ofNullable(comment));
 
         commentMapper.updateEntityFromDto(updateDto, comment);
 
         commentService.update(updateDto);
-        Mockito.verify(commentRepository, Mockito.times(1)).save(comment);
+        verify(commentRepository, Mockito.times(1)).save(comment);
 
     }
 
@@ -121,7 +130,7 @@ public class CommentServiceTest {
                 .build();
 
         Comment comment = Comment.builder().id(COMMENT_ID).authorId(AUTHOR_ID).build();
-        Mockito.when(commentRepository.findById(COMMENT_ID)).thenReturn(Optional.ofNullable(comment));
+        when(commentRepository.findById(COMMENT_ID)).thenReturn(Optional.ofNullable(comment));
 
         assertThrows(BusinessException.class, () -> commentService.update(updateDto));
     }
@@ -132,7 +141,7 @@ public class CommentServiceTest {
         Comment comment2 = Comment.builder().id(ELSE_COMMENT_ID).build();
         List<Comment> comments = List.of(comment1, comment2);
 
-        Mockito.when(commentRepository.findAllByPostId(POST_ID)).thenReturn(comments);
+        when(commentRepository.findAllByPostId(POST_ID)).thenReturn(comments);
 
         List<CommentReadDto> commentDtos = commentService.getCommentsByPostId(POST_ID);
 
@@ -142,6 +151,6 @@ public class CommentServiceTest {
     @Test
     public void testRemoveSuccessfully() {
         commentService.remove(COMMENT_ID);
-        Mockito.verify(commentRepository, Mockito.times(1)).deleteById(COMMENT_ID);
+        verify(commentRepository, Mockito.times(1)).deleteById(COMMENT_ID);
     }
 }
