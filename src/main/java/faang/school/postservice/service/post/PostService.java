@@ -72,9 +72,9 @@ public class PostService {
 
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        postRepository.save(post);
-        postCacheRepository.save(post);
-        return postRepository.save(post);
+        Post saved = postRepository.save(post);
+        postCacheRepository.save(saved);
+        return saved;
     }
 
     @Transactional
