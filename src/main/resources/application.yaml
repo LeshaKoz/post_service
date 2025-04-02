@@ -30,11 +30,12 @@ spring:
   task:
     scheduling:
       comment:
+        max_comments_per_size: 20
         cron_expression: 0 0 0 * * *
         executor:
           core_pool_size: 5
-          max_poll_size: 10
-          queue_capacity: 100
+          max_poll_size: 5
+          queue_capacity: 1000
           thread_prefix: comment-moderator
 
 server:
