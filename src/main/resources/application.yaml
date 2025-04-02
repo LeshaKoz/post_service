@@ -41,7 +41,3 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
-
-app:
-  settings:
-    max-length: 4096

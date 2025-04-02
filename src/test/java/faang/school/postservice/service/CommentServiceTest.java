@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.config.app.AppConfig;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.client.UserServiceClient;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +40,6 @@ public class CommentServiceTest {
     private Comment comment;
 
     @Mock
-    private AppConfig appConfig;
-
-    @Mock
     private CommentRepository repository;
 
     @Mock
@@ -53,6 +50,9 @@ public class CommentServiceTest {
 
     @Mock
     private UserServiceClient client;
+
+    @Value("${app.settings.max-length}")
+    private int maxLength;
 
     @InjectMocks
     private CommentService service;
@@ -71,7 +71,6 @@ public class CommentServiceTest {
         CommentDto goodDto = commentDto = CommentDto.builder().content("Ха=ха").build();
         when(client.getUser(1L)).thenReturn(user);
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
-        when(appConfig.getMaxLength()).thenReturn(1000);
         when(mapper.toEntity(goodDto)).thenReturn(successComment);
         when(repository.save(any(Comment.class))).thenReturn(successComment);
         when(mapper.toDto(successComment)).thenReturn(goodDto);
@@ -142,7 +141,6 @@ public class CommentServiceTest {
     public void negativeCreateCommentCommentTooLong() {
         when(client.getUser(1L)).thenReturn(user);
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
-        when(appConfig.getMaxLength()).thenReturn(4096);
 
         String tooMuch = "a".repeat(4097);
         CommentDto longContent = CommentDto.builder().content(tooMuch).build();
@@ -161,7 +159,6 @@ public class CommentServiceTest {
         CommentDto goodDto = commentDto = CommentDto.builder().content("Ха=ха=ха").build();
 
         when(repository.findById(1L)).thenReturn(Optional.of(successComment));
-        when(appConfig.getMaxLength()).thenReturn(1000);
         when(repository.save(successComment)).thenReturn(successComment);
         when(mapper.toDto(successComment)).thenReturn(goodDto);
 
@@ -212,7 +209,6 @@ public class CommentServiceTest {
     @Test
     public void negativeEditCommentTooLongContent() {
         when(repository.findById(1L)).thenReturn(Optional.of(comment));
-        when(appConfig.getMaxLength()).thenReturn(4096);
         String tooMuch = "a".repeat(4097);
         CommentDto longContent = commentDto = CommentDto.builder().content(tooMuch).build();
 

@@ -1,7 +1,6 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.app.AppConfig;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
@@ -12,6 +11,7 @@ import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -25,7 +25,7 @@ public class CommentService {
     private final CommentMapper mapper;
     private final PostRepository postRepository;
     private final UserServiceClient client;
-    private final AppConfig appConfig;
+    private static final int MAX_LENGTH = 4096;
 
     public CommentDto createComment(long userId, long postId, CommentDto commentDto) {
         UserDto user = client.getUser(userId);
@@ -33,7 +33,7 @@ public class CommentService {
             throw new DataValidationException("пользователь на найден");
         }
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new DataValidationException("Пост с id {} не найден", postId));
+                .orElseThrow(() -> new DataValidationException("Пост с id %d не найден", postId));
         validateNullCommentDto(commentDto);
         validateCommentContent(commentDto);
         Comment commentForSave = mapper.toEntity(commentDto);
@@ -44,7 +44,7 @@ public class CommentService {
 
     public CommentDto editComment(CommentDto commentDto, long commentId, String content) {
         Comment targetComment = repository.findById(commentId)
-                .orElseThrow(() -> new DataValidationException("Комментарий {} не найден", commentId));
+                .orElseThrow(() -> new DataValidationException("Комментарий %d не найден", commentId));
 
         validateNullCommentDto(commentDto);
         validateCommentContent(commentDto);
@@ -68,7 +68,7 @@ public class CommentService {
 
     public void deleteComment(long commentId) {
         repository.findById(commentId)
-                .orElseThrow(() -> new DataValidationException("Комментарий {} не найден", commentId));
+                .orElseThrow(() -> new DataValidationException("Комментарий %d не найден", commentId));
         log.info("Комментарий {} успешно удален", commentId);
         repository.deleteById(commentId);
     }
@@ -80,10 +80,12 @@ public class CommentService {
 
         int contentLength = commentDto.content().length();
 
-        if (contentLength > appConfig.getMaxLength()) {
+        if (contentLength > MAX_LENGTH) {
             throw new DataValidationException(
-                    "Максимальная длина комментария {} символов, вы ввели {}", appConfig.getMaxLength(), contentLength);
+                    "Максимальная длина комментария %d символов, вы ввели %d", MAX_LENGTH, contentLength);
         }
+        System.out.println("contentLength: " + contentLength);
+        System.out.println("maxLength: " + MAX_LENGTH);
     }
 
     private void validateNullCommentDto(CommentDto commentDto) {
