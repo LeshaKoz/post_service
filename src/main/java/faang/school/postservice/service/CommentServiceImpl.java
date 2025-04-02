@@ -5,7 +5,6 @@ import faang.school.postservice.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,17 +26,16 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void moderateComments() {
-        int maxPage = getMaxPage();
-        log.info("Start moderating comments, max page: {}", maxPage);
+        log.info("Start moderating comments");
+        List<Long> unverifiedCommentsIds = commentRepository.getUnverifiedCommentsIds();
 
-        for (int i = 0; i <= getMaxPage(); i++) {
-            log.info("Moderating page: {}", i);
-            List<CompletableFuture<Void>> futures =
-                    commentRepository.getUnverifiedComments(PageRequest.of(i, limit)).stream()
-                            .map(this::moderateComment)
-                            .toList();
+        for (int i = 0; i < unverifiedCommentsIds.size(); i += limit) {
+            List<Long> subList = unverifiedCommentsIds.subList(i, Math.min(unverifiedCommentsIds.size(), i + limit));
+            List<CompletableFuture<Void>> futures = commentRepository.getUnverifiedComments(subList).stream()
+                    .map(this::moderateComment)
+                    .toList();
 
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            futures.forEach(CompletableFuture::join);
         }
 
         log.info("Finished moderating comments");
@@ -45,15 +43,20 @@ public class CommentServiceImpl implements CommentService {
 
     private CompletableFuture<Void> moderateComment(Comment comment) {
         return CompletableFuture.runAsync(() -> {
-            comment.setVerified(!moderationDictionary.isTextAreCorrect(comment.getContent()));
-            comment.setVerifiedAt(LocalDateTime.now());
-            commentRepository.save(comment);
-            log.info("Comment: {} moderated. Is verified: {}", comment.getId(), comment.getVerified());
+            try {
+                String content = comment.getContent();
+                if (content == null || content.isBlank()) {
+                    comment.setVerified(true);
+                } else {
+                    comment.setVerified(moderationDictionary.isTextAreCorrect(content.toLowerCase()));
+                }
+                comment.setVerifiedAt(LocalDateTime.now());
+                commentRepository.save(comment);
+                log.debug("Comment: {} moderated. Is verified: {}", comment.getId(), comment.getVerified());
+            } catch (Exception e) {
+                log.error("Error moderating comment: {}", comment.getId(), e);
+            }
+
         }, commentModeratorExecutor);
-    }
-
-
-    private int getMaxPage() {
-        return commentRepository.getUnverifiedCommentsCount() / limit;
     }
 }
