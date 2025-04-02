@@ -17,7 +17,7 @@ public class CommentAnalyzerConfig {
     public WebClient commentAnalyzerClient() {
         return WebClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("Content-Type", "application/json")
+                .filter(errorHandlingFilter())
                 .build();
     }
 

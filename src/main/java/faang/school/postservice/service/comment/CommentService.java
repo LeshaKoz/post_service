@@ -4,4 +4,6 @@ import reactor.core.publisher.Mono;
 
 public interface CommentService {
     public Mono<Void> moderateComments();
+
+    public void banUsersForComments();
 }

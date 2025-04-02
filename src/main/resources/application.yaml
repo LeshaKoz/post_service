@@ -48,7 +48,17 @@ services:
 
 moderation:
   comments:
-    cron: "0/20 * * * * *"
+    cron: "0 0 * * * *"
     batch-size: 250000
     max-attempts: 3
     backoff-delay: 1000
+    timeout-hours: 5
+
+  ban-users-for-comments:
+    cron: "0/10 * * * * *"
+    batch-size: 250000
+    max-attempts: 3
+    backoff-delay: 1000
+    thread-pool-size: 8
+    timeout-hours: 2
+    ban-threshold: 5

@@ -20,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 import java.util.Map;
@@ -44,16 +46,15 @@ public class CommentServiceTest {
     @Mock
     private CommentAnalyzer commentAnalyzer;
 
-    private ToxicityScoreDto toxicityScore;
+    private Mono<ToxicityScoreDto> toxicityScore;
     private final ArgumentCaptor<Comment> commentCaptor = ArgumentCaptor.forClass(Comment.class);
 
 
     @BeforeEach
     public void setUp() {
         ReflectionTestUtils.setField(commentService, "batchSize", 100);
-        ReflectionTestUtils.setField(commentService, "threadPoolSize", 24);
 
-        toxicityScore = ToxicityScoreDto.builder()
+        toxicityScore = Mono.just(ToxicityScoreDto.builder()
                 .attributeScores(Map.of(
                         CommentToxicityType.TOXICITY, new AttributeScoreDto(
                                 List.of(new SpanScoreDto(new SummaryScoreDto(0.15, "PROBABILITY"))),
@@ -66,7 +67,7 @@ public class CommentServiceTest {
                 ))
                 .languages(List.of("en"))
                 .detectedLanguages(List.of("en"))
-                .build();
+                .build());
     }
 
     @Test
@@ -82,7 +83,8 @@ public class CommentServiceTest {
         when(commentRepository.findComments(any())).thenReturn(commentPage);
         when(commentAnalyzer.analyzeComment(anyString())).thenReturn(toxicityScore);
 
-        commentService.moderateComments();
+        Mono<Void> result = commentService.moderateComments();
+        StepVerifier.create(result).verifyComplete();
 
         verify(commentRepository, times(3)).save(commentCaptor.capture());
         List<Comment> capturedComments = commentCaptor.getAllValues();
@@ -94,7 +96,7 @@ public class CommentServiceTest {
     @Test
     public void testModerateComments_moderationFailed() {
         Comment comment1 = Comment.builder().content("This text contains offensive content").build();
-        toxicityScore.getAttributeScores().get(CommentToxicityType.TOXICITY)
+        toxicityScore.block().getAttributeScores().get(CommentToxicityType.TOXICITY)
                 .setSummaryScore(new SummaryScoreDto(0.45, "PROBABILITY"));
 
         List<Comment> comments = List.of(comment1);
@@ -104,7 +106,8 @@ public class CommentServiceTest {
         when(commentRepository.findComments(any())).thenReturn(commentPage);
         when(commentAnalyzer.analyzeComment(anyString())).thenReturn(toxicityScore);
 
-        commentService.moderateComments();
+        Mono<Void> result = commentService.moderateComments();
+        StepVerifier.create(result).verifyComplete();
 
         verify(commentRepository, times(1)).save(commentCaptor.capture());
         List<Comment> capturedComments = commentCaptor.getAllValues();

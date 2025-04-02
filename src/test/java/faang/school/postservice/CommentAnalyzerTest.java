@@ -41,9 +41,6 @@ public class CommentAnalyzerTest {
     private WebClient.RequestBodySpec requestBodySpec;
 
     @Mock
-    private WebClient.RequestHeadersSpec<?> requestHeadersSpec;
-
-    @Mock
     private WebClient.ResponseSpec responseSpec;
 
     @BeforeEach
@@ -62,7 +59,7 @@ public class CommentAnalyzerTest {
 
         when(responseSpec.bodyToMono(ToxicityScoreDto.class)).thenReturn(Mono.just(response));
 
-        ToxicityScoreDto result = commentAnalyzer.analyzeComment(text);
+        ToxicityScoreDto result = commentAnalyzer.analyzeComment(text).block();
         assertNotNull(result);
         assertEquals(response, result);
 
@@ -79,7 +76,7 @@ public class CommentAnalyzerTest {
                         "Comment analyzer API error", HttpStatus.BAD_REQUEST)));
 
         CommentAnalyzerException result = assertThrows(CommentAnalyzerException.class,
-                () -> commentAnalyzer.analyzeComment(text)
+                () -> commentAnalyzer.analyzeComment(text).block()
         );
 
         assertEquals("Comment analyzer API error (HTTP 400 BAD_REQUEST)", result.getMessage());
