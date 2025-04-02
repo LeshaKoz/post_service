@@ -48,7 +48,7 @@ services:
 
 moderation:
   comments:
-    cron: "0 0 * * * *"
+    cron: "0/20 * * * * *"
     batch-size: 250000
-    thread-pool-size: 24
+    max-attempts: 3
     backoff-delay: 1000

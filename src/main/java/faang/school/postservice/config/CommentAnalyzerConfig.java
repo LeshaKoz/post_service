@@ -13,9 +13,6 @@ public class CommentAnalyzerConfig {
     @Value("${services.comment-analyzer.endpoint}")
     String baseUrl;
 
-    @Value("${services.comment-analyzer.api-key}")
-    String apiKey;
-
     @Bean
     public WebClient commentAnalyzerClient() {
         return WebClient.builder()
