@@ -102,4 +102,16 @@ public class Comment {
      */
     @Column(name = "small_image_file_key")
     private String smallImageFileKey;
+
+    /**
+     * Проверяет, принадлежит ли комментарий к указанному посту.
+     *
+     * @param postId идентификатор поста для проверки принадлежности
+     * @return true если комментарий принадлежит указанному посту,
+     *         false если пост не установлен или идентификатор не совпадает
+     * @throws NullPointerException если переданный postId равен null
+     */
+    public boolean belongsToPost(Long postId) {
+        return this.post != null && postId.equals(this.post.getId());
+    }
 }

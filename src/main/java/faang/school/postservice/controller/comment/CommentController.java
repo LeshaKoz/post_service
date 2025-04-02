@@ -27,10 +27,10 @@ import java.util.List;
  *
  * <p>Доступные методы:</p>
  * <ul>
- *   <li>{@link #createComment(long, CommentCreateDto)} - Создание нового комментария</li>
- *   <li>{@link #updateComment(long, long, CommentCreateDto)} - Обновление существующего комментария</li>
- *   <li>{@link #getCommentsByPostId(long)} - Получение всех комментариев к посту</li>
- *   <li>{@link #deleteComment(long, long)} - Удаление комментария</li>
+ *   <li>{@link #createComment(Long, CommentCreateDto)} - Создание нового комментария</li>
+ *   <li>{@link #updateComment(Long, Long, CommentCreateDto)} - Обновление существующего комментария</li>
+ *   <li>{@link #getCommentsByPostId(Long)} - Получение всех комментариев к посту</li>
+ *   <li>{@link #deleteComment(Long, Long)} - Удаление комментария</li>
  * </ul>
  *
  * @author Zhltsk-V
@@ -51,7 +51,7 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<CommentViewDto> createComment(
             @Parameter(description = "ID of the post to comment on", required = true, example = "1")
-            @PathVariable long postId,
+            @PathVariable Long postId,
             @Parameter(description = "Comment data to create", required = true)
             @RequestBody @Valid CommentCreateDto commentCreateDto) {
         log.info("Request to create comment for post with ID: {}", postId);
@@ -67,9 +67,9 @@ public class CommentController {
     @PutMapping("/{commentId}")
     public ResponseEntity<CommentViewDto> updateComment(
             @Parameter(description = "ID of the post containing the comment", required = true, example = "1")
-            @PathVariable long postId,
+            @PathVariable Long postId,
             @Parameter(description = "ID of the comment to update", required = true, example = "1")
-            @PathVariable long commentId,
+            @PathVariable Long commentId,
             @Parameter(description = "Updated comment data", required = true)
             @RequestBody @Valid CommentCreateDto commentCreateDto) {
         log.info("Request to update comment with ID: {} for post with ID: {}", commentId, postId);
@@ -85,7 +85,7 @@ public class CommentController {
     @GetMapping
     public ResponseEntity<List<CommentViewDto>> getCommentsByPostId(
             @Parameter(description = "ID of the post to get comments for", required = true, example = "1")
-            @PathVariable long postId) {
+            @PathVariable Long postId) {
         log.info("Request to get comments for post with ID: {}", postId);
         List<CommentViewDto> comments = commentService.getCommentsByPostId(postId);
 
@@ -99,9 +99,9 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @Parameter(description = "ID of the post containing the comment", required = true, example = "1")
-            @PathVariable long postId,
+            @PathVariable Long postId,
             @Parameter(description = "ID of the comment to delete", required = true, example = "1")
-            @PathVariable long commentId) {
+            @PathVariable Long commentId) {
         log.info("Request to delete comment with ID: {} for post with ID: {}", commentId, postId);
         commentService.deleteComment(postId, commentId);
 

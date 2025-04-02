@@ -21,12 +21,6 @@ public interface CommentMapper {
      * @param commentCreateDto DTO для создания комментария.
      * @return Сущность Comment.
      */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "likes", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "largeImageFileKey", ignore = true)
-    @Mapping(target = "smallImageFileKey", ignore = true)
     Comment toEntity(CommentCreateDto commentCreateDto);
 
     /**

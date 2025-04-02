@@ -64,11 +64,12 @@ public class CommentService {
     @Transactional
     public CommentViewDto createComment(Long postId, CommentCreateDto commentCreateDto) {
         log.debug("Creating comment for post with ID: {}", postId);
-        Post post = getPostById(postId);
+
+        commentValidator.validatePostExists(postId);
         commentValidator.validateUserById(commentCreateDto.getAuthorId());
 
         Comment comment = commentMapper.toEntity(commentCreateDto);
-        comment.setPost(post);
+        comment.setPost(getPostById(postId));
         comment.setCreatedAt(LocalDateTime.now());
 
         Comment savedComment = commentRepository.save(comment);
@@ -113,6 +114,8 @@ public class CommentService {
     @Transactional
     public List<CommentViewDto> getCommentsByPostId(Long postId) {
         log.debug("Retrieving comments for post with ID: {}", postId);
+        commentValidator.validatePostExists(postId);
+
         List<Comment> comments = commentRepository.findAllByPostId(postId);
         log.info("Found {} comments for post with ID: {}", comments.size(), postId);
 
@@ -163,8 +166,20 @@ public class CommentService {
      * @return найденный пост
      * @throws EntityNotFoundException если пост не найден
      */
-    private Post getPostById(Long postId) {
+    public Post getPostById(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post with ID " + postId + " not found"));
+    }
+
+    /**
+     * Обновляет сущность комментария и возвращает её DTO-представление.
+     * Используется для случаев, когда обновление происходит не через стандартный DTO.
+     *
+     * @param comment сущность комментария для обновления
+     * @return DTO-представление обновленного комментария
+     */
+    public CommentViewDto updateCommentEntity(Comment comment) {
+        Comment updatedComment = commentRepository.save(comment);
+        return commentMapper.toViewDto(updatedComment);
     }
 }

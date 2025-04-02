@@ -48,7 +48,7 @@ public class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("likePost: позитивный сценарий")
+    @DisplayName("Добавление лайка к посту - успешный сценарий")
     public void givenValidPostAndUserWhenLikePostThenReturnLikeViewDto() {
         likeViewDto.setPostId(postId);
         Mockito.when(postService.getPostEntity(postId)).thenReturn(postEntity);
@@ -65,7 +65,7 @@ public class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("unlikePost: позитивный сценарий")
+    @DisplayName("Удаление лайка с поста - успешный сценарий")
     public void givenValidPostAndUserWhenUnlikePostThenLikeIsDeleted() {
         likeService.unlikePost(postId, userId);
 
@@ -76,7 +76,7 @@ public class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("likeComment: позитивный сценарий")
+    @DisplayName("Добавление лайка к комментарию - успешный сценарий")
     public void givenValidPostAndUserWhenLikeCommentThenReturnLikeViewDto() {
         likeViewDto.setCommentId(commentId);
         Mockito.when(commentService.getCommentById(commentId)).thenReturn(commentEntity);
@@ -93,7 +93,7 @@ public class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("unlikeComment: позитивный сценарий")
+    @DisplayName("Удаление лайка с комментария - успешный сценарий")
     public void givenValidPostAndUserWhenUnlikeCommentThenLikeIsDeleted() {
         likeService.unlikeComment(commentId, userId);
 

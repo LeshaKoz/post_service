@@ -5,6 +5,7 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CommentValidator {
     private final UserServiceClient userServiceClient;
+    private final PostRepository postRepository;;
 
     /**
      * Проверяет принадлежность комментария указанному посту.
@@ -36,7 +38,7 @@ public class CommentValidator {
      *
      */
     public void validateCommentBelongsToPost(Comment comment, Long postId, Long commentId) {
-        if (!comment.getPost().getId().equals(postId)) {
+        if (comment == null || !comment.belongsToPost(postId)) {
             throw new DataValidationException("Comment with ID " + commentId
                     + " doesn't belong to post with ID " + postId);
         }
@@ -53,6 +55,19 @@ public class CommentValidator {
         UserDto userDto = userServiceClient.getUser(authorId);
         if (userDto == null) {
             throw new EntityNotFoundException("User with ID " + authorId + " not found");
+        }
+    }
+
+    /**
+     * Проверяет существование поста с указанным идентификатором.
+     *
+     * @param postId идентификатор поста для проверки
+     * @throws EntityNotFoundException если пост с указанным ID не найден
+     * @throws IllegalArgumentException если переданный postId равен null
+     */
+    public void validatePostExists(Long postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new EntityNotFoundException("Post with ID " + postId + " not found");
         }
     }
 }
