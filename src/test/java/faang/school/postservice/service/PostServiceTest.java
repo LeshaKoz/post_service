@@ -61,7 +61,7 @@ class PostServiceTest {
     private ImageProcessingProperties properties;
 
     @InjectMocks
-    private PostService postService;
+    private PostServiceImpl postService;
 
     private PostDto postDto;
     private Post post;
