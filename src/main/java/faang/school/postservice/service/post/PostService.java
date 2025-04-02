@@ -8,6 +8,7 @@ import faang.school.postservice.exception.PostWasDeletedException;
 import faang.school.postservice.exception.ProjectNotFoundException;
 import faang.school.postservice.exception.UserNotFoundException;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.annotation.ViewPost;
 import feign.FeignException;
@@ -30,13 +31,13 @@ import java.util.stream.Collectors;
 @Service
 public class PostService {
 
-    @Value("${post-service.publish.batch-size}")
-    private int batchSize;
-
     private final PostRepository postRepository;
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
     private final AsyncPostPublishPerformer publishPerformer;
+    private final PostCacheRepository postCacheRepository;
+    @Value("${post-service.publish.batch-size}")
+    private int batchSize;
 
     @Transactional
     public void createPostByUserId(Long userId, Post post) {
@@ -46,6 +47,7 @@ public class PostService {
         post.setUpdatedAt(LocalDateTime.now());
 
         postRepository.save(post);
+        postCacheRepository.save(post);
     }
 
     @Transactional
@@ -56,6 +58,7 @@ public class PostService {
         post.setUpdatedAt(LocalDateTime.now());
 
         postRepository.save(post);
+        postCacheRepository.save(post);
     }
 
     @CreatePost
@@ -69,6 +72,8 @@ public class PostService {
 
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+        postRepository.save(post);
+        postCacheRepository.save(post);
         return postRepository.save(post);
     }
 
@@ -81,6 +86,7 @@ public class PostService {
         existingPost.setProjectId(post.getProjectId());
 
         postRepository.save(existingPost);
+        postCacheRepository.save(post);
     }
 
     @Transactional
@@ -90,6 +96,7 @@ public class PostService {
         existingPost.setDeleted(true);
 
         postRepository.save(existingPost);
+        postCacheRepository.deletePost(postId);
     }
 
     @ViewPost
@@ -145,6 +152,7 @@ public class PostService {
     @Transactional
     public void savePost(Post post) {
         postRepository.save(post);
+        postCacheRepository.save(post);
     }
 
     private void doesUserExist(Long userId) {
@@ -177,7 +185,13 @@ public class PostService {
     }
 
     private Post getPost(Long postId) {
-        return postRepository.findById(postId)
+        Post post = postCacheRepository.findById(postId);
+        if (post != null) {
+            return post;
+        }
+        post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        postCacheRepository.save(post);
+        return post;
     }
 }
