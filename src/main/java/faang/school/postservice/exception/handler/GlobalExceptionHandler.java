@@ -1,11 +1,11 @@
 package faang.school.postservice.exception.handler;
 
 import faang.school.postservice.exception.ErrorResponse;
-import faang.school.postservice.exception.FileEmptyException;
-import faang.school.postservice.exception.FileSizeException;
+import faang.school.postservice.exception.InvalidFileException;
 import faang.school.postservice.exception.MaxResourcesReachedException;
-import faang.school.postservice.exception.PostNotFoundException;
-import faang.school.postservice.exception.ResourceNotFoundException;
+import faang.school.postservice.exception.ResourcePostIdNotEqualsPostIdException;
+import faang.school.postservice.exception.not_found_exceptions.PostNotFoundException;
+import faang.school.postservice.exception.not_found_exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -42,21 +42,21 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(e.getMessage());
     }
 
+    @ExceptionHandler(ResourcePostIdNotEqualsPostIdException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleResourcePostIdNotEqualsPostIdException(ResourcePostIdNotEqualsPostIdException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
     @ExceptionHandler(MaxResourcesReachedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMaxResourcesReachedException(MaxResourcesReachedException e) {
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler(FileEmptyException.class)
+    @ExceptionHandler(InvalidFileException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleFileEmptyException(FileEmptyException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler(FileSizeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleFileSizeException(FileSizeException e) {
+    public ErrorResponse handleInvalidFileException(InvalidFileException e) {
         return new ErrorResponse(e.getMessage());
     }
 }

@@ -4,9 +4,9 @@ import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.service.PostResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,9 +23,10 @@ public class PostResourceController {
     private final PostResourceService postResourceService;
 
     @PutMapping("/{postId}")
-    public ResourceDto addResource(@PathVariable Long postId, @RequestParam("files")  List<MultipartFile> files) {
+    public @Validated ResourceDto addResource(@PathVariable Long postId,
+                                              @RequestParam("files") List<MultipartFile> files) {
         ResourceDto resourceDto = postResourceService.add(postId, files);
-        log.info("The picture was added to the post");
+        log.info("The file was added to the post");
         return resourceDto;
     }
 

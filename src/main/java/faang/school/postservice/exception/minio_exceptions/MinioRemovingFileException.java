@@ -1,4 +1,4 @@
-package faang.school.postservice.exception;
+package faang.school.postservice.exception.minio_exceptions;
 
 public class MinioRemovingFileException extends RuntimeException{
     public MinioRemovingFileException(String message) {
