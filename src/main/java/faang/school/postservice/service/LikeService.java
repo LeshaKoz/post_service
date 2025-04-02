@@ -46,7 +46,7 @@ public class LikeService {
             like.setComment(null);
             Like likeFromDataBase = likeRepository.save(like);
             log.info(USER_LIKES_POST, like.getUserId(), like.getPost().getId());
-            likeEventPublisher.publish(new LikePostEvent(post.getId(), post.getAuthorId(), like.getUserId()));
+            likeEventPublisher.publish(new LikePostEvent(post.getId(), post.getAuthorId(), like.getUserId()), "like_topic");
             return likeFromDataBase;
         } else {
             logWarningSameLikeStatus(like);

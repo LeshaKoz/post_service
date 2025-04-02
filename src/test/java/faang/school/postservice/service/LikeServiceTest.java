@@ -118,6 +118,6 @@ public class LikeServiceTest {
         likeService.setLikeToPost(like);
 
         Mockito.verify(likeEventPublisher, Mockito.times(1))
-                .publish(new LikePostEvent(post.getId(), post.getAuthorId(), like.getUserId()));
+                .publish(new LikePostEvent(post.getId(), post.getAuthorId(), like.getUserId()), "like_topic");
     }
 }
