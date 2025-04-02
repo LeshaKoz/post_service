@@ -15,6 +15,7 @@ import faang.school.postservice.publisher.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.FileRepository;
 import faang.school.postservice.service.UserService;
+import faang.school.postservice.service.feed.NewsFeedService;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,8 @@ public class CommentService {
     private final S3Service s3Service;
     private final FileRepository fileRepository;
     private final CommentCreateMessagePublisher commentCreateMessagePublisher;
+    private final NewsFeedService newsFeedService;
+
     @Value("${services.s3.max_image_size}")
     private int maxImageSize;
 
@@ -47,6 +50,7 @@ public class CommentService {
                 commentMapper.toEvent(newComment, CommentEventType.CREATE)
         );
 
+        newsFeedService.addAuthorToCacheByComment(newComment);
         return commentMapper.toDto(newComment);
     }
 

@@ -1,0 +1,19 @@
+package faang.school.postservice.model.cache;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.io.Serializable;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@RedisHash(value = "user")
+public class UserCache implements Serializable {
+    @Id
+    private long userId;
+    private String username;
+}

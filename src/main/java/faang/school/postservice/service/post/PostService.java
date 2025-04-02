@@ -8,6 +8,8 @@ import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
+import faang.school.postservice.event.kafka.KafkaPostEventDto;
+import faang.school.postservice.event.kafka.KafkaPostViewEventDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -15,6 +17,8 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.publisher.kafka.KafkaPostEventPublisher;
+import faang.school.postservice.publisher.kafka.KafkaPostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
@@ -22,12 +26,15 @@ import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -46,6 +53,8 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
+    private final KafkaPostEventPublisher kafkaPostEventPublisher;
+    private final KafkaPostViewEventPublisher kafkaPostViewEventPublisher;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -79,6 +88,13 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+
+        KafkaPostEventDto postEventDto = KafkaPostEventDto.builder()
+                .postId(post.getId())
+                .authorId(post.getAuthorId())
+                .build();
+        kafkaPostEventPublisher.sendPostEvent(postEventDto);
+
         return postMapper.toDto(postRepository.save(post));
     }
 
@@ -129,6 +145,14 @@ public class PostService {
     public Post getPostById(long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + id + " не найден"));
+    }
+
+    public Post viewPostById(long id) {
+        Post post = getPostById(id);
+        KafkaPostViewEventDto eventDto = new KafkaPostViewEventDto(post.getId());
+
+        kafkaPostViewEventPublisher.sendPostViewEvent(eventDto);
+        return post;
     }
 
     public List<PostReadDto> getPostsByHashtagId(long hashtagId) {
@@ -256,4 +280,19 @@ public class PostService {
                 postProperties.getSchedule().getBatchSize()
         );
     }
+
+    @Transactional
+    public Long incrementPostView(long postId) {
+        Post post = getPostById(postId);
+        if (!post.isPublished()) {
+            return 0L;
+        }
+        post.setViews(post.getViews() + 1);
+        try {
+            return postRepository.save(post).getViews();
+        } catch (OptimisticLockingFailureException e) {
+            throw new ConcurrentModificationException("Внесение изменений в не актуальную версию поста");
+        }
+    }
+
 }

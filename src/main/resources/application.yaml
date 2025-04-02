@@ -25,6 +25,21 @@ spring:
         calculations: calculations_channel
         comment_create: comment_create_channel
         likes: likes_channel
+      cache:
+        ttl: 86400 #24 hour
+    kafka:
+      address: localhost:9092
+      acknowledgement: all
+      group-id: post-service-group
+      partitions: 1
+      replications: 1
+      topic:
+        posts: posts
+        post-views: post-views
+      keys:
+        post: post
+        post-view: post-view
+        feed: feed
 
   cloud:
     openfeign:
@@ -126,6 +141,10 @@ task:
       core-size: 4
       max-size: 8
       keep-alive: 60
+
+news-feed:
+  batch-size: 20
+  max-feed-size: 500
 
 ---
 

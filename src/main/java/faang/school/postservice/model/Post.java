@@ -12,6 +12,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -84,4 +85,10 @@ public class Post extends BaseEntity {
 
     @Column(name = "verified", nullable = false)
     private boolean verified;
+
+    @Column(name = "views")
+    private Long views;
+
+    @Version
+    private long version;
 }

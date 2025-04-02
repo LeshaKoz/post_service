@@ -15,6 +15,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.publisher.kafka.KafkaPostEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.GrammarService;
@@ -83,6 +84,8 @@ public class PostServiceTest {
     private ResourceRepository resourceRepository;
     @Mock
     private PostImageService postImageService;
+    @Mock
+    KafkaPostEventPublisher kafkaPostEventPublisher;
     private Post post;
 
     @BeforeEach
