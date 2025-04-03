@@ -43,8 +43,6 @@ spring:
           retries: 5
           retry.backoff.ms: 1000
 
-
-
   servlet:
     multipart:
       max-file-size: 5MB

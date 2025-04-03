@@ -14,7 +14,7 @@ public abstract class AbstractEventProducer<T> {
     private final NewTopic topic;
 
     public void sendEvent(T event) {
-        log.info("Отправка ивента {} в кафку с топиком {}", event, topic.name());
+        log.info("Отправка ивента {} в Kafka с топиком {}", event, topic.name());
         kafkaTemplate.send(topic.name(), event);
     }
 }
