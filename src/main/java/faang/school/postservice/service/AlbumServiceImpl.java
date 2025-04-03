@@ -35,8 +35,8 @@ import static java.util.stream.Collectors.toMap;
 @Qualifier("albumServiceImpl")
 public class AlbumServiceImpl implements AlbumService {
 
-    private static final String POST_NOT_FOUND_MESSAGE = "Post not found";
-    private static final String ALBUM_NOT_FOUND_MESSAGE = "Album not found";
+    private static final String POST_NOT_FOUND_MESSAGE = "Post with id = %d not found";
+    private static final String ALBUM_NOT_FOUND_MESSAGE = "Album with id = %d not found";
 
     private final AlbumRepository albumRepository;
     private final UserContext userContext;
@@ -46,7 +46,9 @@ public class AlbumServiceImpl implements AlbumService {
     private final PostRepository postRepository;
 
     @Autowired
-    public AlbumServiceImpl(UserServiceClient userServiceClient, AlbumMapper albumMapper, PostRepository postRepository, AlbumRepository albumRepository, UserContext userContext, List<AlbumVisibilityFilter> filters) {
+    public AlbumServiceImpl(UserServiceClient userServiceClient, AlbumMapper albumMapper,
+                            PostRepository postRepository, AlbumRepository albumRepository,
+                            UserContext userContext, List<AlbumVisibilityFilter>  filters) {
         this.userServiceClient = userServiceClient;
         this.albumMapper = albumMapper;
         this.postRepository = postRepository;
@@ -127,7 +129,7 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional
     public AlbumDto addPostToAlbum(long userId, long postId, long albumId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException(POST_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(POST_NOT_FOUND_MESSAGE, postId)));
         Album album = albumRepository.findByIdWithPosts(albumId)
                 .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
@@ -140,9 +142,9 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional
     public void deletePostFromAlbum(long userId, long postId, long albumId) {
         postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException(POST_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(POST_NOT_FOUND_MESSAGE, postId)));
         Album album = albumRepository.findByIdWithPosts(albumId)
-                .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(ALBUM_NOT_FOUND_MESSAGE, albumId)));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
         album.removePost(postId);
         albumRepository.save(album);
@@ -150,7 +152,7 @@ public class AlbumServiceImpl implements AlbumService {
 
     public AlbumDto getAlbumByIdReturnAlbumDto(long albumId) {
         Album album = albumRepository.findByIdWithPosts(albumId)
-                .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(ALBUM_NOT_FOUND_MESSAGE, albumId)));
         return albumMapper.toAlbumDto(album);
     }
 
@@ -160,7 +162,7 @@ public class AlbumServiceImpl implements AlbumService {
         UserDto userDto = userServiceClient.getUser(userId);
         AlbumValidator.checkUserExist(userId, userDto);
         Album album = albumRepository.findByIdWithPosts(albumDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(ALBUM_NOT_FOUND_MESSAGE, albumDto.getId())));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
         Album updatedAlbum = albumMapper.toAlbum(albumDto);
         updatedAlbum.setUpdatedAt(LocalDateTime.now());
@@ -171,7 +173,7 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional
     public void deleteAlbum(long userId, long albumId) {
         Album album = albumRepository.findById(albumId)
-                .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(ALBUM_NOT_FOUND_MESSAGE, albumId)));
         AlbumValidator.checkAlbumAuthorWithUser(userId, album);
         albumRepository.deleteById(album.getId());
     }
@@ -187,7 +189,7 @@ public class AlbumServiceImpl implements AlbumService {
     @Transactional
     public void addFavouriteAlbum(long userId, long albumId) {
         albumRepository.findById(albumId)
-                .orElseThrow(() -> new EntityNotFoundException(ALBUM_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(ALBUM_NOT_FOUND_MESSAGE, albumId)));
         UserDto userDto = userServiceClient.getUser(userId);
         AlbumValidator.checkUserExist(userId, userDto);
         albumRepository.addAlbumToFavorites(albumId, userId);

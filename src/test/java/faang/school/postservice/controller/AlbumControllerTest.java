@@ -200,7 +200,7 @@ class AlbumControllerTest {
         setUpAlbumDto();
         when(albumService.createAlbum(userId, albumDto)).thenReturn(albumDto);
 
-        mockMvc.perform(post("/albums/api/v1/new")
+        mockMvc.perform(post("/albums/new")
                         .header("x-user-id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(albumDto)))
@@ -213,7 +213,7 @@ class AlbumControllerTest {
         setUpAlbumDto();
         when(albumService.addPostToAlbum(userId, postId, albumId)).thenReturn(albumDto);
 
-        mockMvc.perform(post("/albums/api/v1/{albumId}/{postId}", albumId, postId)
+        mockMvc.perform(post("/albums/{albumId}/add-post/{postId}", albumId, postId)
                         .header("x-user-id", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value(albumDto.getTitle()));
@@ -223,7 +223,7 @@ class AlbumControllerTest {
     void testDeletePostFromAlbumReturnOk() throws Exception {
         doNothing().when(albumService).deletePostFromAlbum(userId, postId, albumId);
 
-        mockMvc.perform(delete("/albums/api/v1/{albumId}/delete-post/{postId}", albumId, postId)
+        mockMvc.perform(delete("/albums/{albumId}/delete-post/{postId}", albumId, postId)
                         .header("x-user-id", userId))
                 .andExpect(status().isNoContent());
     }
@@ -233,7 +233,7 @@ class AlbumControllerTest {
         setUpAlbumDto();
         when(albumService.getAlbumByIdReturnAlbumDto(albumId)).thenReturn(albumDto);
 
-        mockMvc.perform(get("/albums/api/v1/{albumId}", albumId))
+        mockMvc.perform(get("/albums/get/{albumId}", albumId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value(albumDto.getTitle()));
     }
@@ -243,7 +243,7 @@ class AlbumControllerTest {
         setUpAlbumDto();
         when(albumService.updateAlbum(eq(userId), any(AlbumDto.class))).thenReturn(albumDto);
 
-        mockMvc.perform(put("/albums/api/v1/{albumId}", albumId)
+        mockMvc.perform(put("/albums/update/{albumId}", albumId)
                         .header("x-user-id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(albumDto)))
@@ -255,7 +255,7 @@ class AlbumControllerTest {
     void testDeleteAlbumOk() throws Exception {
         doNothing().when(albumService).deleteAlbum(userId, albumId);
 
-        mockMvc.perform(delete("/albums/api/v1/{albumId}", albumId)
+        mockMvc.perform(delete("/albums/delete/{albumId}", albumId)
                         .header("x-user-id", userId))
                 .andExpect(status().isNoContent());
     }
@@ -268,7 +268,7 @@ class AlbumControllerTest {
         when(albumService.getAllAlbumsByAuthorIdWithFilters(eq(userId), any(AlbumFilterDto.class)))
                 .thenReturn(expectedAlbums);
 
-        mockMvc.perform(post("/albums/api/v1/albums-by-author/{userId}", userId)
+        mockMvc.perform(post("/albums/by-author/{userId}", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(albumFilterDto)))
                 .andExpect(status().isOk())
@@ -283,7 +283,7 @@ class AlbumControllerTest {
         when(albumService.getAllAlbumsWithFilters(any(AlbumFilterDto.class)))
                 .thenReturn(expectedAlbums);
 
-        mockMvc.perform(post("/albums/api/v1/all-albums")
+        mockMvc.perform(post("/albums/all-albums")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(albumFilterDto)))
                 .andExpect(status().isOk())
@@ -294,7 +294,7 @@ class AlbumControllerTest {
     void testAddFavouriteAlbum() throws Exception {
         doNothing().when(albumService).addFavouriteAlbum(userId, albumId);
 
-        mockMvc.perform(post("/albums/api/v1/favourite/add/{albumId}", albumId)
+        mockMvc.perform(post("/albums/favourite/add/{albumId}", albumId)
                         .header("x-user-id", userId))
                 .andExpect(status().isOk());
     }
@@ -303,7 +303,7 @@ class AlbumControllerTest {
     void testDeleteFavouriteAlbum() throws Exception {
         doNothing().when(albumService).deleteFavouriteAlbum(userId, albumId);
 
-        mockMvc.perform(delete("/albums/api/v1/favourite/del/{albumId}", albumId)
+        mockMvc.perform(delete("/albums/favourite/delete/{albumId}", albumId)
                         .header("x-user-id", userId))
                 .andExpect(status().isNoContent());
     }
@@ -316,7 +316,7 @@ class AlbumControllerTest {
         when(albumService.getFavouriteAlbumsByUserId(eq(userId), any(AlbumFilterDto.class)))
                 .thenReturn(expectedAlbums);
 
-        mockMvc.perform(post("/albums/api/v1/favourite")
+        mockMvc.perform(post("/albums/favourite")
                         .header("x-user-id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(albumFilterDto)))

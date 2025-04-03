@@ -70,7 +70,7 @@ public class AlbumController {
         return ResponseEntity.ok(updatedUsers);
     }
 
-    @PostMapping("/api/v1/new")
+    @PostMapping("/new")
     public ResponseEntity<AlbumDto> createAlbum(
             @RequestHeader(value = "x-user-id") Long userId,
             @Valid @RequestBody AlbumDto albumDto) {
@@ -82,7 +82,7 @@ public class AlbumController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDto);
     }
 
-    @PostMapping("/api/v1/{albumId}/{postId}")
+    @PostMapping("/{albumId}/add-post/{postId}")
     public ResponseEntity<AlbumDto> addPostToAlbum(
             @RequestHeader("x-user-id") Long userId,
             @PathVariable Long postId,
@@ -91,8 +91,8 @@ public class AlbumController {
         return ResponseEntity.ok(savedDto);
     }
 
-    @DeleteMapping("/api/v1/{albumId}/delete-post/{postId}")
-    public ResponseEntity<HttpStatus> deletePostFromAlbum(
+    @DeleteMapping("/{albumId}/delete-post/{postId}")
+    public ResponseEntity<Void> deletePostFromAlbum(
             @RequestHeader("x-user-id") Long userId,
             @PathVariable Long postId,
             @PathVariable Long albumId) {
@@ -100,14 +100,14 @@ public class AlbumController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/api/v1/{albumId}")
+    @GetMapping("/get/{albumId}")
     public ResponseEntity<AlbumDto> getAlbumByIdReturnAlbumDto(
             @PathVariable long albumId) {
         AlbumDto albumDto = albumService.getAlbumByIdReturnAlbumDto(albumId);
         return ResponseEntity.ok(albumDto);
     }
 
-    @PutMapping("/api/v1/{albumId}")
+    @PutMapping("/update/{albumId}")
     public ResponseEntity<AlbumDto> updateAlbum(
             @RequestHeader("x-user-id") Long userId,
             @RequestBody AlbumDto albumDto) {
@@ -115,15 +115,15 @@ public class AlbumController {
         return ResponseEntity.ok(updatedAlbum);
     }
 
-    @DeleteMapping("/api/v1/{albumId}")
-    public ResponseEntity<AlbumDto> deleteAlbum(
+    @DeleteMapping("/delete/{albumId}")
+    public ResponseEntity<Void> deleteAlbum(
             @RequestHeader("x-user-id") Long userId,
             @PathVariable Long albumId) {
         albumService.deleteAlbum(userId, albumId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/api/v1/albums-by-author/{userId}")
+    @PostMapping("/by-author/{userId}")
     public ResponseEntity<List<AlbumDto>> getAllAlbumsByAuthorIdWithFilters(
             @PathVariable Long userId,
             @RequestBody AlbumFilterDto albumFilterDto) {
@@ -131,14 +131,14 @@ public class AlbumController {
         return ResponseEntity.ok(albums);
     }
 
-    @PostMapping("/api/v1/all-albums")
+    @PostMapping("/all-albums")
     public ResponseEntity<List<AlbumDto>> getAllAlbumsWithFilters(
             @RequestBody AlbumFilterDto albumFilterDto) {
         List<AlbumDto> albums = albumService.getAllAlbumsWithFilters(albumFilterDto);
         return ResponseEntity.ok(albums);
     }
 
-    @PostMapping("/api/v1/favourite/add/{albumId}")
+    @PostMapping("/favourite/add/{albumId}")
     public ResponseEntity<HttpStatus> addFavouriteAlbum(
             @RequestHeader("x-user-id") Long userId,
             @PathVariable Long albumId) {
@@ -146,15 +146,15 @@ public class AlbumController {
         return ResponseEntity.ok(HttpStatus.OK);
     }
 
-    @DeleteMapping("/api/v1/favourite/del/{albumId}")
-    public ResponseEntity<HttpStatus> deleteFavouriteAlbum(
+    @DeleteMapping("/favourite/delete/{albumId}")
+    public ResponseEntity<Void> deleteFavouriteAlbum(
             @RequestHeader("x-user-id") Long userId,
             @PathVariable Long albumId) {
         albumService.deleteFavouriteAlbum(userId, albumId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/api/v1/favourite")
+    @PostMapping("/favourite")
     public ResponseEntity<List<AlbumDto>> getFavouriteAlbumsByUserId(
             @RequestHeader("x-user-id") Long userId,
             @RequestBody AlbumFilterDto albumFilterDto) {
