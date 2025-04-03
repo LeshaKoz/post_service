@@ -1,5 +1,6 @@
 package faang.school.postservice.mapper.post;
 
+import faang.school.postservice.dto.feed.FeedItemCommentDto;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostResponseDto;
@@ -9,6 +10,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -24,5 +26,14 @@ public interface PostMapper {
     List<PostResponseDto> toPostResponseDtos(List<Post> posts);
 
     PostDto toPostDto(Post post);
+
+    //FeedItemPostDto toFeedItemPostDto(PostResponseDto postResponseDto);
+
+    //@Mapping(target = "comments", source = "comments")
+    //FeedItemPostDto toFeedItemPostDto(FeedItemPostDto feedItemPostDto, LinkedHashSet<FeedItemCommentDto> comments);
+
+    @Mapping(target = "comments", source = "comments")
+    PostResponseDto toPostResponseDto(PostResponseDto postResponseDto, LinkedHashSet<FeedItemCommentDto> comments);
+
 
 }

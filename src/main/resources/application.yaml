@@ -45,7 +45,7 @@ spring:
       acks: all
       retries: 3
     consumer:
-      group-id: newsfeed1
+      group-id: newsfeed2
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -64,10 +64,10 @@ spring:
       retry-interval: 1000 # Интервал между попытками
       #default-retryable: false # Отправка в DLQ после неудачных попыток
     topic:
-      posts-topic: posts1
-      post-views-topic: post_views1
-      post-likes-topic: post_likes1
-      post-comments-topic: post_comments1
+      posts-topic: posts2
+      post-views-topic: post_views2
+      post-likes-topic: post_likes2
+      post-comments-topic: post_comments2
 
   mvc:
     servlet:

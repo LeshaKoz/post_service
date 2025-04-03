@@ -1,9 +1,9 @@
 package faang.school.postservice.service.feed;
 
 import faang.school.postservice.dto.feed.FeedItemDto;
-import faang.school.postservice.dto.feed.FeedItemResponseDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.mapper.feed.FeedMapper;
+import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.repository.feed.FeedRepository;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +22,11 @@ public class FeedServiceImpl implements FeedService {
     private final PostService postService;
     private final FeedRepository feedRepository;
     private final FeedMapper feedMapper;
+    private final PostMapper postMapper;
     //private final NewsFeedProperties newsFeedProperties;
 
     @Override
-    public Set<FeedItemResponseDto> getFeed(long userId, int pageNum) {
+    public Set<PostResponseDto> getFeed(long userId, int pageNum) {
         log.info("Get feed for user {}, page {}", userId, pageNum);
 
         Set<FeedItemDto> feedItems = feedRepository.feedItems(userId, pageNum);
@@ -39,7 +40,11 @@ public class FeedServiceImpl implements FeedService {
         return feedItems.stream()
                 .map(feedItemDto -> {
                     PostResponseDto postResponseDto = postService.getPostWithCache(feedItemDto.postId());
-                    return feedMapper.toFeedResponseDto(feedItemDto, postResponseDto);
+                    //FeedItemPostDto feedItemPostDto = postMapper.toFeedItemPostDto(postResponseDto);
+                    //FeedItemPostDto feedItemPostDto = postService.getPostForFeed(feedItemDto.postId());
+
+                    //return feedMapper.toFeedResponseDto(feedItemDto, feedItemPostDto);
+                    return postResponseDto;
                 })
                 .collect(Collectors.toSet());
 
@@ -48,8 +53,9 @@ public class FeedServiceImpl implements FeedService {
     @Override
     //@Async("asyncTaskExecutor")
     public void processNewPost(Long postId, List<Long> followersIds) {
-
         PostResponseDto post = postService.getPostWithCache(postId);
+        //FeedItemPostDto feedItemPostDto = postMapper.toFeedItemPostDto(post);
+        //FeedItemPostDto feedItemPostDto = postService.getPostForFeed(postId);
 
         feedRepository.addPostToFollowersFeeds(followersIds, post);
         log.info("Post {} processed", postId);

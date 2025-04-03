@@ -1,6 +1,6 @@
 package faang.school.postservice.broker.consumer;
 
-import faang.school.postservice.dto.post.PostLikeEvent;
+import faang.school.postservice.dto.post.PostCommentEvent;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,26 +14,25 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PostLikeConsumer {
-
+public class PostCommentConsumer {
     private final PostService postService;
     private final AsyncTaskExecutor asyncTaskExecutor;
 
     @KafkaListener(
-            topics = "${spring.kafka.topic.post-likes-topic}",
+            topics = "${spring.kafka.topic.post-comments-topic}",
             groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "postLikeEventContainerFactory")
-    public void consume(PostLikeEvent postLikeEvent, Acknowledgment acknowledgment) {
-        long postId = postLikeEvent.postId();
+            containerFactory = "postCommentEventContainerFactory")
+    public void consume(PostCommentEvent postCommentEvent, Acknowledgment acknowledgment) {
+        long postId = postCommentEvent.postId();
         CompletableFuture<Void> result = CompletableFuture.runAsync(() ->
-                                postService.incrementPostLikesCounter(postId),
+                                postService.addCommentToHash(postId, postCommentEvent),
                         asyncTaskExecutor)
                 .thenAccept(res -> {
-                    log.info("Post {} like processed", postId);
+                    log.info("Post {} comment processed", postId);
                     acknowledgment.acknowledge();
                 })
                 .exceptionally(exception -> {
-                    log.error("Error consuming like event with post id {}. Error: {}",
+                    log.error("Error consuming comment event with post id {}. Error: {}",
                             postId, exception.getMessage());
                     return null;
                 });

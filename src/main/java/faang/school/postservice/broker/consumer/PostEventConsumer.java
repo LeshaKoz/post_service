@@ -34,7 +34,7 @@ public class PostEventConsumer {
                     acknowledgment.acknowledge();
                 })
                 .exceptionally(exception -> {
-                    log.error("Error consuming message with post id {}. Error: {}",
+                    log.error("Error consuming post publication event with post id {}. Error: {}",
                             postPublicationEvent.postId(), exception.getMessage());
                     return null;
                 });

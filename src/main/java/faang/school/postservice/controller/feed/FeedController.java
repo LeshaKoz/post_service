@@ -1,6 +1,6 @@
 package faang.school.postservice.controller.feed;
 
-import faang.school.postservice.dto.feed.FeedItemResponseDto;
+import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.service.feed.FeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class FeedController {
                 pageNum = 0;
             }
 
-            Set<FeedItemResponseDto> feed = feedService.getFeed(userId, pageNum);
+            Set<PostResponseDto> feed = feedService.getFeed(userId, pageNum);
             return ResponseEntity.ok(feed);
 
         }catch(Exception e) {

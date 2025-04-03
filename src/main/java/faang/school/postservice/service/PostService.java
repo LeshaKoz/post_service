@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dto.post.PostCommentEvent;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
@@ -18,9 +19,15 @@ public interface PostService {
 
     void deletePost(Long postId);
 
-    PostResponseDto getPostWithCache(Long Id);
+    PostResponseDto getPostWithCache(Long postId);
+
+    //FeedItemPostDto getPostForFeed(Long postId);
+
     void incrementPostLikesCounter(long postId);
+
     void decrementPostLikesCounter(long postId);
+
+    void addCommentToHash(long postId, PostCommentEvent postCommentEvent);
 
     List<PostResponseDto> findAllByFilter(PostFilterDto filter);
 }

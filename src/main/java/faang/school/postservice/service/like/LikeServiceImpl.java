@@ -3,6 +3,7 @@ package faang.school.postservice.service.like;
 import faang.school.postservice.broker.producer.PostLikeProducer;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.LikeEventDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.like.LikeMapper;
@@ -100,6 +101,11 @@ public class LikeServiceImpl implements LikeService {
         final long userId = getUserId();
         likeRepository.deleteByCommentIdAndUserId(commentId, userId);
         log.info("Successfully deleted like for commentId = {} by userId = {}", commentId, userId);
+    }
+
+    @Override
+    public List<LikeDto> getLikes(long postId) {
+        return likeMapper.toLikeDtos(likeRepository.findByPostId(postId));
     }
 
     private Post getPost(Long postId) {
