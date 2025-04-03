@@ -50,8 +50,7 @@ public class CommentServiceImpl implements CommentService {
             Supplier<Stream<ItemToVerifyDto>> pageItemsFetcher = () -> commentMapper.toItemToVerifyDtosStream(
                     commentRepository.findByVerifiedDateIsNull(pageRequest).stream());
             moderationService.moderateItems(pageItemsFetcher).thenAcceptAsync(
-                    moderationResults ->
-                    {
+                    moderationResults -> {
                         var verifiedItems = moderationResults.stream().filter(
                                 ItemModerationResultDto::isVerified);
                         CompletableFuture.runAsync(() -> updateComments(verifiedItems, true),
