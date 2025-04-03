@@ -8,8 +8,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @ConfigurationProperties(prefix = "spring.kafka.topics")
 public class FeedProperties {
-    Post post;
-    PostDelete postDelete;
+    private Post post;
+    private PostDelete postDelete;
 
     @Getter
     @Setter
