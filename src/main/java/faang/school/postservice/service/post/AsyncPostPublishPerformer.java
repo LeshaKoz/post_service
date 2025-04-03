@@ -17,6 +17,7 @@ import java.util.List;
 public class AsyncPostPublishPerformer {
     private final PostRepository postRepository;
     private final PostCacheRepository postCacheRepository;
+    private final PostCreatedAsyncService asyncService;
 
     @Async("publishExecutor")
     public void publishBatch(List<Post> posts) {
@@ -25,7 +26,9 @@ public class AsyncPostPublishPerformer {
             post.setPublishedAt(LocalDateTime.now());
         });
         postRepository.saveAll(posts);
-        postCacheRepository.saveAll(posts);
+        posts.forEach(asyncService::processPostCreated);
+//        postCacheRepository.saveAll(posts); //TODO Anton Graf need to refactor redis cache to avoid LazyInitException
+
         log.info("Scheduled task #Publish post# completed");
     }
 }
