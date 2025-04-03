@@ -1,6 +1,7 @@
 package faang.school.postservice.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -10,7 +11,7 @@ import java.util.concurrent.Executor;
 
 @EnableAsync
 @Configuration
-public class ThreadPoolConfig implements AsyncConfigurer {
+public class ThreadPoolConfig {
 
     @Value("${task.execution.pool.core-size}")
     private int corePoolSize;
@@ -21,8 +22,8 @@ public class ThreadPoolConfig implements AsyncConfigurer {
     @Value("${task.execution.pool.keep-alive}")
     private int keepAliveSeconds;
 
-    @Override
-    public Executor getAsyncExecutor() {
+    @Bean
+    public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(corePoolSize);
         executor.setMaxPoolSize(maxPoolSize);

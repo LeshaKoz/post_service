@@ -5,8 +5,6 @@ import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.LikeMapperImpl;
 import faang.school.postservice.model.Like;
-import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.like.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.validator.LikeValidator;
@@ -31,8 +29,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class LikeServiceTest {
-    @Mock
-    private LikeEventPublisher likeEventPublisher;
     @Mock
     private PostService postService;
     @Mock
@@ -76,7 +72,6 @@ public class LikeServiceTest {
     @Test
     public void testCreateLikePostSuccess() {
         Like like = likeMapperImpl.toEntity(likeDtoPost);
-        when(postService.getPostById(likeDtoPost.postId())).thenReturn(Post.builder().authorId(1L).build());
         likeService.createPostLike(likeDtoPost);
         verify(likeValidator, times(1)).validateLikeCreationParams(likeDtoPost);
         verify(likeRepository, times(1)).save(like);

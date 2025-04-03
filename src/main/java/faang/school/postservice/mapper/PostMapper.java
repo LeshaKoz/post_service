@@ -3,6 +3,7 @@ package faang.school.postservice.mapper;
 import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
+import faang.school.postservice.event.PostEvent;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.utils.StringUtils;
@@ -34,6 +35,9 @@ public interface PostMapper {
     @Mapping(target = "content", conditionQualifiedByName = "isNotBlank")
     @Mapping(target = "scheduledAt", conditionQualifiedByName = "isNotNull")
     void updateEntityFromDto(PostUpdateDto dto, @MappingTarget Post entity);
+
+    @Mapping(target = "userId", source = "authorId")
+    PostEvent toEvent(Post post);
 
     @Condition
     @Named("isNotBlank")

@@ -7,7 +7,6 @@ import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.service.post.PostService;
@@ -43,9 +42,6 @@ public class CommentServiceTest {
     private CommentRepository commentRepository;
 
     @Mock
-    private CommentCreateMessagePublisher commentCreateMessagePublisher;
-
-    @Mock
     private UserService userService;
 
     @Mock
@@ -74,8 +70,6 @@ public class CommentServiceTest {
         commentService.create(createDto);
         verify(commentRepository, Mockito.times(1)).save(any());
         verify(newsFeedService).cacheCommentForPost(any());
-        verify(commentCreateMessagePublisher, Mockito.times(1))
-                .publish(any());
     }
 
     @Test

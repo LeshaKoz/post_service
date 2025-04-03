@@ -8,6 +8,8 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -20,6 +22,24 @@ public class UserService {
             return userServiceClient.getUser(userId);
         } catch (FeignException.NotFound e) {
             throw new EntityNotFoundException("Пользователь с ID " + userId + " не найден " + e.getMessage());
+        }
+    }
+
+    public List<Long> getUserFollowers(long foloweeId, int page, int size) {
+        try {
+            userContext.setUserId(foloweeId);
+            return userServiceClient.getUserFollowers(foloweeId, page, size);
+        } catch (FeignException.NotFound e) {
+            throw new EntityNotFoundException("Пользователь с ID " + foloweeId + " не найден " + e.getMessage());
+        }
+    }
+
+    public int getUserFollowersCount(long foloweeId) {
+        try {
+            userContext.setUserId(foloweeId);
+            return userServiceClient.getFollowersCount(foloweeId);
+        } catch (FeignException.NotFound e) {
+            throw new EntityNotFoundException("Пользователь с ID " + foloweeId + " не найден " + e.getMessage());
         }
     }
 }

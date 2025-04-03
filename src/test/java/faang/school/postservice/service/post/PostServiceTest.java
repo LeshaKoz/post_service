@@ -15,6 +15,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.publisher.PostPublishingProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.GrammarService;
@@ -86,6 +87,8 @@ public class PostServiceTest {
     private PostImageService postImageService;
     @Mock
     private NewsFeedService newsFeedService;
+    @Mock
+    private PostPublishingProducer postPublishingProducer;
 
     private Post post;
 
@@ -171,6 +174,7 @@ public class PostServiceTest {
 
         verify(postRepository, atLeastOnce()).save(postArgumentCaptor.capture());
         verify(newsFeedService).cachePost(any());
+        verify(postPublishingProducer).publish(any());
         Post capturedPost = postArgumentCaptor.getValue();
         assertTrue(capturedPost.isPublished());
     }

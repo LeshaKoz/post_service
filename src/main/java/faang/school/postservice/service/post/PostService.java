@@ -15,6 +15,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.publisher.PostPublishingProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
@@ -49,6 +50,7 @@ public class PostService {
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
     private final NewsFeedService newsFeedService;
+    private final PostPublishingProducer postPublishingProducer;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -85,6 +87,7 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         Post savedPost = postRepository.save(post);
         newsFeedService.cachePost(savedPost);
+        postPublishingProducer.publish(postMapper.toEvent(post));
         return postMapper.toDto(savedPost);
     }
 

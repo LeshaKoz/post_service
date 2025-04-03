@@ -34,6 +34,17 @@ spring:
             connectTimeout: 5_000
             readTimeout: 10_000
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    topics:
+        post:
+            name: post-topic
+            partitions: 1
+        news-feed-subs:
+          name: news-feed-subs
+          partitions: 1
+
+
 resilience4j:
   retry:
     configs:

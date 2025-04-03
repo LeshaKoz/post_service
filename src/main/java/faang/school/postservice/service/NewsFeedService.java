@@ -17,6 +17,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static faang.school.postservice.model.cache.CacheAuthor.PROJECT_PREFIX;
@@ -26,6 +28,10 @@ import static faang.school.postservice.model.cache.CacheComment.COMMENT_PREFIX;
 @Service
 @RequiredArgsConstructor
 public class NewsFeedService {
+    private static final String FEED_PREFIX = "user_feed:";
+    private static final int NEWS_FEED_RANGE_START = 0;
+    private static final int FEED_END_INDEX = 1;
+
     private final CachePostRepository cachePostRepository;
     private final NewsFeedMapper newsFeedMapper;
     private final CacheAuthorRepository cacheAuthorRepository;
@@ -36,6 +42,9 @@ public class NewsFeedService {
 
     @Value("${news-feed.max-count-visible-comments:3}")
     private int maxComments;
+
+    @Value("${news-feed.max-posts-in-feed:500}")
+    private int maxPostsInFeed;
 
 
     public void cacheCommentForPost(Comment comment) {
@@ -93,6 +102,19 @@ public class NewsFeedService {
                         projectService.getProjectById(projectId),
                         cacheTTLProperties.getAuthor().toMillis()
                 ));
+    }
+
+    public void addPostForNewsFeed(Post post, List<Long> followersIds) {
+        long postId = post.getId();
+        long timestamp = post.getPublishedAt().toEpochSecond(ZoneOffset.UTC);
+        followersIds.parallelStream()
+                .forEach(id -> {
+                    var cacheKey = FEED_PREFIX + id;
+                    redisTemplate.opsForZSet().add(cacheKey, postId, timestamp);
+                    redisTemplate.opsForZSet().removeRange(
+                            cacheKey, NEWS_FEED_RANGE_START, -maxPostsInFeed - FEED_END_INDEX
+                    );
+                });
     }
 
     private CacheAuthor cacheAuthor(String cacheAuthorId, Supplier<CacheAuthor> cacheAuthorSupplier) {

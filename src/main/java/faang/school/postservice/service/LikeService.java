@@ -3,10 +3,8 @@ package faang.school.postservice.service;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.event.LikeEvent;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Like;
-import faang.school.postservice.publisher.like.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.validator.LikeValidator;
@@ -14,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +26,6 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final LikeValidator likeValidator;
     private final LikeMapper likeMapper;
-    private final LikeEventPublisher likeEventPublisher;
     private final PostService postService;
 
     @Transactional
@@ -37,13 +33,6 @@ public class LikeService {
         likeValidator.validateLikeCreationParams(dto);
         Like entity = likeMapper.toEntity(dto);
         likeRepository.save(entity);
-
-        LikeEvent likeEvent = LikeEvent.builder()
-                .postId(dto.postId())
-                .authorId(postService.getPostById(dto.postId()).getAuthorId())
-                .userId(dto.userId())
-                .timeStamp(LocalDateTime.now()).build();
-        likeEventPublisher.publish(likeEvent);
 
         return likeMapper.toDto(entity);
     }

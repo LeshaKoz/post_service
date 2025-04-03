@@ -1,14 +1,15 @@
 package faang.school.postservice.publisher;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+
+import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
 public abstract class MessagePublisher<T> {
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final String channel;
+    protected final KafkaTemplate<String, Object> kafkaTemplate;
+    protected final String topic;
 
-    public void publish(T message) {
-        redisTemplate.convertAndSend(channel, message);
-    }
+    public abstract void publish(T message);
 }
