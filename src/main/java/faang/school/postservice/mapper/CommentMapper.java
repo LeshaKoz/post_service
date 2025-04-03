@@ -12,7 +12,7 @@ public interface CommentMapper {
     @Mapping(target = "postId", source = "post.id")
     CommentDto toDto(Comment comment);
 
-    @Mapping(target = "likes", ignore = true) //expression = "java(new ArrayList<Like>())")
+    @Mapping(target = "likes", ignore = true)
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

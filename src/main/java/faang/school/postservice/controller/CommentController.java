@@ -57,7 +57,6 @@ public class CommentController {
     @ResponseStatus(HttpStatus.CREATED)
     public CommentDto createComment(@Positive(message = ID_ERROR_MESSAGE) @PathVariable Long postId
             , @Validated @NotEmpty @RequestBody CommentDto commentDto) {
-        // commentDto.setAuthorId(userContext.getUserId());
 
         Comment comment = commentMapper.toEntity(commentDto);
         return commentMapper.toDto(

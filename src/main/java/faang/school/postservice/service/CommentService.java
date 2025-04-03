@@ -29,10 +29,7 @@ public class CommentService {
     }
 
     public List<Comment> getComments(Long postId) {
-        List<Comment> comments = new ArrayList<>(commentRepository.findAllByPostId(postId));
-        comments.sort((l, r) -> (int) (r.getId() - l.getId()));
-
-        return comments;
+        return commentRepository.findAllByPostId(postId);
     }
 
     public Comment createComment(Long postId, Comment comment) {
@@ -45,8 +42,9 @@ public class CommentService {
 
     public Comment updateComment(Long commentId, Comment updatesForComment) {
         Comment originalComment = getComment(commentId);
-        updateCommentFromUpdates(originalComment, updatesForComment).ifPresent(commentRepository::save);
-
+        if (updateCommentFromUpdates(originalComment, updatesForComment)) {
+            commentRepository.save(originalComment);
+        }
         return originalComment;
     }
 
@@ -59,7 +57,7 @@ public class CommentService {
         return false;
     }
 
-    private Optional<Comment> updateCommentFromUpdates(Comment original, Comment updates) {
+    private boolean updateCommentFromUpdates(Comment original, Comment updates) {
         boolean commentWasUpdated = false;
 
         String newContent = updates.getContent();
@@ -84,10 +82,6 @@ public class CommentService {
             commentWasUpdated = true;
         }
 
-        if (commentWasUpdated) {
-            return Optional.of(original);
-        }
-
-        return Optional.empty();
+        return commentWasUpdated;
     }
 }

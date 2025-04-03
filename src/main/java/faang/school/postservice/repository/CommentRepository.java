@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface CommentRepository extends CrudRepository<Comment, Long> {
 
-    @Query("SELECT c FROM Comment c WHERE c.post.id = :postId")
+    @Query("SELECT c FROM Comment c WHERE c.post.id = :postId ORDER BY c.createdAt DESC")
     List<Comment> findAllByPostId(long postId);
-
 }

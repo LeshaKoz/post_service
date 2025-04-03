@@ -22,7 +22,7 @@ public class CommentDto {
     private Long id;
 
     @NotBlank(message = "Comment must have content")
-    @Size(min = 2, max = 4096, message = "Comment can be minimal 2 and maximal 4096 characters")
+    @Size(max = 4096, message = "Comment can be minimal 1 and maximal 4096 characters")
     private String content;
 
     @Positive(message = "Comment must have authorId")
