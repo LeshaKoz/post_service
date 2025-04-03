@@ -7,6 +7,7 @@ import faang.school.postservice.exception.LanguageToolException;
 import faang.school.postservice.exception.PostNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.utils.validationUtils.PostValidation;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,8 @@ public class PostService {
     private final PostMapper postMapper;
     private final PostRepository postRepository;
     private final LanguageToolClient languageToolClient;
-
+    private final LikeRepository likeRepository;
+  
     @Value("${posts.correction.batch-size}")
     int batchSize;
 
@@ -53,7 +55,7 @@ public class PostService {
     public PostResponseDto createDraftPost(PostRequestDto postRequestDto) {
         PostValidation.validatePostAuthors(postRequestDto);
         PostValidation.validatePostDraftCreation(postRequestDto);
-        Post post = postRepository.save(postMapper.ToPost(postRequestDto));
+        Post post = postRepository.save(postMapper.toPost(postRequestDto));
         return postMapper.toPostResponseDto(post);
     }
 
@@ -109,27 +111,32 @@ public class PostService {
         PostValidation.validatePostId(postId);
         Optional<Post> optionalPost = postRepository.findById(postId);
         validatePostOptional(optionalPost, postId);
+
         return postMapper.toPostResponseDto(optionalPost.get());
     }
 
     public List<PostResponseDto> getUserDraftPosts(Long userId) {
         PostValidation.validateUserId(userId);
-        return postMapper.toPostResponseDtoList(postRepository.findDraftsByAuthorId(userId));
+        List<Post> drafts = postRepository.findDraftsByAuthorId(userId);
+        return postMapper.toPostResponseDtoList(drafts);
     }
 
     public List<PostResponseDto> getProjectDraftPosts(Long projectId) {
         PostValidation.validateProjectId(projectId);
-        return postMapper.toPostResponseDtoList(postRepository.findDraftsByProjectId(projectId));
+        List<Post> drafts = postRepository.findDraftsByProjectId(projectId);
+        return postMapper.toPostResponseDtoList(drafts);
     }
 
     public List<PostResponseDto> getUserPublishedPosts(Long userId) {
         PostValidation.validateUserId(userId);
-        return postMapper.toPostResponseDtoList(postRepository.findPublishedByAuthorId(userId));
+        List<Post> posts = postRepository.findPublishedByAuthorId(userId);
+        return postMapper.toPostResponseDtoList(posts);
     }
 
     public List<PostResponseDto> getProjectPublishedPosts(Long projectId) {
         PostValidation.validateProjectId(projectId);
-        return postMapper.toPostResponseDtoList(postRepository.findPublishedByProjectId(projectId));
+        List<Post> posts = postRepository.findPublishedByProjectId(projectId);
+        return postMapper.toPostResponseDtoList(posts);
     }
 
     private void validatePostOptional(Optional<Post> postOptional, Long id) {
