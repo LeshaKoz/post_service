@@ -11,13 +11,14 @@ import faang.school.postservice.service.like.annotation.AddLike;
 import faang.school.postservice.service.post.PostService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,6 +28,7 @@ public class LikeService {
     private final UserServiceClient userServiceClient;
     private final PostService postService;
     private final CommentService commentService;
+    private final LikeEventPublisher likeEventPublisher;
 
     @AddLike
     @Transactional
@@ -35,7 +37,6 @@ public class LikeService {
         Post post = postService.getPostById(postId);
         checkExistLikeForPost(postId, userId);
         Like like = buildLikePost(post, userId);
-
         return likeRepository.save(like);
     }
 
@@ -73,8 +74,8 @@ public class LikeService {
             throw new IllegalArgumentException("Post is not published");
         }
         return post.getLikes().stream()
-            .filter(Objects::nonNull)
-            .count();
+                .filter(Objects::nonNull)
+                .count();
     }
 
     public List<String> likesPost(Long postId) {
@@ -84,14 +85,14 @@ public class LikeService {
         }
 
         return post.getLikes().stream()
-            .filter(Objects::nonNull)
-            .map(Like::getUserId)
-            .filter(Objects::nonNull)
-            .map(userServiceClient::getUser)
-            .filter(Objects::nonNull)
-            .map(UserDto::username)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .map(Like::getUserId)
+                .filter(Objects::nonNull)
+                .map(userServiceClient::getUser)
+                .filter(Objects::nonNull)
+                .map(UserDto::username)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     public List<String> likesComment(Long commentId) {
@@ -101,27 +102,27 @@ public class LikeService {
         }
 
         return comment.getLikes().stream()
-            .filter(Objects::nonNull)
-            .map(Like::getUserId)
-            .filter(Objects::nonNull)
-            .map(userServiceClient::getUser)
-            .filter(Objects::nonNull)
-            .map(UserDto::username)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .map(Like::getUserId)
+                .filter(Objects::nonNull)
+                .map(userServiceClient::getUser)
+                .filter(Objects::nonNull)
+                .map(UserDto::username)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private void checkExistLikeForPost(long postId, long userId) {
         if (likeRepository.findByPostIdAndUserId(postId, userId).isPresent()) {
             throw new EntityExistsException(
-                String.format("Like already exists for postId: %d", postId));
+                    String.format("Like already exists for postId: %d", postId));
         }
     }
 
     private void checkExistLikeForComment(long commentId, long userId) {
         if (likeRepository.findByCommentIdAndUserId(commentId, userId).isPresent()) {
             throw new EntityExistsException(
-                String.format("Like already exists for commentId: %d", commentId));
+                    String.format("Like already exists for commentId: %d", commentId));
         }
     }
 
@@ -134,15 +135,15 @@ public class LikeService {
 
     private Like buildLikePost(Post post, long userId) {
         return Like.builder()
-            .post(post)
-            .userId(userId)
-            .build();
+                .post(post)
+                .userId(userId)
+                .build();
     }
 
     private Like buildLikeComment(Comment comment, long userId) {
         return Like.builder()
-            .comment(comment)
-            .userId(userId)
-            .build();
+                .comment(comment)
+                .userId(userId)
+                .build();
     }
 }

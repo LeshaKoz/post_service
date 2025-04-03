@@ -39,7 +39,7 @@ dependencies {
     implementation("software.amazon.awssdk:s3:2.30.0")
     implementation("software.amazon.awssdk:url-connection-client:2.30.0")
     implementation("software.amazon.awssdk:regions:2.30.0")
-    runtimeOnly ("aws.smithy.kotlin:aws-credentials-jvm:1.4.0")
+    runtimeOnly("aws.smithy.kotlin:aws-credentials-jvm:1.4.0")
     implementation("net.coobird:thumbnailator:0.4.14")
 
     /**
@@ -53,7 +53,7 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.5.3.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
-    implementation ("org.apache.commons:commons-collections4:4.4")
+    implementation("org.apache.commons:commons-collections4:4.4")
 
     /**
      * Test containers
@@ -62,6 +62,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("com.redis.testcontainers:testcontainers-redis-junit-jupiter:1.4.6")
+    testImplementation ("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.testcontainers:kafka")
 
     /**
      * Tests

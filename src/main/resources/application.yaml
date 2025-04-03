@@ -21,6 +21,11 @@ spring:
     redis:
       port: 6379
       host: localhost
+      post-ttl-hours: 24
+      clear-cache:
+        cron: 0 0 * * * *
+      post-ttl-key: "post-id-ttl"
+      post-id-key: "post-id"
       channels:
         calculations_channel:
           name: calculations_channel
@@ -86,6 +91,8 @@ post:
     scheduler:
       cron: "0 0/1 * 1/1 * ?" # every minute
   max-images-per-post: 10
+  subscribers:
+    chunk-size: 100
 
 resources:
   file:
@@ -106,11 +113,17 @@ post-service:
       cron: "0 * * * * *"
     batch-size: 1000
     thread-amount: 10
+  post-created:
+    executor:
+      core-pool-size: 4
+      max-pool-size: 10
+      queue-capacity: 100
 
 kafka:
   bootstrap-servers: localhost:9092
   topic:
     comment: user-comment-post
+    post: user-create-post
 
 news-feed:
   keys:
