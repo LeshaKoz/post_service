@@ -76,6 +76,15 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found with ID: " + postId));
+    }
+
+    public boolean existsById(Long postId) {
+        return postRepository.existsById(postId);
+    }
+
     public List<PostDto> getAllAuthorDraftPosts(long authorId) {
         validExistsAuthor(authorId);
         return getAllFilterAndSortedPosts(postRepository.findByAuthorId(authorId), Predicate.not(Post::isPublished));
