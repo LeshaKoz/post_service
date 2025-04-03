@@ -24,6 +24,7 @@ import faang.school.postservice.publisher.kafka.post.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
+import faang.school.postservice.service.cache.RedisCacheService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,7 @@ public class PostService {
     private final PostImageService postImageService;
     private final PostEventPublisher postEventPublisher;
     private final PostViewEventPublisher postViewEventPublisher;
+    private final RedisCacheService redisCacheService;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -90,7 +92,10 @@ public class PostService {
 
         PostReadDto publishedPost = postMapper.toDto(postRepository.save(post));
 
+        redisCacheService.savePost(publishedPost);
+        redisCacheService.saveAuthorPost(publishedPost);
         publishCreatedEvent(publishedPost);
+
         return publishedPost;
     }
 

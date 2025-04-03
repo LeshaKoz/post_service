@@ -22,6 +22,7 @@ import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.GrammarService;
 import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.PaginationService;
+import faang.school.postservice.service.cache.RedisCacheService;
 import faang.school.postservice.service.s3.S3Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,6 +91,8 @@ public class PostServiceTest {
     private PostEventPublisher postEventPublisher;
     @Mock
     private PostViewEventPublisher postViewEventPublisher;
+    @Mock
+    private RedisCacheService redisCacheService;
 
     private Post post;
 

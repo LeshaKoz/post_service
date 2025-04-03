@@ -47,6 +47,10 @@ spring:
           num-partitions: 6
           replication-factor: 3
 
+  cache:
+    type: redis
+    time-to-live: 86400
+
   data:
     redis:
       port: 6379
@@ -153,8 +157,8 @@ ad:
 task:
   execution:
     pool:
-      core-size: 4
-      max-size: 8
+      core-size: 24
+      max-size: 48
       keep-alive: 60
 
 ---

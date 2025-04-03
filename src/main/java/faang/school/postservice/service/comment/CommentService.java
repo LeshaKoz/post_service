@@ -12,11 +12,12 @@ import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.File;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.redis.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.publisher.kafka.comment.CommentEventPublisher;
+import faang.school.postservice.publisher.redis.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.FileRepository;
 import faang.school.postservice.service.UserService;
+import faang.school.postservice.service.cache.RedisCacheService;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,8 @@ public class CommentService {
     private final FileRepository fileRepository;
     private final CommentCreateMessagePublisher commentCreateMessagePublisher;
     private final CommentEventPublisher commentEventPublisher;
+    private final RedisCacheService redisCacheService;
+
     @Value("${services.s3.max_image_size}")
     private int maxImageSize;
 
@@ -51,6 +54,7 @@ public class CommentService {
         );
 
         CommentReadDto commentReadDto = commentMapper.toDto(newComment);
+        redisCacheService.saveAuthorComment(commentReadDto);
         publishCreatedComment(commentReadDto);
 
         return commentReadDto;

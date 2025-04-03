@@ -10,6 +10,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.kafka.comment.CommentEventPublisher;
 import faang.school.postservice.publisher.redis.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.cache.RedisCacheService;
 import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.service.post.PostService;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,9 @@ public class CommentServiceTest {
 
     @Mock
     private CommentEventPublisher commentEventPublisher;
+
+    @Mock
+    private RedisCacheService redisCacheService;
 
     @InjectMocks
     private CommentService commentService;
