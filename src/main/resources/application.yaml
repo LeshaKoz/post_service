@@ -25,16 +25,24 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+cron:
+  correct_post: "0 0 0 * * *"
+
 server:
   port: 8081
 
 user-service:
   host: localhost
   port: 8080
+
 project-service:
   host: localhost
   port: 8082
+
 payment-service:
   host: localhost
   port: 9080
+
+yandex-speller:
+  url: https://speller.yandex.net
 
