@@ -164,6 +164,7 @@ public class CommentImageService {
      * @param comment комментарий с изображениями
      */
     //todo: позволяет удалять два и более раз, добавить проверку на существование файла
+
     private void deleteImagesFromStorage(Comment comment) {
         try {
             if (comment.getLargeImageFileKey() != null) {
