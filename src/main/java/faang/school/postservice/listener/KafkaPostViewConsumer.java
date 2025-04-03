@@ -21,7 +21,7 @@ public class KafkaPostViewConsumer {
     private final PostRedisRepository postRedisRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Value("${spring.data.kafka.topic.post-views.max-retries}")
+    @Value("${spring.data.kafka.topic.post-views.max-retries:5}")
     private int maxRetries;
 
     @KafkaListener(topics = "${spring.data.kafka.topic.post-views.name}", groupId = "${spring.data.kafka.group-id}")

@@ -33,6 +33,7 @@ spring:
       group-id: post-service-group
       partitions: 1
       replications: 1
+      deserializer-trusted-packages: "java.util,java.lang,faang.school.postservice.event.kafka"
       topic:
         post-views:
           name: post-views
