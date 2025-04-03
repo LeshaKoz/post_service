@@ -22,6 +22,9 @@ public class RedisConfig {
     @Value("${spring.data.redis.channels.calculations_channel.post-channel.name}")
     private String postEventChannel;
 
+    @Value("${spring.data.redis.channels.calculations_channel.comment-channel.name}")
+    private String commentEventChannel;
+
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(redisHost, redisPort);
@@ -40,5 +43,10 @@ public class RedisConfig {
     @Bean
     public ChannelTopic postEventTopic() {
         return new ChannelTopic(postEventChannel);
+    }
+
+    @Bean
+    ChannelTopic commentEventTopic() {
+        return new ChannelTopic(commentEventChannel);
     }
 }
