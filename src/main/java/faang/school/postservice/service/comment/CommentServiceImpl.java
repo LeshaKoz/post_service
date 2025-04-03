@@ -4,6 +4,7 @@ import faang.school.postservice.client.CommentAnalyzer;
 import faang.school.postservice.exception.CommentAnalyzerException;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.kafka.publisher.UserBanKafkaPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,11 +34,6 @@ import java.util.stream.IntStream;
 @Slf4j
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
-    private static final double TOXICITY_THRESHOLD = 0.35;
-
-    private final CommentRepository commentRepository;
-    private final CommentAnalyzer commentAnalyzer;
-
     @Value("${moderation.comments.batch-size}")
     private int commentModerationBatchSize;
 
@@ -68,6 +64,12 @@ public class CommentServiceImpl implements CommentService {
     @Value("${moderation.ban-users-for-comments.ban-threshold}")
     private int userBanThreshold;
 
+    private static final double TOXICITY_THRESHOLD = 0.35;
+
+    private final CommentRepository commentRepository;
+    private final CommentAnalyzer commentAnalyzer;
+    private final UserBanKafkaPublisher userBanKafkaPublisher;
+
     public Mono<Void> moderateComments() {
         log.info("Comment moderation started");
         return Mono.fromCallable(commentRepository::count)
@@ -78,6 +80,7 @@ public class CommentServiceImpl implements CommentService {
                 })
                 .flatMap(batchNumber -> {
                     Pageable pageable = PageRequest.of(batchNumber, commentModerationBatchSize);
+
                     return Mono.fromCallable(() -> commentRepository.findComments(pageable))
                             .subscribeOn(Schedulers.boundedElastic())
                             .flatMapMany(page -> Flux.fromIterable(page.getContent()));
@@ -86,7 +89,7 @@ public class CommentServiceImpl implements CommentService {
                 .timeout(Duration.ofHours(commentModerationTimeoutHours))
                 .then()
                 .doOnSuccess(v -> log.info("Comment moderation completed"))
-                .doOnError(e -> log.error("Error while moderating comments"));
+                .doOnError(e -> log.error("Error while moderating comments", e));
     }
 
     public void banUsersForComments() {
@@ -122,17 +125,14 @@ public class CommentServiceImpl implements CommentService {
 
     private void banUserForComments(List<Comment> comments) {
         Map<Long, Integer> unverifiedComments = new HashMap<>();
-        for (Comment comment : comments) {
-            if (!comment.isVerified()) {
-                unverifiedComments.putIfAbsent(comment.getId(), 0);
-                unverifiedComments.put(comment.getId(), unverifiedComments.get(comment.getId()) + 1);
-            }
-        }
-        for (var entry : unverifiedComments.entrySet()) {
-            if (entry.getValue() >= userBanThreshold) {
-                //
-            }
-        }
+        comments.stream()
+                .filter(comment -> !comment.isVerified())
+                .forEach(comment -> unverifiedComments.merge(comment.getId(), 1, Integer::sum));
+
+        unverifiedComments.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() >= userBanThreshold)
+                .forEach(entry -> userBanKafkaPublisher.publish(entry.getKey()));
     }
 
     private Mono<Void> moderateComment(Comment comment) {

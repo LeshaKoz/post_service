@@ -48,11 +48,13 @@ public class CommentServiceTest {
 
     private Mono<ToxicityScoreDto> toxicityScore;
     private final ArgumentCaptor<Comment> commentCaptor = ArgumentCaptor.forClass(Comment.class);
-
+    private final int commentModerationBatchSize = 3;
 
     @BeforeEach
     public void setUp() {
-        ReflectionTestUtils.setField(commentService, "batchSize", 100);
+        ReflectionTestUtils.setField(commentService, "banBatchSize", 100);
+        ReflectionTestUtils.setField(commentService, "commentModerationTimeoutHours", 1);
+        ReflectionTestUtils.setField(commentService, "commentModerationBatchSize", commentModerationBatchSize);
 
         toxicityScore = Mono.just(ToxicityScoreDto.builder()
                 .attributeScores(Map.of(
@@ -77,14 +79,15 @@ public class CommentServiceTest {
         Comment comment3 = Comment.builder().content("content2").build();
 
         List<Comment> comments = List.of(comment1, comment2, comment3);
-        Page<Comment> commentPage = new PageImpl<>(comments, PageRequest.of(0, 2), 3);
+        Page<Comment> commentPage = new PageImpl<>(comments, PageRequest.of(0, commentModerationBatchSize), 3);
 
         when(commentRepository.count()).thenReturn(3L);
         when(commentRepository.findComments(any())).thenReturn(commentPage);
         when(commentAnalyzer.analyzeComment(anyString())).thenReturn(toxicityScore);
 
         Mono<Void> result = commentService.moderateComments();
-        StepVerifier.create(result).verifyComplete();
+        StepVerifier.create(result)
+                .verifyComplete();
 
         verify(commentRepository, times(3)).save(commentCaptor.capture());
         List<Comment> capturedComments = commentCaptor.getAllValues();
@@ -107,7 +110,8 @@ public class CommentServiceTest {
         when(commentAnalyzer.analyzeComment(anyString())).thenReturn(toxicityScore);
 
         Mono<Void> result = commentService.moderateComments();
-        StepVerifier.create(result).verifyComplete();
+        StepVerifier.create(result)
+                .verifyComplete();
 
         verify(commentRepository, times(1)).save(commentCaptor.capture());
         List<Comment> capturedComments = commentCaptor.getAllValues();
