@@ -84,7 +84,7 @@ public class LikeService {
         log.info("Попытка добавить лайк на комментарий с ID {} от пользователя с ID {}",
                 commentId, userId);
         likeValidator.validateForAddingCommentLike(commentId, userId);
-        Comment comment = commentService.getCommentEntity(commentId);
+        Comment comment = commentService.getCommentById(commentId);
 
         Like like = new Like();
         like.setUserId(userId);

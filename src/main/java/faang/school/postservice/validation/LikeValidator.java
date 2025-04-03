@@ -6,8 +6,8 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
-import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -117,7 +117,7 @@ public class LikeValidator {
      * @param commentId Идентификатор комментария.
      */
     private void validateCommentExistence(long commentId) {
-        commentService.getCommentEntity(commentId);
+        commentService.getCommentById(commentId);
     }
 
     /**
@@ -144,7 +144,7 @@ public class LikeValidator {
      * @throws DataValidationException Если лайк на пост уже существует.
      */
     private void validateUserDidNotLikePostOfComment(long commentId, long userId) {
-        Comment comment = commentService.getCommentEntity(commentId);
+        Comment comment = commentService.getCommentById(commentId);
         Long postId = comment.getPost().getId();
         validateUserDidNotLikePost(postId, userId);
     }

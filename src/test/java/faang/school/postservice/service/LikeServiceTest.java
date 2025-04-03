@@ -47,7 +47,7 @@ public class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("likePost: позитивный сценарий")
+    @DisplayName("Добавление лайка к посту - успешный сценарий")
     public void givenValidPostAndUserWhenLikePostThenReturnLikeViewDto() {
         likeViewDto.setPostId(postId);
         Mockito.when(postService.getPostEntity(postId)).thenReturn(postEntity);
@@ -64,7 +64,7 @@ public class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("unlikePost: позитивный сценарий")
+    @DisplayName("Удаление лайка с поста - успешный сценарий")
     public void givenValidPostAndUserWhenUnlikePostThenLikeIsDeleted() {
         likeService.unlikePost(postId, userId);
 
@@ -75,10 +75,10 @@ public class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("likeComment: позитивный сценарий")
+    @DisplayName("Добавление лайка к комментарию - успешный сценарий")
     public void givenValidPostAndUserWhenLikeCommentThenReturnLikeViewDto() {
         likeViewDto.setCommentId(commentId);
-        Mockito.when(commentService.getCommentEntity(commentId)).thenReturn(commentEntity);
+        Mockito.when(commentService.getCommentById(commentId)).thenReturn(commentEntity);
         Mockito.when(likeRepository.save(Mockito.any(Like.class))).thenReturn(likeEntity);
         Mockito.when(likeMapper.toDto(likeEntity)).thenReturn(likeViewDto);
 
@@ -86,13 +86,13 @@ public class LikeServiceTest {
         Assertions.assertNotNull(result);
 
         Mockito.verify(likeValidator).validateForAddingCommentLike(commentId, userId);
-        Mockito.verify(commentService).getCommentEntity(commentId);
+        Mockito.verify(commentService).getCommentById(commentId);
         Mockito.verify(likeRepository).save(Mockito.any(Like.class));
         Mockito.verify(likeMapper).toDto(likeEntity);
     }
 
     @Test
-    @DisplayName("unlikeComment: позитивный сценарий")
+    @DisplayName("Удаление лайка с комментария - успешный сценарий")
     public void givenValidPostAndUserWhenUnlikeCommentThenLikeIsDeleted() {
         likeService.unlikeComment(commentId, userId);
 
