@@ -26,11 +26,26 @@ spring:
       port: 6379
       host: localhost
       channels:
+        user-bans-channel: "user-bans"
         calculations_channel:
           name: calculations_channel
 
 server:
   port: 8081
+
+ad:
+  batch:
+    size: 10
+
+jspell:
+  api:
+    url: "https://jspell-checker.p.rapidapi.com/check"
+    key: "X-RapidAPI-Key"
+    host: "jspell-checker.p.rapidapi.com"
+
+scheduler:
+  post-correction:
+    cron: "0 0 2 * * *"
 
 logging:
   level:

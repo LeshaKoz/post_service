@@ -3,6 +3,7 @@ package faang.school.postservice.service.post.interfaces;
 import faang.school.postservice.dto.post.PostDto;
 
 import java.util.List;
+
 import faang.school.postservice.model.Post;
 
 public interface PostService {
@@ -25,4 +26,6 @@ public interface PostService {
     List<PostDto> getProjectPublishedPosts(PostDto postDto);
 
     Post getPostById(Long postId);
+
+    void correctUnpublishedPosts();
 }

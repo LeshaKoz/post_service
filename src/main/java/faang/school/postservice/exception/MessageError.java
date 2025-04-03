@@ -8,7 +8,8 @@ public enum MessageError {
     AUTHOR_NOT_FOUND_EXCEPTION("Author with id %d not found"),
     COMMENT_NOT_FOUND_EXCEPTION("Comment with id %d not found"),
     FORBIDDEN_EXCEPTION("User with id %d is not allowed to %s"),
-    ENTITY_NOT_FOUND_EXCEPTION("Entity %s with id %d was not found");
+    ENTITY_NOT_FOUND_EXCEPTION("Entity %s with id %d was not found"),
+    POST_NOT_CORRECTED_EXCEPTION("Unable to correct post with id %d");
 
     private final String message;
 

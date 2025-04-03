@@ -1,12 +1,15 @@
 package faang.school.postservice.exception.handler;
 
+import faang.school.postservice.exception.AIIntegrationException;
 import faang.school.postservice.exception.AuthorNotFoundException;
 import faang.school.postservice.exception.CommentNotFoundException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.FileProcessException;
 import faang.school.postservice.exception.ForbiddenException;
+import faang.school.postservice.exception.JsonNotReadException;
 import faang.school.postservice.exception.PostDtoValidationException;
 import faang.school.postservice.exception.PostIdMismatchException;
+import faang.school.postservice.exception.PostNotCorrectedException;
 import faang.school.postservice.exception.PostNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -69,6 +72,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleValidationException(PostDtoValidationException e) {
         log.warn("Post dto validation exception: {}", e.getMessage());
         return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    @ExceptionHandler(PostNotCorrectedException.class)
+    public ErrorResponse handlePostNotCorrectedException(PostNotCorrectedException e) {
+        log.error("PostNotCorrectedException", e);
+        return buildResponse(e);
+    }
+
+    @ExceptionHandler(AIIntegrationException.class)
+    public ErrorResponse handleAIIntegrationException(AIIntegrationException e) {
+        log.error("AIIntegrationException", e);
+        return buildResponse(e);
+    }
+
+    @ExceptionHandler(JsonNotReadException.class)
+    public ErrorResponse handleJsonNotReadException(JsonNotReadException e) {
+        log.error("JsonNotReadException", e);
+        return buildResponse(e);
     }
 
     private ErrorResponse buildResponse(Exception e) {

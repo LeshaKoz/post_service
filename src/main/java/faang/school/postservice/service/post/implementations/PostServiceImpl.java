@@ -2,6 +2,7 @@ package faang.school.postservice.service.post.implementations;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.post.PostServiceConstants;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
@@ -11,21 +12,28 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.interfaces.PostService;
+import faang.school.postservice.service.post_correct.interfaces.PostCorrectService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostServiceImpl implements PostService {
-
     private final ProjectServiceClient projectServiceClient;
     private final UserServiceClient userServiceClient;
+    private final PostCorrectService postCorrectService;
     private final PostRepository postRepository;
     private final PostMapper postMapper;
 
@@ -167,5 +175,45 @@ public class PostServiceImpl implements PostService {
         }
 
         return post;
+    }
+
+    public void correctUnpublishedPosts() {
+        List<Post> unpublishedPosts = postRepository.findReadyToPublish();
+        log.info("Starting correction for {} unpublished posts", unpublishedPosts.size());
+        if (unpublishedPosts.isEmpty()) {
+            return;
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(
+                PostServiceConstants.ThreadPool.EXECUTOR_POOL_THREAD_NUMBER);
+        List<CompletableFuture<Void>> futures = unpublishedPosts.stream()
+                .map(post -> postCorrectService.correctPost(post, executor))
+                .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .orTimeout(PostServiceConstants.TimeOut.CORRECT_POSTS_FUTURES_TIMEOUT, TimeUnit.SECONDS)
+                .thenRun(() -> log.info("Finished correcting unpublished posts"))
+                .exceptionally(throwable -> {
+                    log.error("Correction unpublished posts process failed", throwable);
+                    return null;
+                })
+                .join();
+
+        shutdownExecutor(executor);
+    }
+
+    private void shutdownExecutor(ExecutorService executor) {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(
+                    PostServiceConstants.AwaitTermination.EXECUTOR_AWAIT_TERMINATION, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                log.warn("Executor did not terminate in the specified time.");
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+            log.error("Executor shutdown interrupted", e);
+        }
     }
 }
