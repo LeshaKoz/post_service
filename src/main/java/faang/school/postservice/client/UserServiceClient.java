@@ -27,6 +27,6 @@ public interface UserServiceClient {
             Pageable pageable
     );
 
-    @GetMapping("/api/v1/users")
+    @GetMapping("/api/v1/users/all")
     List<UserDto> getAllUsers();
 }

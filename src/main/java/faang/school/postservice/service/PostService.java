@@ -1,7 +1,11 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.kafka.events.PostFollowersEvent;
+import faang.school.postservice.kafka.producer.KafkaEventProducer;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -38,6 +42,8 @@ public class PostService {
     private final PostMapper postMapper;
     private final AuthorCacheService authorCacheService;
     private final ExecutorService executorService;
+    private final KafkaEventProducer kafkaEventProducer;
+    private final UserServiceClient userServiceClient;
 
     @Value("${moderation.threadSize}")
     private int threadSize;
@@ -63,12 +69,26 @@ public class PostService {
     public Post publish(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new DataValidationException("Specified post not found. Id:" + postId));
+
         if (post.isPublished()) {
             throw new DataValidationException("Post is already published. Id:" + postId);
         }
+
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+
         authorCacheService.saveAuthorCache(post.getAuthorId());
+
+        UserDto author = userServiceClient.getUser(post.getAuthorId());
+        List<Long> followers = author.getFollowers();
+
+        kafkaEventProducer.sendPostFollowersEvent(PostFollowersEvent.builder()
+                .postId(post.getId())
+                .authorId(post.getAuthorId())
+                .followersIds(followers)
+                .publishedAt(post.getPublishedAt())
+                .build());
+
         return postRepository.save(post);
     }
 
