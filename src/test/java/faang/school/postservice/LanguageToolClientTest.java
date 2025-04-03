@@ -10,8 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,36 +22,26 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class LanguageToolClientTest {
-    @Mock
-    private WebClient webClient;
-
-    @Mock
-    private WebClient.RequestBodySpec requestBodySpec;
-
-    @Mock
-    private WebClient.RequestBodyUriSpec requestBodyUriSpec;
-
-    @Mock
-    private WebClient.ResponseSpec responseSpec;
-
     @InjectMocks
     private LanguageToolClient languageToolClient;
 
+    @Mock
+    private RestTemplate restTemplate;
+
     private String text;
     private final String language = "auto";
+    private final String baseUrl = "https://api.languagetool.org/v2";
 
     @BeforeEach
     public void setUp() {
-        when(webClient.post()).thenReturn(requestBodyUriSpec);
-        when(requestBodyUriSpec.uri("/check")).thenReturn(requestBodySpec);
-        when(requestBodySpec.body(any())).thenAnswer(inv -> requestBodySpec);
-        when(requestBodySpec.retrieve()).thenReturn(responseSpec);
+        ReflectionTestUtils.setField(languageToolClient, "baseUrl", "https://api.languagetool.org/v2");
     }
 
     @Test
@@ -58,16 +50,14 @@ public class LanguageToolClientTest {
         LanguageToolResponseDto response = new LanguageToolResponseDto();
         response.setMatches(Collections.emptyList());
 
-        when(responseSpec.bodyToMono(LanguageToolResponseDto.class))
-                .thenReturn(Mono.just(response));
+        when(restTemplate.exchange(eq(baseUrl + "/check"), any(HttpMethod.class), any(),
+                eq(LanguageToolResponseDto.class))).thenReturn(ResponseEntity.ok(response));
 
         String result = languageToolClient.getCorrectedText(text, language);
 
         assertEquals(text, result);
-        verify(webClient, times(1)).post();
-        verify(requestBodyUriSpec, times(1)).uri("/check");
-        verify(requestBodySpec, times(1)).body(any());
-        verify(requestBodySpec, times(1)).retrieve();
+        verify(restTemplate, times(1))
+                .exchange(eq(baseUrl + "/check"), any(), any(), eq(LanguageToolResponseDto.class));
     }
 
     @Test
@@ -78,16 +68,14 @@ public class LanguageToolClientTest {
                 new GrammarMatch(List.of(new ReplacementValueDto("This")), 0, 5)))
         );
 
-        when(responseSpec.bodyToMono(LanguageToolResponseDto.class))
-                .thenReturn(Mono.just(response));
+        when(restTemplate.exchange(eq(baseUrl + "/check"), any(HttpMethod.class), any(),
+                eq(LanguageToolResponseDto.class))).thenReturn(ResponseEntity.ok(response));
 
         String result = languageToolClient.getCorrectedText(text, language);
 
         assertEquals("This is text", result);
-        verify(webClient, times(1)).post();
-        verify(requestBodyUriSpec, times(1)).uri("/check");
-        verify(requestBodySpec, times(1)).body(any());
-        verify(requestBodySpec, times(1)).retrieve();
+        verify(restTemplate, times(1))
+                .exchange(eq(baseUrl + "/check"), any(), any(), eq(LanguageToolResponseDto.class));
     }
 
     @Test
@@ -99,15 +87,13 @@ public class LanguageToolClientTest {
                 new GrammarMatch(List.of(new ReplacementValueDto("is")), 6, 3)))
         );
 
-        when(responseSpec.bodyToMono(LanguageToolResponseDto.class))
-                .thenReturn(Mono.just(response));
+        when(restTemplate.exchange(eq(baseUrl + "/check"), any(HttpMethod.class), any(),
+                eq(LanguageToolResponseDto.class))).thenReturn(ResponseEntity.ok(response));
 
         String result = languageToolClient.getCorrectedText(text, language);
 
         assertEquals("This is text", result);
-        verify(webClient, times(1)).post();
-        verify(requestBodyUriSpec, times(1)).uri("/check");
-        verify(requestBodySpec, times(1)).body(any());
-        verify(requestBodySpec, times(1)).retrieve();
+        verify(restTemplate, times(1))
+                .exchange(eq(baseUrl + "/check"), any(), any(), eq(LanguageToolResponseDto.class));
     }
 }
