@@ -25,6 +25,10 @@ public class KafkaPostConsumer {
                 .filter(subscriberId -> !processSubscriber(subscriberId, postEvent))
                 .toList();
 
+        checkFailedSubscribers(failedSubscribers);
+    }
+
+    private void checkFailedSubscribers(List<Long> failedSubscribers) {
         if (!failedSubscribers.isEmpty()) {
             throw new SubscriberProcessingException("Не удалось обработать подписчиков: " + failedSubscribers);
         }

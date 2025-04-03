@@ -55,7 +55,7 @@ public class FeedService {
 
     private void updateFeed(String feedKey, PostEvent postEvent) {
         long score = -postEvent.createdAt()
-                .atZone(ZoneId.systemDefault())
+                .atZone(ZoneId.of("UTC"))
                 .toInstant()
                 .toEpochMilli();
         redisTemplate.opsForZSet().add(feedKey, String.valueOf(postEvent.postId()), score);
