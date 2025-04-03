@@ -149,6 +149,7 @@ public class FileService {
     }
 
     private String createFileKey(String fileName) {
+        fileName = fileName.replaceAll("[^\\p{L}\\p{N}._\\-\\— ]", "_");
         String pathName = DEFAULT_USER_ID;
         String timeStamp = String.valueOf(System.nanoTime());
 
