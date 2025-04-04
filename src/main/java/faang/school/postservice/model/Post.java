@@ -41,7 +41,7 @@ public class Post {
     @Column(name = "content", nullable = false, length = 4096)
     private String content;
 
-    @Column(name = "author_id", nullable = false)
+    @Column(name = "author_id")
     private Long authorId;
 
     @Column(name = "project_id")
@@ -93,7 +93,7 @@ public class Post {
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
     private Set<Hashtag> hashtags;
-
+  
     @Column(name = "verified", nullable = false)
     @Builder.Default
     private boolean verified = false;
