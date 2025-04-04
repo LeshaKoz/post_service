@@ -8,6 +8,7 @@ import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.PostEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.corrector.PostCorrector;
 import faang.school.postservice.service.moderate.ModerationService;
@@ -68,6 +69,9 @@ public class PostServiceTest {
     @Mock
     private AsyncConfig asyncConfig;
 
+    @Mock
+    private PostEventPublisher postEventPublisher;
+
     private final Executor executor = Executors.newSingleThreadExecutor();
 
     @InjectMocks
@@ -109,8 +113,6 @@ public class PostServiceTest {
                 .id(ID)
                 .published(true)
                 .build();
-
-        when(asyncConfig.taskExecutor()).thenReturn(executor);
     }
 
     @Test

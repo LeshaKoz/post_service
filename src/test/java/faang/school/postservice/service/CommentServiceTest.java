@@ -3,10 +3,12 @@ package faang.school.postservice.service;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
+import faang.school.postservice.event.CommentEvent;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.comment.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,9 @@ class CommentServiceTest {
     @Mock
     private PostService postService;
 
+    @Mock
+    private CommentEventPublisher commentEventPublisher;
+
     @InjectMocks
     private CommentService commentService;
 
@@ -66,11 +71,17 @@ class CommentServiceTest {
                 .content(commentCreateDto.getContent())
                 .postId(POST_ID)
                 .build();
-
         when(commentRepository.save(comment)).thenReturn(comment);
 
         CommentReadDto result = commentService.addComment(commentCreateDto);
+
         assertEquals(expected, result);
+        verify(commentEventPublisher).publish(CommentEvent.builder()
+                .postId(POST_ID)
+                .authorId(USER_ID)
+                .commentId(comment.getId())
+                .content(comment.getContent())
+                .build());
     }
 
     @Test
