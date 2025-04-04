@@ -47,3 +47,8 @@ payment-service:
 post-service:
   tag:
     count-of-most-popular-tags: 2
+  comment:
+    count-of-unverified-comments-for-ban: 5
+    redis:
+      ban-users-key: user_ban
+
