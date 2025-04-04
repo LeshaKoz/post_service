@@ -41,3 +41,8 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+app:
+  cron:
+    author-banner: "0 0 12 * * ?"  # Каждый день в 12:00
+
