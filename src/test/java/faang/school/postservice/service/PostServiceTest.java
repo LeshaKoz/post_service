@@ -1,13 +1,17 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.async.AsyncConfig;
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
+import faang.school.postservice.dto.post.PostCreatedEvent;
 import faang.school.postservice.dto.post.ReadPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.PostEventPublisher;
+import faang.school.postservice.publisher.kafka.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.corrector.PostCorrector;
 import faang.school.postservice.service.moderate.ModerationService;
@@ -16,6 +20,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -67,6 +73,15 @@ public class PostServiceTest {
 
     @Mock
     private AsyncConfig asyncConfig;
+
+    @Mock
+    private PostEventPublisher postEventPublisher;
+
+    @Mock
+    private UserServiceClient userServiceClient;
+
+    @Mock
+    private KafkaPostProducer kafkaPostProducer;
 
     private final Executor executor = Executors.newSingleThreadExecutor();
 
@@ -109,23 +124,28 @@ public class PostServiceTest {
                 .id(ID)
                 .published(true)
                 .build();
-
-        when(asyncConfig.taskExecutor()).thenReturn(executor);
     }
 
     @Test
     void createPostSuccessfullyTest() {
         when(postMapper.toEntity(createPostDto)).thenReturn(post);
         when(postRepository.save(any(Post.class))).thenReturn(post);
+        when(userServiceClient.getFollowerIds(anyLong())).thenReturn(List.of(2L, 3L));
         when(postMapper.toDto(post)).thenReturn(readPostDto);
 
         ReadPostDto response = postService.create(createPostDto);
 
+        ArgumentCaptor<PostCreatedEvent> eventCaptor = ArgumentCaptor.forClass(PostCreatedEvent.class);
+        verify(kafkaPostProducer).sendEvent(eventCaptor.capture());
+
+        PostCreatedEvent sentEvent = eventCaptor.getValue();
+        assertEquals(1L, sentEvent.getPostId());
+        assertEquals(2L, sentEvent.getAuthorId());
+        assertEquals(List.of(2L, 3L), sentEvent.getSubscriberIds());
         assertNotNull(response);
         assertEquals(TEST_CONTENT, response.getContent());
         assertEquals(AUTHOR_ID, response.getAuthorId());
         assertFalse(response.getPublished());
-
         verify(postValidator).validateDraftPost(createPostDto);
         verify(postRepository).save(any(Post.class));
         verify(postMapper).toDto(post);

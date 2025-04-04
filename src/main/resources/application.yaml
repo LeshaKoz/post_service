@@ -26,7 +26,22 @@ spring:
           name: calculations_channel
           post-channel:
             name: post_channel_topic
-
+    kafka:
+      bootstrap-servers: localhost:9092
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        properties:
+          spring.json.add.type.headers: false
+      topic:
+        post:
+          name: posts
+          partitions: 10
+          replicas: 1
+      admin:
+        properties:
+          retries: 5
+          retry.backoff.ms: 1000
 
   servlet:
     multipart:

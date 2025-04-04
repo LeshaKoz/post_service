@@ -1,14 +1,17 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.async.AsyncConfig;
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.CreatePostDto;
+import faang.school.postservice.dto.post.PostCreatedEvent;
 import faang.school.postservice.dto.post.ReadPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.event.PostEvent;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.PostEventPublisher;
+import faang.school.postservice.publisher.kafka.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.corrector.PostCorrector;
 import faang.school.postservice.service.moderate.ModerationService;
@@ -39,6 +42,8 @@ public class PostService {
     private final ModerationService moderationService;
     private final AsyncConfig asyncConfig;
     private final PostEventPublisher postEventPublisher;
+    private final KafkaPostProducer kafkaPostProducer;
+    private final UserServiceClient userServiceClient;
 
     public Post findById(@NotNull Long id) {
         return postRepository.findById(id)
@@ -74,6 +79,16 @@ public class PostService {
         post.setPublished(false);
 
         Post savedPost = postRepository.save(post);
+
+
+        List<Long> subscriberIds = userServiceClient.getFollowerIds(savedPost.getAuthorId());
+        PostCreatedEvent event = PostCreatedEvent.builder()
+                .postId(savedPost.getId())
+                .authorId(savedPost.getAuthorId())
+                .subscriberIds(subscriberIds)
+                .build();
+        kafkaPostProducer.sendEvent(event);
+
         return postMapper.toDto(savedPost);
     }
 

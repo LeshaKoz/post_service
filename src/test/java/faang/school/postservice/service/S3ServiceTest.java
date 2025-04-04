@@ -70,7 +70,6 @@ public class S3ServiceTest {
 
     @Test
     void testDeleteFile_Exists() {
-        when(s3client.doesObjectExist(bucketName, key)).thenReturn(true);
         s3service.deleteFile(key);
 
         verify(s3client).deleteObject(any(DeleteObjectRequest.class));
@@ -81,7 +80,6 @@ public class S3ServiceTest {
         S3Object s3Object = mock(S3Object.class);
         S3ObjectInputStream objectContent = new S3ObjectInputStream(new ByteArrayInputStream(new byte[0]), null);
 
-        when(s3client.doesObjectExist(bucketName, key)).thenReturn(true);
         when(s3client.getObject(bucketName, key)).thenReturn(s3Object);
         when(s3Object.getObjectContent()).thenReturn(objectContent);
 
@@ -104,7 +102,6 @@ public class S3ServiceTest {
 
     @Test
     void testDeleteFile_ThrowsException() {
-        when(s3client.doesObjectExist(bucketName, key)).thenReturn(true);
         doThrow(new AmazonServiceException("Ошибка удаления"))
                 .when(s3client).deleteObject(any(DeleteObjectRequest.class));
 
@@ -116,7 +113,6 @@ public class S3ServiceTest {
         S3Object s3Object = mock(S3Object.class);
         S3ObjectInputStream objectContent = new S3ObjectInputStream(new ByteArrayInputStream(new byte[10]), null);
 
-        when(s3client.doesObjectExist(bucketName, key)).thenReturn(true);
         when(s3client.getObject(bucketName, key)).thenReturn(s3Object);
         when(s3Object.getObjectContent()).thenReturn(objectContent);
 
