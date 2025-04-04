@@ -5,6 +5,7 @@ import faang.school.postservice.exception.ApiError;
 import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
+import faang.school.postservice.exception.KafkaMessageSendingException;
 import faang.school.postservice.exception.UploadFileException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +86,12 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toList());
 
         return new ApiError("Constraint violation", errors);
+    }
+
+    @ExceptionHandler(KafkaMessageSendingException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorDto handleKafkaMessageSendingException(KafkaMessageSendingException ex) {
+        return new ErrorDto("Sending event to Kafka topic failed", ex.getMessage());
     }
 
     @ExceptionHandler(Throwable.class)

@@ -10,6 +10,7 @@ import faang.school.postservice.filter.post.PostProjectSpecification;
 import faang.school.postservice.filter.post.PostPublishedSpecification;
 import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,9 @@ class PostServiceImplTest {
     private PostMapperImpl postMapper;
     @Mock
     ExecutorService executorService;
+    @Mock
+    KafkaPostProducer kafkaPostProducer;
+
     @InjectMocks
     private PostServiceImpl postService;
     private PostCreateRequestDto postCreateRequestDto;
@@ -60,7 +64,8 @@ class PostServiceImplTest {
                 postServiceValidatorMock,
                 postMapper,
                 postSpecificationFilters,
-                executorService
+                executorService,
+                kafkaPostProducer
         );
 
         postCreateRequestDto = PostCreateRequestDto.builder()

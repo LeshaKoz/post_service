@@ -28,6 +28,11 @@ spring:
           name: user_ban
         comment-channel: comment_channel
         like-event-channel: like_event
+    kafka:
+      bootstrap-servers: "localhost:9092"
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
   mvc:
     servlet:
@@ -37,6 +42,17 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+
+app:
+  kafka:
+    topic:
+      producer:
+        posts:
+          name: posts
+          enabled: true
+      retry:
+        max-attempts: 3
+        retry-backoff-ms: 1000
 
 server:
   port: 8081

@@ -7,6 +7,7 @@ import faang.school.postservice.dto.post.PostUpdateRequestDto;
 import faang.school.postservice.filter.post.PostSpecificationFilter;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +35,14 @@ public class PostServiceImpl implements PostService {
     private final PostMapper postMapper;
     private final List<PostSpecificationFilter> postSpecificationFilters;
     private final ExecutorService executorService;
+    private final KafkaPostProducer kafkaPostProducer;
 
     @Override
     public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
         postServiceValidator.validatePostDto(postCreateRequestDto);
         Post post = postMapper.toPostEntity(postCreateRequestDto);
         Post draftPost = postRepository.save(post);
+        kafkaPostProducer.sendPostCreatedEvent(draftPost.getId(), draftPost.getAuthorId());
         log.info("Post draft created, id = {}", draftPost.getId());
         return postMapper.toPostResponseDto(draftPost);
     }
@@ -52,6 +55,7 @@ public class PostServiceImpl implements PostService {
         postToPublish.setPublishedAt(LocalDateTime.now());
         Post publishedPost = postRepository.save(postToPublish);
         log.info("Draft post is published, id = {}", publishedPost.getId());
+
         return postMapper.toPostResponseDto(publishedPost);
     }
 
