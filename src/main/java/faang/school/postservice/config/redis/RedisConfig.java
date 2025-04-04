@@ -1,10 +1,6 @@
 package faang.school.postservice.config.redis;
 
 
-import faang.school.postservice.dto.user.UserRedisDto;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.HashOperations;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -53,17 +49,5 @@ public class RedisConfig {
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return new GenericJackson2JsonRedisSerializer(mapper);
-    }
-
-    @Bean(name = "userRedis")
-    public HashOperations<String, String, UserRedisDto> redisTemplateUser() {
-        RedisTemplate<String, UserRedisDto> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
-
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-        return template.opsForHash();
     }
 }
