@@ -1,6 +1,5 @@
 package faang.school.postservice.config.redis;
 
-
 import faang.school.postservice.dto.user.UserRedisDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,17 +12,17 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-public class RedisConfig {
+public class RedisConfigFeed {
 
     @Value("${spring.data.redis.host}")
-    private String redisHost;
+    private String host;
 
     @Value("${spring.data.redis.port}")
-    private int redisPort;
+    private int port;
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(redisHost, redisPort);
+        return new LettuceConnectionFactory(host, port);
     }
 
     @Bean(name = "userRedis")
@@ -37,5 +36,4 @@ public class RedisConfig {
         template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return template.opsForHash();
     }
-
 }

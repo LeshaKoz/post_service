@@ -3,7 +3,7 @@ package faang.school.postservice.service.kafka;
 import faang.school.postservice.dto.event.CommentEventDto;
 import faang.school.postservice.mapper.comment.CommentEventMapper;
 import faang.school.postservice.model.Comment;
-import faang.school.postservice.service.feed.AddAuthorCommentToRedisService;
+import faang.school.postservice.service.feed.AsyncAddAuthorCommentService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -17,7 +17,8 @@ import org.springframework.stereotype.Service;
 public class KafkaCommentEventPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final CommentEventMapper commentMapper;
-    private final AddAuthorCommentToRedisService addAuthorCommentToRedisService;
+    private final AsyncAddAuthorCommentService asyncAddAuthorCommentService;
+
     @Value("${kafka.topic.comment}")
     private String topic;
 
@@ -26,6 +27,6 @@ public class KafkaCommentEventPublisher {
         String uniqueKey = comment.getId().toString();
         CommentEventDto dto = commentMapper.toDto(comment);
         kafkaTemplate.send(topic, uniqueKey, dto);
-        addAuthorCommentToRedisService.addAuthorByCommentToCashAsync(comment);
+       asyncAddAuthorCommentService.addAuthorByCommentToCashAsync(comment);
     }
 }
