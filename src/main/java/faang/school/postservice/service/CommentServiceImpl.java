@@ -19,7 +19,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final Executor commentModeratorExecutor;
-    private final ModerationDictionary moderationDictionary;
+    private final ModerationDictionaryImpl moderationDictionary;
 
     @Value("${spring.task.scheduling.comment.max_comments_per_size}")
     private int limit;

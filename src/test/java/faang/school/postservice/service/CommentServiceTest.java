@@ -28,7 +28,7 @@ public class CommentServiceTest {
     @Mock
     private CommentRepository commentRepository;
     @Mock
-    private ModerationDictionary moderationDictionary;
+    private ModerationDictionaryImpl moderationDictionary;
     @InjectMocks
     private CommentServiceImpl commentService;
 
