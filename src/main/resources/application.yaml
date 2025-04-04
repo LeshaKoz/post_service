@@ -45,9 +45,6 @@ spring:
             connect-timeout: 5000
             read-timeout: 5000
 
-  kafka:
-    bootstrap-servers: localhost:9092
-
 scheduling:
   publishing-cron: "0 * * * * *"
 
