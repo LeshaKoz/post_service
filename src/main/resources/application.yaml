@@ -41,3 +41,11 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+# Расписание выполнения модерации (каждый день в полночь) и путь к словарю
+moderation:
+  cron:
+    expression: 0 0 0 * * ?
+  dictionary:
+    path: "moderation-dictionary.txt"
+    batch.size: 1000

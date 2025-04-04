@@ -156,4 +156,17 @@ public class Post {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    /**
+     * Флаг, указывающий, проверен ли пост модератором. По умолчанию `false`.
+     */
+    @Column(name = "verified")
+    private boolean verified;
+
+    /**
+     * Дата и время проверки поста модератором. Может быть пустым, если пост не проверен.
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "verified_at")
+    private LocalDateTime verifiedAt;
 }

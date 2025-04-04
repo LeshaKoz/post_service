@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dictionary.ModerationDictionary;
 import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.post.PostViewDto;
@@ -13,11 +14,17 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Сервисный класс `PostService` для управления постами.
@@ -34,6 +41,7 @@ import java.util.List;
  *     <li>{@link #getProjectDrafts(long)} - получение черновиков проекта.</li>
  *     <li>{@link #getAuthorPublishedPosts(long)} - получение опубликованных постов автора.</li>
  *     <li>{@link #getProjectPublishedPosts(long)} - получение опубликованных постов проекта.</li>
+ *     <li>{@link #moderateUnverifiedPost()} - модерирует посты на наличие нецензурнойм лексики.</li>
  * </ul>
  * </p>
  *
@@ -46,6 +54,10 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final PostValidator postValidator;
+    private final ModerationDictionary moderationDictionary;
+
+    @Value("${moderation. dictionary. batch. size}")
+    private int batchSize;
 
     /**
      * Создает черновик поста на основе переданного DTO.
@@ -205,5 +217,85 @@ public class PostService {
     public Post getPostEntity(long postId) {
         return postRepository.findById(postId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Post not found with id: %s", postId)));
+    }
+
+    /**
+     * Запускает процесс модерации всех неверифицированных постов.
+     * <p>
+     * Метод выполняет следующие действия:
+     * <ol>
+     *   <li>Находит все посты без даты верификации</li>
+     *   <li>Разбивает их на пакеты указанного размера</li>
+     *   <li>Запускает асинхронную проверку каждого пакета</li>
+     *   <li>Ожидает завершения всех проверок</li>
+     * </ol>
+     */
+    public void moderateUnverifiedPost() {
+        log.info("Moderation of unverified posts started");
+        List<Post> unverifiedPosts = postRepository.findAllByVerifiedAtIsNull();
+
+        if (unverifiedPosts.isEmpty()) {
+            return;
+        }
+
+        List<List<Post>> batches = partition(unverifiedPosts, batchSize);
+
+        List<CompletableFuture<Void>> futures = batches.stream()
+                .map(this::checkForProfanity)
+                .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        log.info("Moderation completed successfully. Total posts processed: {}", unverifiedPosts.size());
+    }
+
+    /**
+     * Проверяет пакет постов на наличие нецензурной лексики.
+     * <p>
+     * Выполняется асинхронно в отдельной транзакции. Для каждого поста:
+     * <ol>
+     *   <li>Проверяет содержание на наличие слов из словаря</li>
+     *   <li>Устанавливает дату верификации</li>
+     *   <li>Помечает пост как верифицированный/не прошедший проверку</li>
+     * </ol>
+     *
+     * @param posts пакет постов для проверки
+     * @return CompletableFuture<Void> для отслеживания завершения операции
+     * @throws RuntimeException если произошла ошибка при сохранении
+     */
+    @Async
+    @Transactional
+    public CompletableFuture<Void> checkForProfanity(List<Post> posts) {
+        try {
+            Set<String> profanity = moderationDictionary.getProfanityWord();
+            LocalDateTime now = LocalDateTime.now();
+
+            posts.forEach(post -> {
+                String content = post.getContent().toLowerCase();
+                boolean profanityFound = profanity.stream()
+                        .anyMatch(content::contains);
+
+                post.setVerifiedAt(now);
+                post.setVerified(!profanityFound);
+            });
+
+            postRepository.saveAll(posts);
+            return CompletableFuture.completedFuture(null);
+        } catch (Exception e) {
+            log.error("Error processing batch of posts: {}", e.getMessage(), e);
+            throw new RuntimeException("Batch processing failed", e);
+        }
+    }
+
+    /**
+     * Разбивает список постов на пакеты указанного размера.
+     *
+     * @param list исходный список постов
+     * @param batchSize размер пакета
+     * @return список пакетов с постами
+     */
+    private static List<List<Post>> partition(List<Post> list, int batchSize) {
+        return Stream.iterate(0, i -> i < list.size(), i -> i + batchSize)
+                .map(i -> list.subList(i, Math.min(i + batchSize, list.size())))
+                .collect(Collectors.toList());
     }
 }
