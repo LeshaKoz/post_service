@@ -111,6 +111,6 @@ task-executor:
     queue-capacity: 50
 
 ad:
-    expired:
-      cron: "0 0 1 * * ?"
-      cron-one-minute: "0 0 1 * * ?"
+  expired:
+    cron: "0 0 1 * * ?"
+    cron-one-minute: "0 0 1 * * ?"
