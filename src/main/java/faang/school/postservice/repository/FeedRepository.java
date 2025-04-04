@@ -11,7 +11,7 @@ import java.time.ZoneId;
 import java.util.Set;
 
 @Repository
-public class RedisFeedRepository {
+public class FeedRepository {
 
     @Value("${feed.key}")
     private String FEED_KEY;
@@ -21,7 +21,7 @@ public class RedisFeedRepository {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public RedisFeedRepository(
+    public FeedRepository(
             @Qualifier("postFeedTemplate") RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }

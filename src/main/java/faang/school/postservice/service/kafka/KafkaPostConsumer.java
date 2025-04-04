@@ -2,7 +2,7 @@ package faang.school.postservice.service.kafka;
 
 import faang.school.postservice.dto.post.PostCreatedEvent;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.RedisFeedRepository;
+import faang.school.postservice.repository.FeedRepository;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Component
 public class KafkaPostConsumer {
-    private final RedisFeedRepository feedRepository;
+    private final FeedRepository feedRepository;
     private final PostService postService;
 
     @KafkaListener(topics = "${kafka.topic.post}",

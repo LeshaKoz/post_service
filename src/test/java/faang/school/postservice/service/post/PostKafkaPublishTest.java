@@ -5,7 +5,7 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostCreatedEvent;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.repository.RedisFeedRepository;
+import faang.school.postservice.repository.FeedRepository;
 import faang.school.postservice.util.BaseContextTest;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -50,7 +50,7 @@ class PostKafkaPublishTest extends BaseContextTest {
     private PostRepository postRepository;
 
     @Autowired
-    private RedisFeedRepository feedRepository;
+    private FeedRepository feedRepository;
 
     @Autowired
     private PostService postService;
