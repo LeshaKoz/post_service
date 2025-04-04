@@ -1,6 +1,6 @@
 package faang.school.postservice.component;
 
-import faang.school.postservice.service.UserModerationService;
+import faang.school.postservice.service.userModeration.UserModerationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

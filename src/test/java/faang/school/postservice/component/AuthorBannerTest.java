@@ -3,7 +3,7 @@ package faang.school.postservice.component;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import faang.school.postservice.service.UserModerationService;
+import faang.school.postservice.service.userModeration.UserModerationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

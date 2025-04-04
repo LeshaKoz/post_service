@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.redis.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.userModeration.UserModerationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

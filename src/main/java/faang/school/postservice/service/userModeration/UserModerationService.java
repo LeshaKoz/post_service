@@ -1,5 +1,6 @@
-package faang.school.postservice.service;
+package faang.school.postservice.service.userModeration;
 
+import faang.school.postservice.contants.InfoMessage;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.redis.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
@@ -26,7 +27,7 @@ public class UserModerationService {
 
         userPostCounts.forEach((authorId, posts) -> {
             if(posts.size() > 5) {
-                log.info("User with authorId {} should be banned, they have {} unverified posts", authorId, posts.size());
+                log.info(InfoMessage.INFO_BANNED_USER, authorId, posts.size());
                 userBanPublisher.publishUserBan(authorId);
             }
         });
