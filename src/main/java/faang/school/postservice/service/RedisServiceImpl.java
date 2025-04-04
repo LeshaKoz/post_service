@@ -15,7 +15,7 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public void pushToRedisUsersForBan(Long authorId) {
-        Long result = redisTemplate.opsForSet().add(channelTopic.getTopic(), authorId);
-        log.debug("User pushed to redis: {}", result);
+        Long result = redisTemplate.convertAndSend(channelTopic.getTopic(), authorId);
+        log.info("User pushed to redis: {}", result);
     }
 }
