@@ -42,7 +42,7 @@ public class Comment {
     @OneToMany(mappedBy = "comment", orphanRemoval = true)
     private List<Like> likes;
 
-    @ManyToOne
+    @ManyToOne  
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
