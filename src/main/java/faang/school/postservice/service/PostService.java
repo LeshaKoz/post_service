@@ -68,7 +68,6 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-
     public Post getPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException(POST, postId));

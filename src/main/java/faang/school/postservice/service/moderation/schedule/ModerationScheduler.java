@@ -13,7 +13,7 @@ public class ModerationScheduler {
 
     private final PostService postService;
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(cron = "${moderation.cron-expression}")
     public void moderatePostsJob() {
         log.info("=== Starting moderation job ===");
         try {
