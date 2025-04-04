@@ -53,5 +53,7 @@ perspective-api:
 
 moderation:
   job:
-    cron: "0/5 * * * * *"
+    cron: "0/10 * * * * *"
+  batch:
+    size: 100
 

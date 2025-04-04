@@ -25,12 +25,10 @@ public class PerspectiveAPI {
     }
 
     public boolean isContentToxic(String text) throws IOException {
-        // 1. Проверка входных данных
         if (text == null || text.trim().isEmpty()) {
             return false;
         }
 
-        // 2. Формирование запроса
         JsonObject request = new JsonObject();
         request.add("comment", new JsonObject());
         request.getAsJsonObject("comment").addProperty("text", text);
@@ -44,8 +42,7 @@ public class PerspectiveAPI {
                 MediaType.get("application/json; charset=utf-8")
         );
 
-        // 3. Формирование URL (исправленная часть)
-        HttpUrl url = HttpUrl.get(apiUrl)  // Используем HttpUrl.get() вместо parse()
+        HttpUrl url = HttpUrl.get(apiUrl)
                 .newBuilder()
                 .addQueryParameter("key", apiKey)
                 .build();
@@ -55,7 +52,6 @@ public class PerspectiveAPI {
                 .post(body)
                 .build();
 
-        // 4. Отправка запроса
         try (Response response = client.newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {
                 String errorBody = response.body().string();
@@ -68,7 +64,6 @@ public class PerspectiveAPI {
                 ));
             }
 
-            // 5. Обработка ответа
             JsonObject responseJson = gson.fromJson(
                     response.body().charStream(),
                     JsonObject.class
