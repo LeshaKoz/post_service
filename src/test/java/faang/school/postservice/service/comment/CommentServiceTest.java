@@ -58,7 +58,7 @@ class CommentServiceTest {
     private static final String UPDATE_CONTENT = "Update content";
 
     @InjectMocks
-    private CommentService commentService;
+    private CommentServiceImpl commentService;
 
     @Mock
     private CommentRepository commentRepository;
