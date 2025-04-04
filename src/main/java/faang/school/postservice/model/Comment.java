@@ -16,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -29,7 +28,6 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "comment")
-@ToString
 public class Comment {
 
     @Id
