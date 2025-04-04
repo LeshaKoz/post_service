@@ -9,14 +9,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "user-service", url = "${user-service.host}:${user-service.port}")
+@FeignClient(name = "user-service", url = "${user-service.host}:${user-service.port}/${user-service.api-prefix}")
 public interface UserServiceClient {
-    @GetMapping("${user-service.api-prefix}/user/{userId}")
+    @GetMapping("/user/{userId}")
     UserDto getUser(@PathVariable long userId);
 
-    @PostMapping("${user-service.api-prefix}/user")
+    @PostMapping("/user")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
 
-    @GetMapping("${user-service.api-prefix}/subscription/{followerId}/follow/{authorId}")
+    @GetMapping("/subscription/{followerId}/follow/{authorId}")
     boolean isFollow(@PathVariable long followerId, @PathVariable long authorId);
+
+    @GetMapping("/user/{userId}/followers")
+    List<Long> getFollowersIdsByUserId(@PathVariable long userId);
 }

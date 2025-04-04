@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.config.kafka.KafkaFeedPostProducer;
 import faang.school.postservice.dto.posts.PostCreatingRequest;
 import faang.school.postservice.dto.posts.PostResultResponse;
 import faang.school.postservice.dto.posts.PostUpdatingDto;
@@ -36,6 +37,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final RedisCache redisCache;
     private final PostUtil postUtil;
+    private final KafkaFeedPostProducer kafkaFeedPostProducer;
     private final RewriterService rewriterService;
     private final ExecutorService scheduledPublishPostThreadPool;
     private static final int MAX_POST_COUNT_PUBLISH_ON_THREAD = 1000;
@@ -67,6 +69,9 @@ public class PostService {
 
         redisCache.cachePost(post);
         log.info("Cached post with id : {}", post.getId());
+
+        kafkaFeedPostProducer.sendCreatePostEvent(post);
+        log.info("Sent CreatePostEvent with id : {}", post.getId());
 
         return postMapper.toDto(post);
     }

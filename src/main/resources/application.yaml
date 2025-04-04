@@ -41,6 +41,7 @@ spring:
       comment_create_event: comment-create
       post_like_event: post-like
       user-ban-topic: user-ban-topic
+      post-create-event: post-create-event
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -49,6 +50,14 @@ spring:
       retries: 3
       enable-idempotence: true
       max-in-flight-requests-per-connection: 5
+      events-sender:
+        core-pool-size: 5
+        max-pool-size: 10
+        queue-capacity: 500
+        thread-name-prefix: KafkaSender-
+      news-feed:
+        post-followers-batch-max-size: 1000
+
 
 expired:
   ad:

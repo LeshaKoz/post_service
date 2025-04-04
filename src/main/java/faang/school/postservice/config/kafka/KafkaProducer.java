@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class KafkaProducer {
-
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Value("${spring.kafka.topics.user-ban-topic}")
