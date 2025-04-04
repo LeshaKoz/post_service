@@ -42,11 +42,10 @@ public class FeedRepository {
     }
 
     public void addPostToFollowersFeeds(List<Long> followersIds, PostResponseDto post) {
-        FeedItemDto feedItem = FeedItemDto.builder()
+        /*FeedItemDto feedItem = FeedItemDto.builder()
                 //.postLikesCounter(0)
                 .postId(post.id())
-                .build();
-
+                .build();*/
         followersIds.forEach(userId -> addPostToFollowerFeed(userId, post));
     }
 

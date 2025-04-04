@@ -91,7 +91,6 @@ public class PostServiceImpl implements PostService {
         );
 
         postEventProducer.producePublishPostEventAsync(userContext.getUserId(), publishedPost);
-
         return postMapper.toPostResponseDto(publishedPost);
     }
 

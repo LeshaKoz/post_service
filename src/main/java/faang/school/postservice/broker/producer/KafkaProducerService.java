@@ -34,10 +34,15 @@ public abstract class KafkaProducerService<T> {
         future.whenComplete((result, ex) -> {
             if (ex != null) {
                 log.error("Failed to send message {} to kafka topic {}. Error: {}",
-                        message, topicName, ex.getMessage());
+                        message,
+                        topicName,
+                        ex.getMessage());
             } else {
                 log.info("Successfully sent message {} to kafka topic {}, partition {}. Result: {}",
-                        message, topicName, result.getRecordMetadata().partition(), result.getRecordMetadata().offset());
+                        message,
+                        topicName,
+                        result.getRecordMetadata().partition(),
+                        result.getRecordMetadata().offset());
             }
         });
     }

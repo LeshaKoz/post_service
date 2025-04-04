@@ -1,6 +1,5 @@
 package faang.school.postservice.service.feed;
 
-import faang.school.postservice.dto.feed.FeedItemResponseDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 
 import java.util.List;
@@ -10,4 +9,6 @@ public interface FeedService {
     Set<PostResponseDto>  getFeed(long userId, int pageNum);
 
     void processNewPost(Long postId, List<Long> followersIds);
+
+    void subProcessNewPost(Long postId, List<Long> followersIds);
 }

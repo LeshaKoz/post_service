@@ -2,6 +2,7 @@ package faang.school.postservice.config.kafka;
 
 import faang.school.postservice.dto.post.PostCommentEvent;
 import faang.school.postservice.dto.post.PostLikeEvent;
+import faang.school.postservice.dto.post.PostProcessEvent;
 import faang.school.postservice.dto.post.PostPublicationEvent;
 import faang.school.postservice.dto.post.PostViewEvent;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,16 @@ public class KafkaConsumersConfig {
     public ConcurrentKafkaListenerContainerFactory<String, PostCommentEvent> postCommentEventContainerFactory(
             ConsumerFactory<String, PostCommentEvent> consumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, PostCommentEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PostProcessEvent> postProcessEventContainerFactory(
+            ConsumerFactory<String, PostProcessEvent> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, PostProcessEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);

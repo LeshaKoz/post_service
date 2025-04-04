@@ -2,6 +2,7 @@ package faang.school.postservice.config.kafka;
 
 import faang.school.postservice.dto.post.PostCommentEvent;
 import faang.school.postservice.dto.post.PostLikeEvent;
+import faang.school.postservice.dto.post.PostProcessEvent;
 import faang.school.postservice.dto.post.PostPublicationEvent;
 import faang.school.postservice.dto.post.PostViewEvent;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,11 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(producerConfigs());
     }
 
+    @Bean
+    public ProducerFactory<String, PostProcessEvent> postProcessEventProducerFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfigs());
+    }
+
 /*    @Bean
     public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
@@ -86,6 +92,12 @@ public class KafkaProducerConfig {
     @Bean
     public KafkaTemplate<String, PostCommentEvent> postCommentEventKafkaTemplate(
             ProducerFactory<String, PostCommentEvent> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
+    }
+
+    @Bean
+    public KafkaTemplate<String, PostProcessEvent> postProcessEventKafkaTemplate(
+            ProducerFactory<String, PostProcessEvent> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 

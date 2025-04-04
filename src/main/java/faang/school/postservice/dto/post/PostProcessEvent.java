@@ -5,8 +5,7 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record PostPublicationEvent(
-
+public record PostProcessEvent(
         Long postId,
 
         List<Long> followersIds

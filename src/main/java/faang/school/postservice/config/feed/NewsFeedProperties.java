@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record NewsFeedProperties(
         String prefix,
         Integer maxPosts,
-        Integer pageSize
+        Integer pageSize,
+        Integer batchSize
 ) {
 }

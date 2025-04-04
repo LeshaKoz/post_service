@@ -33,7 +33,7 @@ public class PostLikeConsumer {
                     acknowledgment.acknowledge();
                 })
                 .exceptionally(exception -> {
-                    log.error("Error consuming like event with post id {}. Error: {}",
+                    log.error("Error consuming post like event with post id {}. Error: {}",
                             postId, exception.getMessage());
                     return null;
                 });
