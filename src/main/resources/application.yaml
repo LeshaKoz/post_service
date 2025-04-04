@@ -28,6 +28,11 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+task:
+  scheduling:
+    comment-ban:
+      cron_expression: 0 0 4 * * *
+
 server:
   port: 8081
 
