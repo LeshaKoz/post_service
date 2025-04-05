@@ -9,6 +9,7 @@ import faang.school.postservice.exception.PostDtoValidationException;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.post_correct.implementations.PostCorrectServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +21,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -48,6 +52,9 @@ class PostServiceImplTest {
 
     @Mock
     private ProjectServiceClient projectServiceClient;
+
+    @Mock
+    PostCorrectServiceImpl postCorrectService;
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -425,5 +432,42 @@ class PostServiceImplTest {
         assertEquals(1L, result.get(1).getId());
         verify(postRepository).findByAuthorId(authorId);
         verify(postMapper, times(2)).toDto(any(Post.class));
+    }
+
+
+    @Test
+    void testCorrectUnpublishedPostsSuccessfully() {
+        List<Post> unpublishedPosts = List.of(new Post(), new Post());
+        when(postRepository.findReadyToPublish()).thenReturn(unpublishedPosts);
+        when(postCorrectService.correctPost(any(Post.class), any(ExecutorService.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        postService.correctUnpublishedPosts();
+
+        verify(postCorrectService, times(2)).correctPost(any(Post.class),
+                any(ExecutorService.class));
+    }
+
+    @Test
+    void testCorrectUnpublishedPosts_whenPostsReadyToPublishIsAbsent() {
+        when(postRepository.findReadyToPublish()).thenReturn(Collections.emptyList());
+
+        postService.correctUnpublishedPosts();
+
+        verify(postCorrectService, never()).correctPost(any(Post.class), any(ExecutorService.class));
+    }
+
+    @Test
+    void testCorrectUnpublishedPosts_withFutureCompletedExceptionally() {
+        List<Post> unpublishedPosts = List.of(new Post());
+        when(postRepository.findReadyToPublish()).thenReturn(unpublishedPosts);
+        CompletableFuture<Void> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new RuntimeException("Correction failed"));
+        when(postCorrectService.correctPost(any(Post.class), any(ExecutorService.class)))
+                .thenReturn(failedFuture);
+
+        postService.correctUnpublishedPosts();
+
+        verify(postCorrectService).correctPost(any(Post.class), any(ExecutorService.class));
     }
 }

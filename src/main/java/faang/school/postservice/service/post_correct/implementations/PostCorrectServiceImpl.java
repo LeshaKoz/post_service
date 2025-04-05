@@ -9,9 +9,9 @@ import faang.school.postservice.exception.PostNotCorrectedException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post_correct.interfaces.PostCorrectService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -27,34 +27,29 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Getter
 @Slf4j
 public class PostCorrectServiceImpl implements PostCorrectService {
     private final PostRepository postRepository;
     private final TransactionTemplate transactionTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @Value("${jspell.api.url}")
-    private String jSpellApiUrl;
-
-    @Value("${jspell.api.key}")
-    private String jSpellApiKey;
-
-    @Value("${jspell.api.host}")
-    private String jSpellApiHost;
+    private final ObjectMapper objectMapper;
+    private final WebClient webClient;
 
     @Override
     public CompletableFuture<Void> correctPost(Post post, ExecutorService executor) {
         return checkSpellingWithRetry(post.getContent())
                 .orTimeout(PostServiceConstants.TimeOut.CHECK_SPELLING_TIMEOUT, TimeUnit.SECONDS)
-                .thenCompose(correctedContent -> CompletableFuture.supplyAsync(() ->
-                        transactionTemplate.execute(status -> {
-                            post.setContent(correctedContent);
-                            post.setUpdatedAt(LocalDateTime.now());
-                            Post savedPost = postRepository.save(post);
-                            log.info("Successfully corrected post with id {}", savedPost.getId());
-                            return savedPost;
-                        }), executor)
-                )
+                .thenCompose(correctedContent -> {
+                    log.info("Received corrected content: {}", correctedContent);
+                    return CompletableFuture.supplyAsync(() ->
+                            transactionTemplate.execute(status -> {
+                                post.setContent(correctedContent);
+                                post.setUpdatedAt(LocalDateTime.now());
+                                Post savedPost = postRepository.save(post);
+                                log.info("Successfully corrected post with id {}", savedPost.getId());
+                                return savedPost;
+                            }), executor);
+                })
                 .thenAccept(savedPost -> {
                 })
                 .exceptionally(throwable -> {
@@ -67,22 +62,13 @@ public class PostCorrectServiceImpl implements PostCorrectService {
     @Override
     public CompletableFuture<String> checkSpellingWithRetry(String content) {
         String jsonRequest = String.format(
-                "{\"language\": \"enUS\", \"fieldValues\": \"%s\", \"config\": {\"forceUpperCase\": false, " +
-                        "\"ignoreIrregularCaps\": false}}", content.replace("\"", "\\\"")
+                "{\"cmd\":\"autocorrect\",\"lang\":\"en_US\",\"text\":\"%s\"}", content.replace("\"", "\\\"")
         );
-
-        WebClient webClient = WebClient.builder()
-                .baseUrl(jSpellApiUrl)
-                .defaultHeader("Content-Type", "application/json")
-                .defaultHeader("X-RapidAPI-Key", jSpellApiKey)
-                .defaultHeader("X-RapidAPI-Host", jSpellApiHost)
-                .build();
-
         Mono<String> responseMono = webClient.post()
                 .bodyValue(jsonRequest)
                 .retrieve()
                 .onStatus(status -> !status.is2xxSuccessful(),
-                        clientResponse -> Mono.error(
+                        clientResponse -> Mono.error(() ->
                                 new AIIntegrationException("Unexpected code " + clientResponse.statusCode() +
                                         " received from the proofreader")))
                 .bodyToMono(String.class)
@@ -90,7 +76,6 @@ public class PostCorrectServiceImpl implements PostCorrectService {
                 .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
                         .maxBackoff(Duration.ofSeconds(8))
                         .filter(throwable -> throwable instanceof IOException || throwable instanceof RuntimeException));
-
         return responseMono.toFuture();
     }
 
@@ -98,20 +83,11 @@ public class PostCorrectServiceImpl implements PostCorrectService {
     public String parseCorrectedContent(String responseBody, String originalContent) {
         try {
             JsonNode rootNode = objectMapper.readTree(responseBody);
-            JsonNode results = rootNode.path("results");
-            if (results.isEmpty()) {
+            JsonNode correctedNode = rootNode.path("corrected");
+            if (correctedNode.isMissingNode() || correctedNode.isNull()) {
                 return originalContent;
             }
-            String correctedContent = originalContent;
-            for (JsonNode result : results) {
-                String wrongText = result.path("text").asText();
-                JsonNode suggestionsNode = result.path("suggestions");
-                if (!suggestionsNode.isEmpty()) {
-                    String suggestion = suggestionsNode.get(0).asText();
-                    correctedContent = correctedContent.replace(wrongText, suggestion);
-                }
-            }
-            return correctedContent;
+            return correctedNode.asText();
         } catch (IOException e) {
             throw new JsonNotReadException(
                     "IO Exception occurred while parsing response to check spelling: " + e.getMessage());

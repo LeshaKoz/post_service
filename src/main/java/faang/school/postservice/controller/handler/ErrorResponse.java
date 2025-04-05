@@ -1,4 +1,4 @@
-package faang.school.postservice.exception.handler;
+package faang.school.postservice.controller.handler;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

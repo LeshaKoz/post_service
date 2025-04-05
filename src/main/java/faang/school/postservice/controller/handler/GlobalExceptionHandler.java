@@ -1,4 +1,4 @@
-package faang.school.postservice.exception.handler;
+package faang.school.postservice.controller.handler;
 
 import faang.school.postservice.exception.AIIntegrationException;
 import faang.school.postservice.exception.AuthorNotFoundException;
@@ -11,6 +11,7 @@ import faang.school.postservice.exception.PostDtoValidationException;
 import faang.school.postservice.exception.PostIdMismatchException;
 import faang.school.postservice.exception.PostNotCorrectedException;
 import faang.school.postservice.exception.PostNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -89,6 +90,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(JsonNotReadException.class)
     public ErrorResponse handleJsonNotReadException(JsonNotReadException e) {
         log.error("JsonNotReadException", e);
+        return buildResponse(e);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException e) {
+        log.error("Validation failed: {}", e.getClass().getSimpleName(), e);
         return buildResponse(e);
     }
 

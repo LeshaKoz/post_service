@@ -1,4 +1,4 @@
-package faang.school.postservice.service.post;
+package faang.school.postservice.service.post_correct;
 
 import faang.school.postservice.service.post.interfaces.PostService;
 import lombok.RequiredArgsConstructor;

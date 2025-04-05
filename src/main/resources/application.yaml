@@ -37,11 +37,12 @@ ad:
   batch:
     size: 10
 
-jspell:
+webspell:
   api:
-    url: "https://jspell-checker.p.rapidapi.com/check"
-    key: "X-RapidAPI-Key"
-    host: "jspell-checker.p.rapidapi.com"
+    url: "https://webspellchecker-webspellcheckernet.p.rapidapi.com/api"
+    content-type: "application/json"
+    key: "348d2925famsh95c7436e81d45c0p1eeb4ajsn1347b2ce620a"
+    host: "webspellchecker-webspellcheckernet.p.rapidapi.com"
 
 scheduler:
   post-correction:
