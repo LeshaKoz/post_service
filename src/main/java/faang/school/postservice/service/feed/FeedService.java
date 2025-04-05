@@ -21,16 +21,17 @@ public class FeedService {
     private final FeedProperties properties;
     private static final String FEED_KEY_PATTERN = "user:%d:feed";
     private static final String POST_FEEDS_INDEX_PATTERN = "post:%d:feeds";
+    private static final long SECONDS_IN_A_DAY = 86400L;
 
     @Value("${spring.data.redis.feed.batch-size}")
-    private int BATCH_SIZE;
+    private int batchSize;
 
     public void addToFeed(PostCreatedEvent event) {
         double score = event.getCreatedAt().toEpochMilli();
         String postId = String.valueOf(event.getPostId());
         String postFeedsKey = String.format(POST_FEEDS_INDEX_PATTERN, event.getPostId());
 
-        List<List<Long>> batches = Lists.partition(event.getFollowerIds(), BATCH_SIZE);
+        List<List<Long>> batches = Lists.partition(event.getFollowerIds(), batchSize);
 
         for (List<Long> batch : batches) {
             feedRedisTemplate.executePipelined((RedisCallback<Void>) connection -> {
@@ -39,12 +40,12 @@ public class FeedService {
 
                     connection.zAdd(feedKey.getBytes(), score, postId.getBytes());
                     connection.zRemRange(feedKey.getBytes(), 0, -properties.getMaxSize() - 1);
-                    connection.expire(feedKey.getBytes(), properties.getTtlDays() * 86400L);
+                    connection.expire(feedKey.getBytes(), properties.getTtlDays() * SECONDS_IN_A_DAY);
 
                     connection.sAdd(postFeedsKey.getBytes(), feedKey.getBytes());
                 }
 
-                connection.expire(postFeedsKey.getBytes(), properties.getTtlDays() * 86400L);
+                connection.expire(postFeedsKey.getBytes(), properties.getTtlDays() * SECONDS_IN_A_DAY);
                 return null;
             });
         }
@@ -64,7 +65,7 @@ public class FeedService {
 
         List<List<byte[]>> batches = Lists.partition(
                 new ArrayList<>(feedKeysBytes),
-                BATCH_SIZE
+                batchSize
         );
 
         for (List<byte[]> batch : batches) {

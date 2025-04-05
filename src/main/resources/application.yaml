@@ -35,10 +35,18 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      topic:
+        post:
+          partitions: 1
+          replicas: 1
     consumer:
       group-id: "post-service-group"
       auto-offset-reset: earliest
       enable-auto-commit: false
+      retry:
+        maxAttempts: 3
+        delay: 1000
+        multiplier: 2
 
   cloud:
     openfeign:

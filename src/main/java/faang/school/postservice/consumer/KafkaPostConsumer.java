@@ -2,10 +2,10 @@ package faang.school.postservice.consumer;
 
 import faang.school.postservice.event.post.PostCreatedEvent;
 import faang.school.postservice.event.post.PostDeletedEvent;
-import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.service.feed.FeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -20,10 +20,20 @@ public class KafkaPostConsumer {
 
     private final FeedService feedService;
 
+    @Value("${spring.kafka.listener.retry.maxAttempts}")
+    private int maxAttempts;
+
+    @Value("${spring.kafka.listener.retry.delay}")
+    private long delay;
+
+    @Value("${spring.kafka.listener.retry.multiplier}")
+    private double multiplier;
+
     @Retryable(
             retryFor = {DataAccessException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000, multiplier = 2)
+            maxAttemptsExpression = "#{${spring.kafka.listener.retry.maxAttempts}}",
+            backoff = @Backoff(delayExpression = "#{${spring.kafka.listener.retry.delay}}",
+                    multiplierExpression = "#{${spring.kafka.listener.retry.multiplier}}")
     )
     @KafkaListener(topics = "post-creations", containerFactory = "kafkaListenerContainerFactory")
     public void listenCreations(PostCreatedEvent event, Acknowledgment ack) {
@@ -38,8 +48,9 @@ public class KafkaPostConsumer {
 
     @Retryable(
             retryFor = {DataAccessException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000, multiplier = 2)
+            maxAttemptsExpression = "#{${spring.kafka.listener.retry.maxAttempts}}",
+            backoff = @Backoff(delayExpression = "#{${spring.kafka.listener.retry.delay}}",
+                    multiplierExpression = "#{${spring.kafka.listener.retry.multiplier}}")
     )
     @KafkaListener(topics = "post-deletions", containerFactory = "kafkaListenerContainerFactory")
     public void listenUpdates(PostDeletedEvent event, Acknowledgment ack) {
