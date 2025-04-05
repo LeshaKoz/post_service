@@ -1,6 +1,7 @@
 package faang.school.postservice.service.user;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.config.redis.RedisProperties;
 import faang.school.postservice.dto.subscription.SubscriptionUserDto;
 import faang.school.postservice.dto.user.UserDto;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final RedisTemplate <String, UserResponseDto> userRedisTemplate;
     private final RedisProperties redisProperties;
+    private final UserContext userContext;
 
     @Override
     public UserDto getUserWithCache(long userId) {
@@ -66,6 +68,12 @@ public class UserServiceImpl implements UserService {
 
     public List<SubscriptionUserDto> getFollowers(long userId) {
         return userServiceClient.getFollowers(userId);
+    }
+
+    @Override
+    public List<UserResponseDto> getAllUsers() {
+        userContext.setUserId(0L); // предположим некий системный пользователь
+        return userServiceClient.getAllUsers();
     }
 
 

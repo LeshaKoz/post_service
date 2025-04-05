@@ -64,13 +64,10 @@ public class FeedRepository {
         return FeedItemRedisTemplate.execute(new SessionCallback<Boolean>() {
              @Override
              public <K, V> Boolean execute(RedisOperations<K, V> operations) throws DataAccessException {
-
+                 // TODO хорошо бы сделать тест для проверки индемпонентности
                  operations.multi();
-
                  operations.opsForZSet().add((K) zsetKey, (V) feedItemDto, score);
-                 // Удаляем все, кроме последних N
                  operations.opsForZSet().removeRange((K) zsetKey, 0, -MAX_FEED_SIZE - 1);
-
                  List<Object> results = operations.exec();
                  return !results.isEmpty();
              }

@@ -159,6 +159,11 @@ public class CommentServiceImpl implements CommentService {
         usersBanPublisher.publish(new UsersBanEvent(userIdsToBan));
     }
 
+    @Override
+    public List<CommentResponseDto> getAllByPostId(long postId) {
+        return commentMapper.toCommentResponseDtos(commentRepository.findAllByPostId(postId));
+    }
+
     private CompletableFuture<Void> moderatePartition(List<Comment> partition) {
         return CompletableFuture.runAsync(() -> {
             partition.forEach(comment -> {

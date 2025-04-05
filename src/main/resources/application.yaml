@@ -50,26 +50,25 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "faang.school.postservice.dto.post"  # Пакет с DTO
-        #spring.json.value.default.type: ""
-        #spring.json.use.type.headers: true  # Использовать информацию о типе из заголовков
+        spring.json.trusted.packages: "faang.school.postservice.dto"  # Пакет с DTO
         spring.json.type.mapping: >
           commentEvent:faang.school.postservice.dto.post.PostCommentEvent,
           postEvent:faang.school.postservice.dto.post.PostPublicationEvent,
           postProcessEvent:faang.school.postservice.dto.post.PostProcessEvent,
           likeEvent:faang.school.postservice.dto.post.PostLikeEvent,
-          viewEvent:faang.school.postservice.dto.post.PostViewEvent
+          viewEvent:faang.school.postservice.dto.post.PostViewEvent,
+          feedHeaterEvent:faang.school.postservice.dto.feed.FeedHeaterEvent
     listener:
       ack-mode: manual
       retry-attempts: 3 # Количество попыток повтора
       retry-interval: 1000 # Интервал между попытками
-      #default-retryable: false # Отправка в DLQ после неудачных попыток
     topic:
-      posts-topic: posts2
-      posts-process-topic: posts_process2
-      post-views-topic: post_views2
-      post-likes-topic: post_likes2
-      post-comments-topic: post_comments2
+      posts-topic: posts3
+      posts-process-topic: posts_process3
+      post-views-topic: post_views3
+      post-likes-topic: post_likes3
+      post-comments-topic: post_comments3
+      feed-heater-topic: heater3
 
   mvc:
     servlet:
@@ -145,5 +144,5 @@ newsfeed:
   prefix: newsfeed11
   max-posts: 10 # Max posts per feed
   page-size: 5  # posts for feed page
-  batch-size: 2 # followers batch size for processing
+  batch-size: 2 # users/followers batch size for processing
   comments-number: 3 # Number of comments in feed post

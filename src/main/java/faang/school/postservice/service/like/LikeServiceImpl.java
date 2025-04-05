@@ -104,6 +104,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
+    @Transactional
     public List<LikeDto> getLikes(long postId) {
         return likeMapper.toLikeDtos(likeRepository.findByPostId(postId));
     }

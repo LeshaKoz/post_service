@@ -30,4 +30,6 @@ public interface PostService {
     void addCommentToHash(long postId, PostCommentEvent postCommentEvent);
 
     List<PostResponseDto> findAllByFilter(PostFilterDto filter);
+
+    List<PostResponseDto> getPostsByUser(long userId);
 }

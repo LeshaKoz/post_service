@@ -1,5 +1,6 @@
 package faang.school.postservice.config.kafka;
 
+import faang.school.postservice.dto.feed.FeedHeaterEvent;
 import faang.school.postservice.dto.post.PostCommentEvent;
 import faang.school.postservice.dto.post.PostLikeEvent;
 import faang.school.postservice.dto.post.PostProcessEvent;
@@ -63,6 +64,16 @@ public class KafkaConsumersConfig {
     public ConcurrentKafkaListenerContainerFactory<String, PostProcessEvent> postProcessEventContainerFactory(
             ConsumerFactory<String, PostProcessEvent> consumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, PostProcessEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
+        return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, FeedHeaterEvent> feedHeaterEventContainerFactory(
+            ConsumerFactory<String, FeedHeaterEvent> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, FeedHeaterEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);

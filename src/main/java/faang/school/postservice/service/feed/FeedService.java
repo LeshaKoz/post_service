@@ -11,4 +11,7 @@ public interface FeedService {
     void processNewPost(Long postId, List<Long> followersIds);
 
     void subProcessNewPost(Long postId, List<Long> followersIds);
+
+    void subProcessExistingPost(Long postId, List<Long> followersIds);
+
 }

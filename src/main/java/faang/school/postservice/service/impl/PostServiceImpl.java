@@ -145,6 +145,7 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponseDto getPostWithCache(Long postId) {
 
         String cacheKey = redisProperties.cache().postCacheName() + postId;
@@ -253,6 +254,13 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<PostResponseDto> findAllByFilter(PostFilterDto filter) {
         return postMapper.toPostResponseDtos(findAllPostsByFilter(filter));
+    }
+
+    @Override
+    @Transactional
+    public List<PostResponseDto> getPostsByUser(long userId) {
+        // TODO предполагается, что тут должно быть ограничение кол-ва постов, и только опубликованные посты
+        return postMapper.toPostResponseDtos(postRepository.findByAuthorId(userId));
     }
 
     private List<Post> preparePostList(List<Post> posts) {

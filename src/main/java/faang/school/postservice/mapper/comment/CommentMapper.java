@@ -45,6 +45,8 @@ public abstract class CommentMapper {
     @Mapping(source = "likes", target = "likeDtos", qualifiedByName = "mapLikes")
     public abstract CommentResponseDto toCommentResponseDto(Comment comment);
 
+    public abstract List<CommentResponseDto> toCommentResponseDtos(List<Comment> comment);
+
     @Mapping(source = "postDto.id", target = "postId")
     public abstract FeedItemCommentDto toFeedItemCommentDto(CommentResponseDto commentResponseDto);
 
