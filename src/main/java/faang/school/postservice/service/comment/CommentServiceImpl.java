@@ -1,7 +1,6 @@
 package faang.school.postservice.service.comment;
 
-import faang.school.postservice.broker.producer.PostCommentProducer;
-import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.broker.producer.PostCommentEventProducer;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.dto.comment.CommentFiltersDto;
@@ -14,7 +13,6 @@ import faang.school.postservice.exception.CommentValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.UploadFileException;
 import faang.school.postservice.mapper.comment.CommentMapper;
-import faang.school.postservice.mapper.user.UserMapper;
 import faang.school.postservice.message.event.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -42,15 +40,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-
 @Setter
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
+
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
-    private final UserServiceClient userServiceClient;
     private final CommentMapper commentMapper;
     private final UserContext userContext;
     private final ImageService imageService;
@@ -58,8 +55,7 @@ public class CommentServiceImpl implements CommentService {
     private final ExecutorService moderationExecutor;
     private final ModerationDictionary moderationDictionary;
     private final UsersBanPublisher usersBanPublisher;
-    private final UserMapper userMapper;
-    private final PostCommentProducer postCommentProducer;
+    private final PostCommentEventProducer postCommentEventProducer;
     private final UserService userService;
 
     @Value("${comment.batchSize}")
@@ -80,7 +76,7 @@ public class CommentServiceImpl implements CommentService {
                 savedComment.getPost().getId(),
                 savedComment.getId(),
                 savedComment.getCreatedAt());
-        postCommentProducer.produceCommentPostEventAsync(savedComment);
+        postCommentEventProducer.produceCommentPostEventAsync(savedComment);
         return commentMapper.toCommentResponseDto(savedComment);
     }
 

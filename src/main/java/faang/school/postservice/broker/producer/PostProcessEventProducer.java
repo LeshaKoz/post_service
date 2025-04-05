@@ -64,5 +64,4 @@ public class PostProcessEventProducer extends KafkaProducerService {
         super.sendMessage(postProcessEvent);
         log.info("Sending PostProcessEvent to message broker. Post : {}", postId);
     }
-
 }

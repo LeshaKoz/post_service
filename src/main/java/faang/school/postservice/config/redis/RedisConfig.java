@@ -27,6 +27,7 @@ import java.time.Duration;
 @Configuration
 @RequiredArgsConstructor
 public class RedisConfig {
+
     private final RedisProperties redisProperties;
     private final ObjectMapper objectMapper;
 
@@ -117,5 +118,4 @@ public class RedisConfig {
                                 .serializeValuesWith(RedisSerializationContext.SerializationPair
                                         .fromSerializer(new GenericJackson2JsonRedisSerializer())));
     }
-
 }

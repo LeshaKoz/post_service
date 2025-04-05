@@ -1,6 +1,6 @@
 package faang.school.postservice.service.comment;
 
-import faang.school.postservice.broker.producer.PostCommentProducer;
+import faang.school.postservice.broker.producer.PostCommentEventProducer;
 import faang.school.postservice.broker.producer.PostEventProducer;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
@@ -96,7 +96,7 @@ public class CommentServiceTest {
     @Mock
     private UserService userService;
     @Mock
-    private PostCommentProducer postCommentProducer;
+    private PostCommentEventProducer postCommentEventProducer;
 
     private long authorId;
     private long commentId;
@@ -149,7 +149,6 @@ public class CommentServiceTest {
         commentService = new CommentServiceImpl(
                 commentRepository,
                 postRepository,
-                userServiceClient,
                 commentMapper,
                 userContext,
                 imageService,
@@ -157,10 +156,8 @@ public class CommentServiceTest {
                 null,
                 null,
                 usersBanPublisher,
-                userMapperImpl,
-                postCommentProducer,
+                postCommentEventProducer,
                 userService);
-
     }
 
     @Test

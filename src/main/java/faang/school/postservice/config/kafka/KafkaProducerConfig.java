@@ -101,5 +101,4 @@ public class KafkaProducerConfig {
             ProducerFactory<String, FeedHeaterEvent> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
-
 }

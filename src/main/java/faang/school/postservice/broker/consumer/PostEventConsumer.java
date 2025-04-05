@@ -24,7 +24,7 @@ public class PostEventConsumer {
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "postPublishEventContainerFactory")
     public void consume(PostPublicationEvent postPublicationEvent, Acknowledgment acknowledgment) {
-        CompletableFuture<Void> result = CompletableFuture.runAsync(() ->
+        CompletableFuture.runAsync(() ->
                                 feedService.processNewPost(
                                         postPublicationEvent.postId(),
                                         postPublicationEvent.followersIds()),

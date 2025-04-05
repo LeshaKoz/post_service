@@ -26,7 +26,7 @@ public class FeedHeaterEventConsumer {
             containerFactory = "feedHeaterEventContainerFactory")
     public void consume(FeedHeaterEvent feedHeaterEvent, Acknowledgment acknowledgment) {
         List<Long> userIds = feedHeaterEvent.userIds();
-        CompletableFuture<Void> result = CompletableFuture.runAsync(() ->
+        CompletableFuture.runAsync(() ->
                                 feedHeaterService.heatFeedByUsersList(userIds),
                         asyncTaskExecutor)
                 .thenAccept(res -> {

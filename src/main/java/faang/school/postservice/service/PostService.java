@@ -21,8 +21,6 @@ public interface PostService {
 
     PostResponseDto getPostWithCache(Long postId);
 
-    //FeedItemPostDto getPostForFeed(Long postId);
-
     void incrementPostLikesCounter(long postId);
 
     void decrementPostLikesCounter(long postId);

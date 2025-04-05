@@ -1,6 +1,6 @@
 package faang.school.postservice.service.like;
 
-import faang.school.postservice.broker.producer.PostLikeProducer;
+import faang.school.postservice.broker.producer.PostLikeEventProducer;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
@@ -37,7 +37,7 @@ public class LikeServiceImpl implements LikeService {
     private final CommentRepository commentRepository;
     private final LikeServiceValidator likeServiceValidator;
     private final UserServiceClient userServiceClient;
-    private final PostLikeProducer postLikeProducer;
+    private final PostLikeEventProducer postLikeEventProducer;
     private final LikeEventPublisher likeEventPublisher;
     private final LikeMapper likeMapper;
     @Value("${like-service.batch-size}")
@@ -64,7 +64,7 @@ public class LikeServiceImpl implements LikeService {
 
         LikeEventDto likeEventDto = likeMapper.toLikeEventDto(savedLike);
         likeEventPublisher.publish(likeEventDto);
-        postLikeProducer.produceLikePostEventAsync(postId);
+        postLikeEventProducer.produceLikePostEventAsync(postId);
 
         log.info("UserId = {} successfully liked postId = {} with {} ", userId, postId, savedLike);
     }

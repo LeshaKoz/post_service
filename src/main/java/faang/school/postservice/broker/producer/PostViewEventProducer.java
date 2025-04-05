@@ -12,13 +12,13 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class PostViewProducer extends KafkaProducerService {
+public class PostViewEventProducer extends KafkaProducerService {
 
-    public PostViewProducer(KafkaTemplate<String, PostViewEvent> kafkaTemplate,
-                            ObjectMapper objectMapper,
-                            CustomKafkaProperties customKafkaProperties,
-                            UserMapper userMapper,
-                            @Value("${spring.kafka.topic.post-views-topic}") String topic) {
+    public PostViewEventProducer(KafkaTemplate<String, PostViewEvent> kafkaTemplate,
+                                 ObjectMapper objectMapper,
+                                 CustomKafkaProperties customKafkaProperties,
+                                 UserMapper userMapper,
+                                 @Value("${spring.kafka.topic.post-views-topic}") String topic) {
         super(kafkaTemplate, objectMapper, topic);
     }
 

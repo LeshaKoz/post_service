@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 public class PostProcessEventConsumer {
+
     private final FeedService feedService;
     private final AsyncTaskExecutor asyncTaskExecutor;
 
@@ -23,7 +24,7 @@ public class PostProcessEventConsumer {
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "postPublishEventContainerFactory")
     public void consume(PostProcessEvent postProcessEvent, Acknowledgment acknowledgment) {
-        CompletableFuture<Void> result = CompletableFuture.runAsync(() ->
+        CompletableFuture.runAsync(() ->
                                 feedService.subProcessNewPost(
                                         postProcessEvent.postId(),
                                         postProcessEvent.followersIds()),

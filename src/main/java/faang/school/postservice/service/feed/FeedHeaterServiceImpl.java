@@ -1,6 +1,6 @@
 package faang.school.postservice.service.feed;
 
-import faang.school.postservice.broker.producer.FeedHeaterProducer;
+import faang.school.postservice.broker.producer.FeedHeaterEventProducer;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.config.feed.NewsFeedProperties;
 import faang.school.postservice.dto.post.PostResponseDto;
@@ -25,7 +25,7 @@ public class FeedHeaterServiceImpl implements FeedHeaterService {
 
     private final NewsFeedProperties newsFeedProperties;
     private final UserService userService;
-    private final FeedHeaterProducer feedHeaterProducer;
+    private final FeedHeaterEventProducer feedHeaterEventProducer;
     private final FeedService feedService;
     private final PostService postService;
     private final AsyncTaskExecutor asyncTaskExecutor;
@@ -41,7 +41,7 @@ public class FeedHeaterServiceImpl implements FeedHeaterService {
             usersBatches.forEach(batch -> {
                 try {
                     if (CollectionUtils.isNotEmpty(batch)) {
-                        feedHeaterProducer.produceFeedHeaterEventAsync(batch);
+                        feedHeaterEventProducer.produceFeedHeaterEventAsync(batch);
                     }
                 } catch (Exception e) {
                     log.error("Failed to process batch: {}", batch, e);
@@ -77,7 +77,6 @@ public class FeedHeaterServiceImpl implements FeedHeaterService {
                             });
                 }
             }
-
         }
     }
 }

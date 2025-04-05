@@ -12,11 +12,11 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class FeedHeaterProducer extends KafkaProducerService {
+public class FeedHeaterEventProducer extends KafkaProducerService {
 
-    public FeedHeaterProducer(KafkaTemplate<String, FeedHeaterEvent> kafkaTemplate,
-                              ObjectMapper objectMapper,
-                              @Value("${spring.kafka.topic.feed-heater-topic}") String topicName) {
+    public FeedHeaterEventProducer(KafkaTemplate<String, FeedHeaterEvent> kafkaTemplate,
+                                   ObjectMapper objectMapper,
+                                   @Value("${spring.kafka.topic.feed-heater-topic}") String topicName) {
         super(kafkaTemplate, objectMapper, topicName);
     }
 

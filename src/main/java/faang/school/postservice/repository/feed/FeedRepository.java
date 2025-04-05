@@ -24,7 +24,7 @@ public class FeedRepository {
     private final RedisTemplate<String, FeedItemDto> FeedItemRedisTemplate;
 
     public Set<FeedItemDto> feedItems(Long userId, int pageNum) {
-
+        //TODO доделать пагинацию фида
         final long pageSize = newsFeedProperties.pageSize();
         String zsetKey = getFeedItemHashKey(userId);
 

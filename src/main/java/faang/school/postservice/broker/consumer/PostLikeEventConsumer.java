@@ -25,7 +25,7 @@ public class PostLikeEventConsumer {
             containerFactory = "postLikeEventContainerFactory")
     public void consume(PostLikeEvent postLikeEvent, Acknowledgment acknowledgment) {
         long postId = postLikeEvent.postId();
-        CompletableFuture<Void> result = CompletableFuture.runAsync(() ->
+        CompletableFuture.runAsync(() ->
                                 postService.incrementPostLikesCounter(postId),
                         asyncTaskExecutor)
                 .thenAccept(res -> {

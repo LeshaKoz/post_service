@@ -1,6 +1,6 @@
 package faang.school.postservice.controller.post;
 
-import faang.school.postservice.broker.producer.PostViewProducer;
+import faang.school.postservice.broker.producer.PostViewEventProducer;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
 import faang.school.postservice.dto.post.PostFilterDto;
@@ -29,7 +29,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
-    private final PostViewProducer postViewProducer;
+    private final PostViewEventProducer postViewEventProducer;
     private final UserContext userContext;
 
     @PostMapping("/")
@@ -56,7 +56,7 @@ public class PostController {
     public PostResponseDto getPost(@PathVariable("id") Long postId) {
         Long visitorId = userContext.getUserId();
         PostResponseDto postResponseDto = postService.getPostWithCache(postId);
-        postViewProducer.produceViewPostEventAsync(postId, visitorId);
+        postViewEventProducer.produceViewPostEventAsync(postId, visitorId);
         return postResponseDto;
     }
 
@@ -70,8 +70,6 @@ public class PostController {
                 .projectId(projectId)
                 .isPublished(isPublished)
                 .build();
-
         return postService.findAllByFilter(postFilter);
     }
-
 }

@@ -1,7 +1,6 @@
 package faang.school.postservice.broker.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.config.kafka.CustomKafkaProperties;
 import faang.school.postservice.dto.post.PostCommentEvent;
 import faang.school.postservice.model.Comment;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +11,11 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class PostCommentProducer extends KafkaProducerService {
+public class PostCommentEventProducer extends KafkaProducerService {
 
-    public PostCommentProducer(KafkaTemplate<String, PostCommentEvent> kafkaTemplate,
-                               ObjectMapper objectMapper,
-                               CustomKafkaProperties customKafkaProperties,
-                               @Value("${spring.kafka.topic.post-comments-topic}") String topic) {
+    public PostCommentEventProducer(KafkaTemplate<String, PostCommentEvent> kafkaTemplate,
+                                    ObjectMapper objectMapper,
+                                    @Value("${spring.kafka.topic.post-comments-topic}") String topic) {
         super(kafkaTemplate, objectMapper, topic);
     }
 
@@ -40,5 +38,4 @@ public class PostCommentProducer extends KafkaProducerService {
         super.sendMessage(postCommentEvent);
         log.info("Sending PostCommentEvent to message broker. Post : {}", postId);
     }
-
 }

@@ -1,7 +1,6 @@
 package faang.school.postservice.controller.feed;
 
 import faang.school.postservice.dto.post.PostResponseDto;
-import faang.school.postservice.service.feed.FeedHeaterService;
 import faang.school.postservice.service.feed.FeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,7 +22,6 @@ import java.util.Set;
 public class FeedController {
 
     private final FeedService feedService;
-    private final FeedHeaterService feedHeaterService;
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserFeed(@PathVariable("userId") Integer userId,
@@ -44,11 +41,5 @@ public class FeedController {
                             "message", e.getMessage()
                     ));
         }
-    }
-
-    @PostMapping("/heat")
-    public ResponseEntity<?> heatUserFeed() {
-        feedHeaterService.heatFeed();
-        return ResponseEntity.ok().build();
     }
 }

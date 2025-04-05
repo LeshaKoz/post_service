@@ -27,13 +27,6 @@ public interface PostMapper {
 
     PostDto toPostDto(Post post);
 
-    //FeedItemPostDto toFeedItemPostDto(PostResponseDto postResponseDto);
-
-    //@Mapping(target = "comments", source = "comments")
-    //FeedItemPostDto toFeedItemPostDto(FeedItemPostDto feedItemPostDto, LinkedHashSet<FeedItemCommentDto> comments);
-
     @Mapping(target = "comments", source = "comments")
     PostResponseDto toPostResponseDto(PostResponseDto postResponseDto, LinkedHashSet<FeedItemCommentDto> comments);
-
-
 }

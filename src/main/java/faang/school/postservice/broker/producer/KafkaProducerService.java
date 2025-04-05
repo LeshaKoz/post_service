@@ -30,7 +30,6 @@ public abstract class KafkaProducerService<T> {
     protected void sendSerializedMessage(T message) {
 
         CompletableFuture<SendResult<String, T>> future = kafkaTemplate.send(topicName, message);
-
         future.whenComplete((result, ex) -> {
             if (ex != null) {
                 log.error("Failed to send message {} to kafka topic {}. Error: {}",
@@ -46,6 +45,4 @@ public abstract class KafkaProducerService<T> {
             }
         });
     }
-
-
 }

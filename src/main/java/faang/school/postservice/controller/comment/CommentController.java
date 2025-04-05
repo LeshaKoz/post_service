@@ -33,6 +33,7 @@ import java.util.List;
 @RequestMapping("/comments")
 @Tag(name = "Comment Controller", description = "API for managing comments and uploading images")
 public class CommentController {
+
     private final CommentService commentService;
 
     @PostMapping

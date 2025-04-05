@@ -83,7 +83,6 @@ public class PostServiceImpl implements PostService {
                 redisProperties.cache().postTtlMinutes(),
                 TimeUnit.MINUTES
         );
-
         postEventProducer.producePublishPostEventAsync(userContext.getUserId(), publishedPost);
         return postMapper.toPostResponseDto(publishedPost);
     }
@@ -91,6 +90,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void publishScheduledPosts() {
+        // TODO переделать логику, чтобы по ним также заполнялся feed
         PostFilterDto postFilterDto = PostFilterDto.builder()
                 .isPublished(false)
                 .isDeleted(false)
@@ -102,12 +102,12 @@ public class PostServiceImpl implements PostService {
         postBatches.stream()
                 .map(this::preparePostList)
                 .map(postsBatch -> CompletableFuture.runAsync(() -> {
-                    postRepository.saveAll(postsBatch);
-                }, executorService).exceptionally(error -> {
-                    log.error("Error processing scheduled posts", error);
-                    throw new RuntimeException("Failed to process scheduled posts", error);
-                })).forEach(CompletableFuture::join);
-        // TODO наверное тоже стоит отослать сообщение в кафку о новом посте
+                            postRepository.saveAll(postsBatch);
+                        }, executorService)
+                        .exceptionally(error -> {
+                            log.error("Error processing scheduled posts", error);
+                            throw new RuntimeException("Failed to process scheduled posts", error);
+                        })).forEach(CompletableFuture::join);
     }
 
     @Override
@@ -141,7 +141,6 @@ public class PostServiceImpl implements PostService {
         String cacheKey = redisProperties.cache().postCacheName() + postId;
         postRedisTemplate.delete(cacheKey);
         log.info("Evicted cache for post id: {}", postId);
-
     }
 
     @Override

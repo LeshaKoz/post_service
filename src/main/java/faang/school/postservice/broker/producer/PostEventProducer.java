@@ -2,7 +2,6 @@ package faang.school.postservice.broker.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.config.context.UserContext;
-import faang.school.postservice.config.kafka.CustomKafkaProperties;
 import faang.school.postservice.dto.post.PostPublicationEvent;
 import faang.school.postservice.dto.subscription.SubscriptionUserDto;
 import faang.school.postservice.model.Post;
@@ -23,7 +22,6 @@ public class PostEventProducer extends KafkaProducerService {
     private final UserContext userContext;
 
     public PostEventProducer(KafkaTemplate<String, PostPublicationEvent> kafkaTemplate,
-                             CustomKafkaProperties customKafkaProperties,
                              ObjectMapper objectMapper,
                              UserService userService,
                              UserContext userContext,

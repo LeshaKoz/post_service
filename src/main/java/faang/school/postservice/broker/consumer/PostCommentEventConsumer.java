@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 public class PostCommentEventConsumer {
+
     private final PostService postService;
     private final AsyncTaskExecutor asyncTaskExecutor;
 
@@ -24,7 +25,7 @@ public class PostCommentEventConsumer {
             containerFactory = "postCommentEventContainerFactory")
     public void consume(PostCommentEvent postCommentEvent, Acknowledgment acknowledgment) {
         long postId = postCommentEvent.postId();
-        CompletableFuture<Void> result = CompletableFuture.runAsync(() ->
+        CompletableFuture.runAsync(() ->
                                 postService.addCommentToHash(postId, postCommentEvent),
                         asyncTaskExecutor)
                 .thenAccept(res -> {

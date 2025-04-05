@@ -36,7 +36,6 @@ public abstract class CommentMapper {
         this.postMapper = postMapper;
     }
 
-
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "likes", ignore = true)
     public abstract Comment toCommentEntity(CommentRequestDto commentRequestDto);

@@ -44,8 +44,7 @@ public class FeedServiceImpl implements FeedService {
 
         return feedItems.stream()
                 .map(feedItemDto -> {
-                    PostResponseDto postResponseDto = postService.getPostWithCache(feedItemDto.postId());
-                    return postResponseDto;
+                    return postService.getPostWithCache(feedItemDto.postId());
                 })
                 .collect(Collectors.toSet());
     }
@@ -113,8 +112,6 @@ public class FeedServiceImpl implements FeedService {
         feedRepository.addPostToFollowersFeeds(partFollowersIds, filledPost);
         log.info("Existing post {} partially processed", postId);
     }
-
-
 }
 
 

@@ -11,6 +11,7 @@ import faang.school.postservice.mapper.user.UserMapper;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -66,15 +67,14 @@ public class UserServiceImpl implements UserService {
         return getFollowers(userId);
     }
 
+    @Cacheable("followers")
     public List<SubscriptionUserDto> getFollowers(long userId) {
         return userServiceClient.getFollowers(userId);
     }
 
     @Override
     public List<UserResponseDto> getAllUsers() {
-        userContext.setUserId(0L); // предположим некий системный пользователь
+        userContext.setUserId(0L); // предположим, что это некий системный пользователь для обращения к feign client
         return userServiceClient.getAllUsers();
     }
-
-
 }
