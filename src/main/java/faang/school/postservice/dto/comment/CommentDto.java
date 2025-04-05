@@ -28,5 +28,6 @@ public class CommentDto {
     private LocalDateTime updatedAt;
     private String largeImageFileKey;
     private String smallImageFileKey;
+    @Builder.Default
     private Boolean verified = false;
 }

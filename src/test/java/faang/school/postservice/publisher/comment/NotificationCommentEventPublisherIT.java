@@ -6,6 +6,9 @@ import faang.school.postservice.config.kafka.KafkaTestConfig;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.event.NotificationCommentEvent;
+import faang.school.postservice.service.CommentService;
+import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.ScheduledPostPublisher;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -14,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -29,10 +33,16 @@ import java.util.Collections;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@SpringBootTest
 @ActiveProfiles("test")
 @ContextConfiguration(classes = KafkaTestConfig.class)
 @Testcontainers
+@SpringBootTest(
+        properties = {
+                "spring.redis.host=localhost",
+                "spring.redis.port=6379",
+                "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration"
+        }
+)
 public class NotificationCommentEventPublisherIT {
 
     @Value("${spring.kafka.topics.notification-comment-topic.name}")
@@ -46,6 +56,12 @@ public class NotificationCommentEventPublisherIT {
 
     @Autowired
     private Consumer<String, String> consumer;
+
+    @MockBean
+    private PostService postService;
+
+    @MockBean
+    private CommentService commentService;
 
     private Post post;
     private Comment comment;

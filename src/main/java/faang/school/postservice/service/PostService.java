@@ -3,6 +3,7 @@ package faang.school.postservice.service;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,12 +19,13 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-
+@RequiredArgsConstructor
 @Service
 @Slf4j
 public class PostService {
@@ -32,6 +34,8 @@ public class PostService {
     private final ExecutorService executorService;
     private final AsyncModerationService asyncModerationService;
     private final SpellCheckerService spellCheckerService;
+    private final PostCacheService postCacheService;
+
     @Value("${moderation.threadSize}")
     private int threadSize;
 
@@ -39,12 +43,14 @@ public class PostService {
                        InternalServices internalServices,
                        ThreadPoolTaskExecutor publishingThreadPool,
                        AsyncModerationService asyncModerationService,
-                       SpellCheckerService spellCheckerService) {
+                       SpellCheckerService spellCheckerService,
+                       PostCacheService postCacheService) {
         this.postRepository = postRepository;
         this.internalServices = internalServices;
         this.asyncModerationService = asyncModerationService;
         this.executorService = publishingThreadPool.getThreadPoolExecutor();
         this.spellCheckerService = spellCheckerService;
+        this.postCacheService = postCacheService;
     }
 
     @Transactional
@@ -67,7 +73,11 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        return postRepository.save(post);
+        Post result = postRepository.save(post);
+
+        postCacheService.cachePost(result);
+
+        return result;
     }
 
     @Transactional
@@ -79,6 +89,7 @@ public class PostService {
                 || !Objects.equals(originalPost.getProjectId(), post.getProjectId())) {
             throw new DataValidationException("Post author cannot be changed!");
         }
+
         return postRepository.save(post);
     }
 
@@ -88,11 +99,15 @@ public class PostService {
                 .orElseThrow(() -> new DataValidationException("Specified post not found. Id:" + postId));
         post.setDeleted(true);
         postRepository.save(post);
+        postCacheService.removePostFromCache(postId);
     }
 
     public Post get(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new DataValidationException("Specified post not found. Id:" + postId));
+        Optional<Post> cachedPost = postCacheService.getCachedPost(postId);
+
+        return cachedPost.orElseGet(() -> postRepository.findById(postId)
+                .orElseThrow(() -> new DataValidationException("Specified post not found. Id:" + postId)));
+
     }
 
     public List<Post> getDraftsByAuthorId(Long userId) {
