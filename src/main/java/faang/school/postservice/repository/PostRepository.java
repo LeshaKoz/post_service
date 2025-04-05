@@ -42,4 +42,13 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     List<Long> findUserIdsToBanWithUnverifiedPosts(int maxPostsToBan);
 
     Page<Post> findByPublishedFalse(Pageable pageable);
+
+    @Query(value = "SELECT s.follower_id FROM subscription s WHERE s.followee_id = :followeeId", nativeQuery = true)
+    List<Long> findAllAuthorSubscribers(@Param("followeeId") Long authorId);
+
+    @Query(value = "SELECT s.follower_id FROM subscription s WHERE s.followee_id = :followeeId", nativeQuery = true)
+    List<Long> findAuthorSubscribers(@Param("followeeId") Long authorId, Pageable pageable);
+
+    @Query(value = "SELECT Count(s) FROM subscription s WHERE s.followee_id = :followeeId", nativeQuery = true)
+    Long findAuthorSubscribersCount(@Param("followeeId") Long authorId);
 }

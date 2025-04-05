@@ -6,6 +6,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.AiModerationService;
 import faang.school.postservice.service.AsyncModerationService;
 import faang.school.postservice.service.InternalServices;
+import faang.school.postservice.service.KafkaPostProducer;
 import faang.school.postservice.service.PostCacheService;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.service.SpellCheckerService;
@@ -75,6 +76,9 @@ public class PostServiceTest {
 
     @Mock
     private SpellCheckerService spellCheckerService;
+
+    @Mock
+    private KafkaPostProducer kafkaPostProducer;
 
     @Mock
     private PostCacheService postCacheService;
@@ -371,6 +375,7 @@ public class PostServiceTest {
                 publishingThreadPool,
                 asyncModerationService,
                 spellCheckerService,
+                kafkaPostProducer,
                 postCacheService);
 
         doAnswer(invocation -> {
