@@ -3,6 +3,7 @@ package faang.school.postservice.service;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exceptions.PostAlreadyPublishedException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Album;
@@ -21,11 +22,21 @@ import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -40,6 +51,54 @@ public class PostService {
     private final AdRepository adRepository;
     private final ResourceRepository resourceRepository;
     private final AlbumRepository albumRepository;
+    private final ExecutorService executorService;
+
+    @Value("$.{app.batch.size:1000}")
+    private final int batchSize;
+
+    @Value("$.{app.thread-pool.publish-timeout:3}")
+    private final int threadTimeout;
+
+    public void publishScheduledPosts() {
+        List<Post> readyPosts = postRepository.findReadyToPublish();
+        if (readyPosts.isEmpty()) {
+            log.info("Нет постов для публикации.");
+            return;
+        }
+
+        List<List<Post>> batches = partitionList(readyPosts, batchSize);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (List<Post> batch : batches) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    publishBatch(batch);
+                } catch (DataValidationException e) {
+                    log.error("Ошибка валидации в списке: {}", e.getMessage());
+                    throw new RuntimeException(e);
+                } catch (Exception e) {
+                    log.error("Ошибка публикации списка: {}", e.getMessage());
+                    throw new RuntimeException(e);
+                }
+            }, executorService);
+
+            futures.add(future);
+        }
+
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .get(threadTimeout, TimeUnit.MINUTES);
+        } catch (TimeoutException e) {
+            log.warn("Превышено время ожидания публикации");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Поток был прерван во время публикации");
+            throw new RuntimeException("Публикация прервана", e);
+        } catch (ExecutionException e) {
+            log.error("Ошибка при выполнении публикации", e.getCause());
+            throw new RuntimeException("Ошибка публикации постов", e.getCause());
+        }
+    }
 
     public PostDto create(PostDto postDto) {
         validateContent(postDto);
@@ -178,6 +237,31 @@ public class PostService {
     private Post takePost(Long postId) {
         return postRepository.findById(postId).orElseThrow(
                 () -> new EntityNotFoundException("Post not found"));
+    }
+
+    private <T> List<List<T>> partitionList(List<T> list, int batchSize) {
+        return IntStream.range(0, (list.size() + batchSize - 1) / batchSize)
+                .mapToObj(i -> list.subList(
+                        i * batchSize, Math.min((i + 1) * batchSize, list.size())
+                ))
+                .toList();
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    private void publishBatch(List<Post> batch) {
+        if (batch == null || batch.isEmpty()) {
+            log.error("в списке не содержится постов");
+            throw new DataValidationException("список постов пуст");
+        }
+
+        for (Post post : batch) {
+            post.setPublished(true);
+            post.setPublishedAt(LocalDateTime.now());
+        }
+
+        postRepository.saveAll(batch);
+        log.info("Опубликовано {} постов с {} по {} id.",
+                batch.size(), batch.get(0).getId(), batch.get(batch.size() - 1).getId());
     }
 }
 
