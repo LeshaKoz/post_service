@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.event.PostEvent;
+import faang.school.postservice.event.PostViewEvent;
 import faang.school.postservice.exception.FeedStorageException;
 import faang.school.postservice.exception.InvalidPostEventException;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,11 @@ public class FeedService {
         } finally {
             lock.unlock();
         }
+    }
+
+    public void incrementViewCache(PostViewEvent event, Long views){
+        String key = "posts:" + event.postId() + ":views";
+        redisTemplate.opsForValue().set(key, views);
     }
 
     private void validatePostEvent(PostEvent postEvent) {

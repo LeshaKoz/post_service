@@ -19,6 +19,9 @@ public class KafkaTopicConfig {
     @Value(value = "${spring.data.kafka.topic.post.name}")
     private String postTopic;
 
+    @Value(value = "${spring.data.kafka.topic.post-views.name}")
+    private String postViewTopic;
+
     @Value(value = "${spring.data.kafka.topic.post.partitions}")
     private int postTopicNumPartitions;
 
@@ -35,5 +38,10 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic postsTopic() {
         return new NewTopic(postTopic, postTopicNumPartitions, postReplicationFactor);
+    }
+
+    @Bean
+    public NewTopic postViewTopic() {
+        return new NewTopic(postViewTopic, postTopicNumPartitions, postReplicationFactor);
     }
 }

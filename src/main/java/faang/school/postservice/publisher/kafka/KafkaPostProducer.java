@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class KafkaPostProducer extends AbstractEventProducer<PostCreatedEvent> {
 
-    public KafkaPostProducer(KafkaTemplate<String, Object> kafkaTemplate, NewTopic post) {
-        super(kafkaTemplate, post);
+    public KafkaPostProducer(KafkaTemplate<String, Object> kafkaTemplate, NewTopic postsTopic) {
+        super(kafkaTemplate, postsTopic);
     }
 
     @Override

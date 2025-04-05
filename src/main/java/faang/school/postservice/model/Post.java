@@ -1,21 +1,7 @@
 package faang.school.postservice.model;
 
 import faang.school.postservice.model.ad.Ad;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -96,4 +82,10 @@ public class Post {
     @CollectionTable(name = "post_file_key", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "file_key")
     private List<String> fileKeys = new ArrayList<>();
+
+    @Column(name = "views")
+    private Long views;
+
+    @Version
+    private long version;
 }

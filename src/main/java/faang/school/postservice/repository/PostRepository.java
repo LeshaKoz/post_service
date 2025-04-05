@@ -1,9 +1,11 @@
 package faang.school.postservice.repository;
 
 import faang.school.postservice.model.Post;
+import feign.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -25,4 +27,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE p.verifiedDate IS NULL")
     Page<Post> findUnverifiedPosts(Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.views = p.views + 1 WHERE p.id = :postId AND p.published = true")
+    Long incrementViews(@Param("postId") long postId);
 }

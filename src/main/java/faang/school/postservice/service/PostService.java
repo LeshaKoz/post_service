@@ -162,4 +162,9 @@ public class PostService {
             page++;
         } while (posts.size() == batchSize);
     }
+
+    @Transactional
+    public Long incrementView(long postId){
+        return postRepository.incrementViews(postId);
+    }
 }
