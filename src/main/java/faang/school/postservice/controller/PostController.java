@@ -29,7 +29,7 @@ public class PostController {
     private final PostService postService;
     private final ResourceService resourceService;
 
-    @PostMapping("/")
+    @PostMapping
     public PostResponseDto createPostDraft(@RequestBody PostCreateRequestDto postCreateRequestDto) {
         return postService.createPostDraft(postCreateRequestDto);
     }

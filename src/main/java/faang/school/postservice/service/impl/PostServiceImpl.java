@@ -1,15 +1,18 @@
 package faang.school.postservice.service.impl;
 
-import faang.school.postservice.dto.resource.ResourceDtoRs;
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostCreateRequestDto;
+import faang.school.postservice.dto.post.PostCreatedEvent;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateRequestDto;
+import faang.school.postservice.dto.resource.ResourceDtoRs;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.UploadFileException;
 import faang.school.postservice.filter.post.PostSpecificationFilter;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.kafka.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.service.ResourceService;
@@ -42,6 +45,8 @@ public class PostServiceImpl implements PostService {
     private final ExecutorService executorService;
     private final ResourceService resourceService;
     private final FileValidator fileValidator;
+    private final KafkaPostProducer kafkaPostProducer;
+    private final UserServiceClient userServiceClient;
 
     @Override
     public PostResponseDto createPostDraft(PostCreateRequestDto postCreateRequestDto) {
@@ -49,6 +54,16 @@ public class PostServiceImpl implements PostService {
         Post post = postMapper.toPostEntity(postCreateRequestDto);
         Post draftPost = postRepository.save(post);
         log.info("Post draft created, id = {}", draftPost.getId());
+
+        List<Long> subscriberIds = userServiceClient.getFollowerIds(draftPost.getAuthorId());
+        PostCreatedEvent event = PostCreatedEvent.builder()
+                .postId(draftPost.getId())
+                .authorId(draftPost.getAuthorId())
+                .subscriberIds(subscriberIds)
+                .build();
+        log.info("subscriberIds size = {}", event.getSubscriberIds().size());
+
+        kafkaPostProducer.sendEvent(event);
         return postMapper.toPostResponseDto(draftPost);
     }
 
