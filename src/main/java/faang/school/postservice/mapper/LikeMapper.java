@@ -11,7 +11,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface LikeMapper {
 
-    @Mapping(target = "postId", source = "post")
+    @Mapping(target = "postId", source = "post.id")
     LikeEvent toEvent(Like postEvent);
 
     default Long toId(Identifiable identifiable) {

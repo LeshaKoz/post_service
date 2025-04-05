@@ -49,7 +49,7 @@ public class RedisConfig {
     public RedisTemplate<Long, Long> redisFeedTemplate(ObjectMapper objectMapper) {
         RedisTemplate<Long, Long> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory());
-        template.setKeySerializer(new StringRedisSerializer());
+        template.setKeySerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
         return template;
     }
