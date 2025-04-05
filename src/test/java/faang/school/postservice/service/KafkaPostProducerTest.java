@@ -61,31 +61,32 @@ public class KafkaPostProducerTest {
         post.setAuthorId(authorId);
 
         List<Long> subscriberIds = List.of(3L, 4L, 5L);
+        when(postRepository.findAuthorSubscribersCount(eq(authorId))).thenReturn(3L);
         when(postRepository.findAuthorSubscribers(eq(authorId), any(Pageable.class)))
                 .thenReturn(subscriberIds.subList(0, 2))
-                .thenReturn(subscriberIds.subList(2, 3))
-                .thenReturn(Collections.emptyList());
-        when(objectMapper.writeValueAsString(any(PostCreatedEvent.class))).thenReturn("{\"json\":\"content\"}");
+                .thenReturn(subscriberIds.subList(2, 3));
+        when(objectMapper.writeValueAsString(any(PostCreatedEvent.class)))
+                .thenReturn("{\"json\":\"content\"}");
 
         kafkaPostProducer.publishPostCreationEvent(post);
 
         verify(kafkaTemplate, times(2)).send(eq("publish_post_topic"), messageCaptor.capture());
         verify(objectMapper, times(2)).writeValueAsString(any(PostCreatedEvent.class));
-        verify(postRepository, times(3)).findAuthorSubscribers(eq(authorId), any(Pageable.class));
-    }
+        verify(postRepository, times(1)).findAuthorSubscribersCount(eq(authorId));
+        verify(postRepository, times(2)).findAuthorSubscribers(eq(authorId), any(Pageable.class));    }
 
     @Test
     void shouldHandleJsonProcessingException() throws JsonProcessingException {
+        Long authorId = 2L;
         Post post = new Post();
         post.setId(1L);
-        post.setAuthorId(2L);
+        post.setAuthorId(authorId);
 
         List<Long> subscriberIds = List.of(3L, 4L, 5L);
-        when(postRepository.findAuthorSubscribers(eq(post.getAuthorId()), any(Pageable.class)))
+        when(postRepository.findAuthorSubscribersCount(eq(authorId))).thenReturn(3L);
+        when(postRepository.findAuthorSubscribers(eq(authorId), any(Pageable.class)))
                 .thenReturn(subscriberIds.subList(0, 2))
-                .thenReturn(subscriberIds.subList(2, 3))
-                .thenReturn(Collections.emptyList());
-
+                .thenReturn(subscriberIds.subList(2, 3));
         when(objectMapper.writeValueAsString(any(PostCreatedEvent.class)))
                 .thenThrow(new JsonProcessingException("Error processing JSON") {});
 

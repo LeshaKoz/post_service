@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -34,48 +35,52 @@ public class KafkaPostProducer {
     private int batchSize;
 
     public void publishPostCreationEvent(Post post) {
-        List<Long> allSubscribers = fetchSubscriberIds(post.getAuthorId());
+        int batchesCount = countSubscribersPages(post.getAuthorId());
+        List<Long> allSubscribers = fetchSubscriberIds(post.getAuthorId(), batchesCount);
         List<List<Long>> batches = partitionSubscriberIds(allSubscribers);
-        int totalBatches = batches.size();
 
-        for (int currentBatch = 0; currentBatch < totalBatches; currentBatch++) {
-            List<Long> subscriberBatch = batches.get(currentBatch);
-            boolean isLastBatch = currentBatch == totalBatches - 1;
-
-            PostCreatedEvent event = createPostCreatedEvent(post, subscriberBatch, currentBatch + 1, totalBatches, isLastBatch);
-            sendEvent(event);
-        }
+        IntStream.range(0, batchesCount)
+                .forEach(currentBatch -> {
+                    List<Long> subscriberBatch = batches.get(currentBatch);
+                    PostCreatedEvent event = createPostCreatedEvent(
+                            post,
+                            subscriberBatch,
+                            currentBatch + 1,
+                            batchesCount
+                    );
+                    sendEvent(event);
+                });
     }
 
-    private List<Long> fetchSubscriberIds(Long authorId) {
-        List<Long> allSubscribers = new ArrayList<>();
-        int page = 0;
+    private int countSubscribersPages(Long authorId) {
+        Long subscribersCount = postRepository.findAuthorSubscribersCount(authorId);
+        return (int) Math.ceil((double) subscribersCount / batchSize);
+    }
 
-        while (true) {
-            Pageable pageable = PageRequest.of(page, batchSize);
-            List<Long> batch = postRepository.findAuthorSubscribers(authorId, pageable);
-            if (batch.isEmpty()) {
-                break;
-            }
-            allSubscribers.addAll(batch);
-            page++;
-        }
+    private List<Long> fetchSubscriberIds(Long authorId, int pagesCount) {
+        List<Long> result = IntStream.range(0, pagesCount)
+                .mapToObj( page -> {
+                    Pageable pageable = PageRequest.of(page, batchSize);
+                    return postRepository.findAuthorSubscribers(authorId, pageable);
+                })
+                .flatMap(List::stream)
+                .toList();
 
-        return allSubscribers;
+        return result;
     }
 
     private List<List<Long>> partitionSubscriberIds(List<Long> allSubscribers) {
         return ListUtils.partition(allSubscribers, batchSize);
     }
 
-    private PostCreatedEvent createPostCreatedEvent(Post post, List<Long> subscriberBatch, int currentBatch, int totalBatches, boolean isLastBatch) {
+    private PostCreatedEvent createPostCreatedEvent(Post post, List<Long> subscriberBatch,
+                                                    int currentBatch, int totalBatches) {
         return new PostCreatedEvent(
                 post.getId(),
                 post.getAuthorId(),
                 subscriberBatch,
                 currentBatch,
-                totalBatches,
-                isLastBatch
+                totalBatches
         );
     }
 
