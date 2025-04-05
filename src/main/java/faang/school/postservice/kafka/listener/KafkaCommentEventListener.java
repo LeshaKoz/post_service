@@ -26,11 +26,9 @@ public class KafkaCommentEventListener implements KafkaEventListener {
         try {
             log.info("Received post event: {}", commentEvent);
             commentEventService.addCommentToPostToFeed(commentEvent);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(String.format("Failed add comment with id = %d to post with id = %d",
-                    commentEvent.commentId(), commentEvent.postId()));
-        } finally {
             ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed add comment with id = {} to post with id = {}", commentEvent.commentId(), commentEvent.postId());
         }
     }
 }

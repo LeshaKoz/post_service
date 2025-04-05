@@ -30,10 +30,9 @@ public class KafkaPostEventListenerImpl implements KafkaEventListener {
         try {
             log.info("Received post event: {}", postEvent);
             postEventService.addPostsToFeed(postEvent);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(String.format("Failed add post with id = %d to feed", postEvent.postId()));
-        } finally {
             ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed add post with id = {}} to feed", postEvent.postId());
         }
     }
 }

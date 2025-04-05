@@ -25,10 +25,9 @@ public class KafkaPostViewEventListener implements KafkaEventListener {
         try {
             log.info("Received post event: {}", postViewEvent);
             postViewService.addViewToPost(postViewEvent);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(String.format("Failed add view to post with id = %d", postViewEvent.postId()));
-        } finally {
             ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed add view to post with id = {}}", postViewEvent.postId());
         }
     }
 }

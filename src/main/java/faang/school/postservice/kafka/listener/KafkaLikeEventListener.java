@@ -25,11 +25,9 @@ public class KafkaLikeEventListener implements KafkaEventListener {
         try {
             log.info("Received post event: {}", likeEvent);
             likeEventService.addLikeToPost(likeEvent);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(String.format("Failed add like with id = %d to post with id = %d",
-                    likeEvent.id(), likeEvent.postId()));
-        } finally {
             ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed add like with id = {} to post with id = {}", likeEvent.id(), likeEvent.postId());
         }
     }
 }
