@@ -1,4 +1,5 @@
 package faang.school.postservice.config.redis;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.dto.post.PostRedisDto;
 import faang.school.postservice.dto.user.UserRedisDto;

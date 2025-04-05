@@ -131,3 +131,6 @@ news-feed:
     feed: feed
     post: posts
   ttl: 600
+
+cache:
+  userAuthorTtl: 86400

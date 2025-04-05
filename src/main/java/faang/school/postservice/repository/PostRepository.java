@@ -1,11 +1,11 @@
 package faang.school.postservice.repository;
 
-import faang.school.postservice.dto.feed.FeedRedisDto;
 import faang.school.postservice.dto.user.UserRedisDto;
 import faang.school.postservice.model.Post;
-import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
@@ -14,20 +14,20 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByProjectId(long projectId);
 
     @Query("SELECT p " +
-        "FROM Post p " +
-        "LEFT JOIN FETCH p.likes " +
-        "WHERE p.projectId = :projectId")
+            "FROM Post p " +
+            "LEFT JOIN FETCH p.likes " +
+            "WHERE p.projectId = :projectId")
     List<Post> findByProjectIdWithLikes(long projectId);
 
     @Query("SELECT p " +
-        "FROM Post p " +
-        "LEFT JOIN FETCH p.likes " +
-        "WHERE p.authorId = :authorId")
+            "FROM Post p " +
+            "LEFT JOIN FETCH p.likes " +
+            "WHERE p.authorId = :authorId")
     List<Post> findByAuthorIdWithLikes(long authorId);
 
     @Query("SELECT p " +
-        "FROM Post p " +
-        "WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
+            "FROM Post p " +
+            "WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
 
     @Query(value = "SELECT id,username, email from users", nativeQuery = true)
@@ -35,4 +35,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query(nativeQuery = true, value = "SELECT follower_id FROM subscription WHERE followee_id = :authorId")
     List<Long> findFollowerIdsByFolloweeId(long authorId);
+
+    @Query(value = "SELECT id,username, email from users WHERE id = :authorId", nativeQuery = true)
+    UserRedisDto getUser(long authorId);
 }
