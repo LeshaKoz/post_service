@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,22 +38,6 @@ public class PostService {
 
     @Value("${moderation.threadSize}")
     private int threadSize;
-
-    public PostService(PostRepository postRepository,
-                       InternalServices internalServices,
-                       ThreadPoolTaskExecutor publishingThreadPool,
-                       AsyncModerationService asyncModerationService,
-                       SpellCheckerService spellCheckerService,
-                       PostCacheService postCacheService,
-                       UserCashService userCashService) {
-        this.postRepository = postRepository;
-        this.internalServices = internalServices;
-        this.asyncModerationService = asyncModerationService;
-        this.executorService = publishingThreadPool.getThreadPoolExecutor();
-        this.spellCheckerService = spellCheckerService;
-        this.postCacheService = postCacheService;
-        this.userCashService = userCashService;
-    }
 
     @Transactional
     public Post createDraft(Post post) {
