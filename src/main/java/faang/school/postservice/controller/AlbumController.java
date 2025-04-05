@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/albums")
@@ -139,11 +140,11 @@ public class AlbumController {
     }
 
     @PostMapping("/favourite/add/{albumId}")
-    public ResponseEntity<HttpStatus> addFavouriteAlbum(
+    public ResponseEntity<Map<String, Boolean>> addFavouriteAlbum(
             @RequestHeader("x-user-id") Long userId,
             @PathVariable Long albumId) {
         albumService.addFavouriteAlbum(userId, albumId);
-        return ResponseEntity.ok(HttpStatus.OK);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
     @DeleteMapping("/favourite/delete/{albumId}")

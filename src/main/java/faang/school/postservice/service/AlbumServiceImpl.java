@@ -8,6 +8,7 @@ import faang.school.postservice.dto.album.AlbumResponseDto;
 import faang.school.postservice.dto.album.AlbumUsersDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.AlbumAccessDeniedException;
+import faang.school.postservice.filter.album.AlbumFilter;
 import faang.school.postservice.filter.albumvisibility.AlbumVisibilityFilter;
 import faang.school.postservice.mapper.AlbumMapper;
 import faang.school.postservice.model.Album;
@@ -18,6 +19,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.album.AlbumValidator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -44,11 +47,13 @@ public class AlbumServiceImpl implements AlbumService {
     private final UserServiceClient userServiceClient;
     private final AlbumMapper albumMapper;
     private final PostRepository postRepository;
+    private final List<AlbumFilter> albumFilters;
 
     @Autowired
     public AlbumServiceImpl(UserServiceClient userServiceClient, AlbumMapper albumMapper,
                             PostRepository postRepository, AlbumRepository albumRepository,
-                            UserContext userContext, List<AlbumVisibilityFilter>  filters) {
+                            UserContext userContext, List<AlbumVisibilityFilter> filters,
+                            List<AlbumFilter> albumFilters) {
         this.userServiceClient = userServiceClient;
         this.albumMapper = albumMapper;
         this.postRepository = postRepository;
@@ -56,6 +61,7 @@ public class AlbumServiceImpl implements AlbumService {
         this.userContext = userContext;
         this.albumVisibilities = filters.stream()
                 .collect(toMap(AlbumVisibilityFilter::getAlbumVisibility, Function.identity()));
+        this.albumFilters = albumFilters;
     }
 
     @Override
@@ -179,11 +185,11 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     public List<AlbumDto> getAllAlbumsByAuthorIdWithFilters(long userId, AlbumFilterDto filters) {
-        return filteredAlbums(albumRepository.findByAuthorId(userId), filters);
+        return filterAlbums(albumRepository.findByAuthorId(userId), filters);
     }
 
     public List<AlbumDto> getAllAlbumsWithFilters(AlbumFilterDto filters) {
-        return filteredAlbums(albumRepository.findAllAlbums(), filters);
+        return filterAlbums(albumRepository.findAllAlbums(), filters);
     }
 
     @Transactional
@@ -201,21 +207,18 @@ public class AlbumServiceImpl implements AlbumService {
     }
 
     public List<AlbumDto> getFavouriteAlbumsByUserId(long userId, AlbumFilterDto filters) {
-        return filteredAlbums(albumRepository.findFavoriteAlbumsByUserId(userId), filters);
+        return filterAlbums(albumRepository.findFavoriteAlbumsByUserId(userId), filters);
     }
 
-    public List<AlbumDto> filteredAlbums(List<Album> albums, AlbumFilterDto filters) {
-        return albums.stream()
-                .filter(album -> filters.getTitle() == null || album.getTitle().contains(filters.getTitle()))
-                .filter(album -> {
-                    if (filters.getCreatedAt() == null) {
-                        return true;
-                    } else if (filters.getCreatedBefore() != null && filters.getCreatedBefore()) {
-                        return album.getCreatedAt().isBefore(filters.getCreatedAt());
-                    } else {
-                        return album.getCreatedAt().isAfter(filters.getCreatedAt());
-                    }
-                })
+    public List<AlbumDto> filterAlbums(@NotNull List<Album> albums, AlbumFilterDto filters) {
+        Stream<Album> filteredAlbums = albums.stream();
+
+        for (AlbumFilter albumFilter : albumFilters) {
+            if (albumFilter.isApplicable(filters)) {
+                filteredAlbums = albumFilter.apply(filteredAlbums, filters);
+            }
+        }
+        return filteredAlbums
                 .map(albumMapper::toAlbumDto)
                 .toList();
     }

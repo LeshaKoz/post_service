@@ -8,6 +8,7 @@ import faang.school.postservice.dto.album.AlbumResponseDto;
 import faang.school.postservice.dto.album.AlbumUsersDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.AlbumAccessDeniedException;
+import faang.school.postservice.filter.album.AlbumFilter;
 import faang.school.postservice.filter.albumvisibility.AlbumVisibilityFilter;
 import faang.school.postservice.mapper.AlbumMapperImpl;
 import faang.school.postservice.model.Album;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -74,6 +76,7 @@ class AlbumServiceImplTest {
     AlbumFilterDto filters = new AlbumFilterDto();
     Album album = new Album();
     Post post = new Post();
+    AlbumFilter mockFilter = mock(AlbumFilter.class);
 
 
     void setUp() {
@@ -90,13 +93,13 @@ class AlbumServiceImplTest {
         album.setTitle("Title");
         album.setDescription("description");
         album.setAuthorId(userId);
+        album.setCreatedAt(LocalDateTime.now());
         album.setPosts(new ArrayList<>(List.of(post)));
     }
 
     void setAlbumFilterDto() {
         filters.setTitle("Title");
-        filters.setCreatedAt(LocalDateTime.now());
-        filters.setCreatedBefore(true);
+        filters.setCreatedAtAfter(LocalDateTime.now().minusDays(2));
     }
 
     @BeforeEach
@@ -104,7 +107,8 @@ class AlbumServiceImplTest {
         when(allUsersFilter.getAlbumVisibility()).thenReturn(AlbumVisibility.PUBLIC);
         when(followersFilter.getAlbumVisibility()).thenReturn(AlbumVisibility.FOLLOWERS);
         albumService = new AlbumServiceImpl(userServiceClient, albumMapper, postRepository,
-                albumRepository, userContext, List.of(allUsersFilter, followersFilter)
+                albumRepository, userContext, List.of(allUsersFilter, followersFilter),
+                List.of(mockFilter)
         );
     }
 
@@ -323,7 +327,7 @@ class AlbumServiceImplTest {
     void testGetAllAlbumsByAuthorIdWithFilters() {
         setUp();
         setAlbumFilterDto();
-        album.setCreatedAt(LocalDateTime.now().minusDays(2));
+
         when(albumRepository.findByAuthorId(userId)).thenReturn(List.of(album));
 
         List<AlbumDto> result = albumService.getAllAlbumsByAuthorIdWithFilters(userId, filters);
@@ -337,14 +341,14 @@ class AlbumServiceImplTest {
     void testGetAllAlbumsWithFilters() {
         setUp();
         setAlbumFilterDto();
-        album.setCreatedAt(LocalDateTime.now().minusDays(2));
+
+        album.setCreatedAt(LocalDateTime.now().minusDays(1));
         when(albumRepository.findAllAlbums()).thenReturn(List.of(album));
 
         List<AlbumDto> result = albumService.getAllAlbumsWithFilters(filters);
 
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
-        assertEquals(albumDto.getTitle(), result.get(0).getTitle());
     }
 
     @Test

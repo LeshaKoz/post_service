@@ -65,4 +65,5 @@ public class AlbumValidator {
             throw new IllegalArgumentException(POST_EXIST_IN_ALBUM);
         }
     }
+
 }

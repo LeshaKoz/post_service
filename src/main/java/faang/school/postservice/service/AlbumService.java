@@ -41,6 +41,6 @@ public interface AlbumService {
 
     List<AlbumDto> getFavouriteAlbumsByUserId(long userId, AlbumFilterDto filters);
 
-    List<AlbumDto> filteredAlbums(List<Album> albums, AlbumFilterDto filters);
+    List<AlbumDto> filterAlbums(List<Album> albums, AlbumFilterDto filters);
 
 }

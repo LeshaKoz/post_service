@@ -78,8 +78,7 @@ class AlbumControllerTest {
 
     void prepareAlbumFilterDto() {
         albumFilterDto.setTitle("title");
-        albumFilterDto.setCreatedAt(LocalDateTime.now().minusDays(1));
-        albumFilterDto.setCreatedBefore(true);
+        albumFilterDto.setCreatedAtBefore(LocalDateTime.now().minusDays(2));
     }
 
     @Test

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class AlbumFilterDto {
 
     private String title;
-    private LocalDateTime createdAt;
-    private Boolean createdBefore;
+    private LocalDateTime createdAtBefore;
+    private LocalDateTime createdAtAfter;
 
 }
