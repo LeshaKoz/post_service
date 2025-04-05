@@ -8,9 +8,6 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.model.event.NotificationCommentEvent;
 import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
-import faang.school.postservice.service.CommentService;
-import faang.school.postservice.service.PostService;
-import faang.school.postservice.service.ScheduledPostPublisher;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -64,12 +61,6 @@ public class NotificationCommentEventPublisherIT {
 
     @MockBean
     private PostService postService;
-
-    @MockBean
-    private PostService postService;
-
-    @MockBean
-    private CommentService commentService;
 
     private Post post;
     private Comment comment;

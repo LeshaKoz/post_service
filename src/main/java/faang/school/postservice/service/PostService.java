@@ -45,8 +45,7 @@ public class PostService {
                        ThreadPoolTaskExecutor publishingThreadPool,
                        AsyncModerationService asyncModerationService,
                        SpellCheckerService spellCheckerService,
-                       KafkaPostProducer kafkaPostProducer) {
-                       SpellCheckerService spellCheckerService,
+                       KafkaPostProducer kafkaPostProducer,
                        PostCacheService postCacheService) {
         this.postRepository = postRepository;
         this.internalServices = internalServices;
@@ -79,9 +78,6 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         Post result = postRepository.save(post);
         kafkaPostProducer.publishPostCreationEvent(result);
-        return result;
-        Post result = postRepository.save(post);
-
         postCacheService.cachePost(result);
 
         return result;

@@ -375,8 +375,7 @@ public class PostServiceTest {
                 publishingThreadPool,
                 asyncModerationService,
                 spellCheckerService,
-                kafkaPostProducer);
-                spellCheckerService,
+                kafkaPostProducer,
                 postCacheService);
 
         doAnswer(invocation -> {
