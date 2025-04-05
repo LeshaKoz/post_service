@@ -9,6 +9,8 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.integration.redis.util.RedisLockRegistry;
+import org.springframework.integration.support.locks.LockRegistry;
 
 @Configuration
 public class RedisConfig {
@@ -48,5 +50,10 @@ public class RedisConfig {
     @Bean
     ChannelTopic commentEventTopic() {
         return new ChannelTopic(commentEventChannel);
+    }
+
+    @Bean
+    public LockRegistry lockRegistry(RedisConnectionFactory connectionFactory) {
+        return new RedisLockRegistry(connectionFactory, "feed-lock");
     }
 }

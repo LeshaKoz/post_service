@@ -29,6 +29,24 @@ spring:
           comment-channel:
             name: comment_channel_topic
 
+    kafka:
+      bootstrap-servers: localhost:9092
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        properties:
+          spring.json.add.type.headers: false
+      topic:
+        post:
+          name: posts
+          partitions: 10
+          replicas: 1
+      admin:
+        properties:
+          retries: 5
+          retry.backoff.ms: 1000
+      consumer:
+        trusted-packages: faang.school.postservice.event
 
   servlet:
     multipart:
@@ -47,6 +65,9 @@ post:
     scheduler:
       cron: "0 0 0 * * ?"
     max-list-size: 50
+
+feed:
+  max-size: 500
 
 services:
   s3:

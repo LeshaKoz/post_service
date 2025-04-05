@@ -1,12 +1,14 @@
 package faang.school.postservice.exception.handler;
 
 import faang.school.postservice.exception.BusinessException;
-import faang.school.postservice.exception.FileProcessingException;
-import jakarta.persistence.EntityNotFoundException;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.exception.FeedStorageException;
+import faang.school.postservice.exception.FileProcessingException;
+import faang.school.postservice.exception.InvalidPostEventException;
+import faang.school.postservice.exception.SubscriberProcessingException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -27,8 +29,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataValidationException.class)
-    public ResponseEntity<String> handleDataValidationException(DataValidationException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());}
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleDataValidationException(DataValidationException e) {
+        return new ErrorResponse(e.getMessage());
+    }
 
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -51,6 +55,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FileProcessingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleFileProcessingException(FileProcessingException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidPostEventException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidPostEventException(InvalidPostEventException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(FeedStorageException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleFeedStorageException(FeedStorageException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(SubscriberProcessingException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleSubscriberProcessingException(SubscriberProcessingException e) {
         return new ErrorResponse(e.getMessage());
     }
 }

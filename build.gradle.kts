@@ -26,6 +26,14 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     /**
+     * Kafka
+     */
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.integration:spring-integration-redis")
+//    implementation("org.apache.kafka:kafka-streams")
+//    testImplementation("org.springframework.kafka:spring-kafka-test")
+
+    /**
      * Database
      */
     implementation("org.liquibase:liquibase-core")
@@ -63,6 +71,12 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    /**
+     * Swagger
+     */
+    implementation("io.swagger.core.v3:swagger-annotations:2.2.29")
+    implementation ("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 }
 
 tasks.test {
