@@ -8,15 +8,15 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface CommentService {
-    public Mono<Void> moderateComments();
+    Mono<Void> moderateComments();
 
-    public void banUsersForComments();
+    void banUsersForComments();
 
-    public void createComment(CommentRequestDto commentRequestDto);
+    void createComment(CommentRequestDto commentRequestDto);
 
-    public void updateComment(Long id, CommentUpdateDto commentUpdateDto);
+    void updateComment(Long id, CommentUpdateDto commentUpdateDto);
 
-    public List<CommentResponseDto> getCommentsByPostId(Long postId);
+    List<CommentResponseDto> getCommentsByPostId(Long postId);
 
-    public void deleteComment(Long id);
+    void deleteComment(Long id);
 }
