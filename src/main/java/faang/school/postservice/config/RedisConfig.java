@@ -1,5 +1,6 @@
 package faang.school.postservice.config;
 
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Post;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -12,7 +13,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-@ConfigurationProperties(prefix = "spring.redis")
+@ConfigurationProperties(prefix = "spring.data.redis")
 @Setter
 public class RedisConfig {
     private String host;
@@ -26,11 +27,21 @@ public class RedisConfig {
 
     @Bean
     public RedisTemplate<String, Post> redisTemplate() {
-        RedisTemplate<String, Post> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory());
+        return createRedisTemplate(Post.class);
+    }
 
+    @Bean
+    public RedisTemplate<String, UserDto> userDtoRedisTemplate() {
+        return createRedisTemplate(UserDto.class);
+    }
+
+    private <T> RedisTemplate<String, T> createRedisTemplate(Class<T> type) {
+        RedisTemplate<String, T> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());
-        Jackson2JsonRedisSerializer<Post> serializer = new Jackson2JsonRedisSerializer<>(Post.class);
+
+        Jackson2JsonRedisSerializer<T> serializer =
+                new Jackson2JsonRedisSerializer<>(type);
         template.setValueSerializer(serializer);
 
         template.afterPropertiesSet();

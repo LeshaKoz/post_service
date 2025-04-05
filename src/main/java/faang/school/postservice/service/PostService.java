@@ -35,6 +35,7 @@ public class PostService {
     private final AsyncModerationService asyncModerationService;
     private final SpellCheckerService spellCheckerService;
     private final PostCacheService postCacheService;
+    private final UserCashService userCashService;
 
     @Value("${moderation.threadSize}")
     private int threadSize;
@@ -44,13 +45,15 @@ public class PostService {
                        ThreadPoolTaskExecutor publishingThreadPool,
                        AsyncModerationService asyncModerationService,
                        SpellCheckerService spellCheckerService,
-                       PostCacheService postCacheService) {
+                       PostCacheService postCacheService,
+                       UserCashService userCashService) {
         this.postRepository = postRepository;
         this.internalServices = internalServices;
         this.asyncModerationService = asyncModerationService;
         this.executorService = publishingThreadPool.getThreadPoolExecutor();
         this.spellCheckerService = spellCheckerService;
         this.postCacheService = postCacheService;
+        this.userCashService = userCashService;
     }
 
     @Transactional
@@ -76,6 +79,8 @@ public class PostService {
         Post result = postRepository.save(post);
 
         postCacheService.cachePost(result);
+
+        userCashService.cacheUser(result.getAuthorId());
 
         return result;
     }

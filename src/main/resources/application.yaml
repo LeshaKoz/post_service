@@ -162,3 +162,4 @@ app:
   newsfeed:
     cache:
       post-ttl: 24h
+      user-ttl: 24h
