@@ -6,8 +6,11 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.AiModerationService;
 import faang.school.postservice.service.AsyncModerationService;
 import faang.school.postservice.service.InternalServices;
+import faang.school.postservice.service.KafkaPostProducer;
+import faang.school.postservice.service.PostCacheService;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.service.SpellCheckerService;
+import faang.school.postservice.service.UserCashService;
 import faang.school.postservice.validation.ModerationDictionaryValidation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -69,6 +72,15 @@ public class PostServiceTest {
 
     @Mock
     private SpellCheckerService spellCheckerService;
+
+    @Mock
+    private KafkaPostProducer kafkaPostProducer;
+
+    @Mock
+    private PostCacheService postCacheService;
+
+    @Mock
+    private UserCashService userCashService;
 
     @InjectMocks
     private PostService postService;

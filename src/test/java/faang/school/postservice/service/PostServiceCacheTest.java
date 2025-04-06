@@ -50,6 +50,9 @@ public class PostServiceCacheTest {
     @Mock
     private KafkaPostProducer kafkaPostProducer;
 
+    @Mock
+    private UserCashService userCashService;
+
     @InjectMocks
     private PostService postService;
 
