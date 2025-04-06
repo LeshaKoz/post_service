@@ -15,7 +15,8 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.publisher.kafka.KafkaPostProducer;
+import faang.school.postservice.publisher.kafka.KafkaPostCreationProducer;
+import faang.school.postservice.publisher.kafka.KafkaPostDeleteProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
@@ -47,7 +48,8 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
-    private final KafkaPostProducer kafkaPostProducer;
+    private final KafkaPostCreationProducer kafkaPostCreationProducer;
+    private final KafkaPostDeleteProducer kafkaPostDeleteProducer;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -83,7 +85,7 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
 
         Post savedPost = postRepository.save(post);
-        kafkaPostProducer.sendPostPublishedEvent(savedPost);
+        kafkaPostCreationProducer.sendPostPublishedEvent(savedPost);
 
         return postMapper.toDto(postRepository.save(savedPost));
     }
@@ -112,7 +114,9 @@ public class PostService {
             throw new BusinessException("Пост уже удален");
         }
         post.setDeleted(true);
-        return postMapper.toDto(postRepository.save(post));
+        Post saveDeletedPost = postRepository.save(post);
+        kafkaPostDeleteProducer.sendPostDeletedEvent(saveDeletedPost);
+        return postMapper.toDto(saveDeletedPost);
     }
 
     public List<PostReadDto> getAllDrafts(long id, PostOwnerType ownerType) {

@@ -1,7 +1,8 @@
 package faang.school.postservice.config.kafka;
 
 import com.fasterxml.jackson.databind.JsonSerializer;
-import faang.school.postservice.event.PostCreatedEvent;
+import faang.school.postservice.event.post.PostCreatedEvent;
+import faang.school.postservice.event.post.PostDeletedEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,14 +28,26 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, PostCreatedEvent> postEventProducerFactory() {
+    public ProducerFactory<String, PostCreatedEvent> postCreationEventProducerFactory() {
         Map<String, Object> props = baseConfig();
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(props);
     }
 
     @Bean
-    public KafkaTemplate<String, PostCreatedEvent> postEventKafkaTemplate() {
-        return new KafkaTemplate<>(postEventProducerFactory());
+    public ProducerFactory<String, PostDeletedEvent> postDeletionEventProducerFactory() {
+        Map<String, Object> props = baseConfig();
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    @Bean
+    public KafkaTemplate<String, PostCreatedEvent> postCreationEventKafkaTemplate() {
+        return new KafkaTemplate<>(postCreationEventProducerFactory());
+    }
+
+    @Bean
+    public KafkaTemplate<String, PostDeletedEvent> postDeletionEventKafkaTemplate() {
+        return new KafkaTemplate<>(postDeletionEventProducerFactory());
     }
 }
