@@ -21,10 +21,10 @@ public class KafkaPostViewConsumer {
     private final PostRedisRepository postRedisRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Value("${spring.data.kafka.topic.post-views.max-retries:5}")
+    @Value("${spring.data.kafka.topics.PostViewEvent.max-retries:5}")
     private int maxRetries;
 
-    @KafkaListener(topics = "${spring.data.kafka.topic.post-views.name}", groupId = "${spring.data.kafka.group-id}")
+    @KafkaListener(topics = "${spring.data.kafka.topics.PostViewEvent.name}", groupId = "${spring.data.kafka.consumer.group-id}")
     public void consume(PostViewKafkaEvent event, Acknowledgment acknowledgment) {
         log.info("Получено событие просмотра поста: {}", event);
         String redisKey = "post:" + event.getPostId();

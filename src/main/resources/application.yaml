@@ -29,14 +29,19 @@ spring:
         ttl: 21600
     kafka:
       bootstrap-servers: localhost:9092
-      acknowledgement: all
-      group-id: post-service-group
-      partitions: 1
-      replications: 1
-      deserializer-trusted-packages: "java.util,java.lang,faang.school.postservice.event.kafka"
-      topic:
-        post-views:
+
+      consumer:
+        group-id: post-service-group
+        deserializer-trusted-packages: "java.util,java.lang,faang.school.postservice.event.kafka"
+
+      producer:
+        acknowledgement: all
+
+      topics:
+        PostViewEvent:
           name: post-views
+          partitions: 1
+          replications: 1
           max-retries: 5
 
   cloud:

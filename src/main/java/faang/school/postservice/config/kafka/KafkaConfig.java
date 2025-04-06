@@ -1,11 +1,11 @@
 package faang.school.postservice.config.kafka;
 
 import com.fasterxml.jackson.databind.ser.std.StringSerializer;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -20,27 +20,13 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
+@RequiredArgsConstructor
 public class KafkaConfig {
-    @Value(value = "${spring.data.kafka.bootstrap-servers}")
-    private String bootstrapAddress;
-
-    @Value("${spring.data.kafka.topic.post-views.name}")
-    private String postViewTopic;
-
-    @Value("${spring.data.kafka.partitions}")
-    private int numPartitions;
-
-    @Value("${spring.data.kafka.replications}")
-    private short replicationFactor;
-
-    @Value("${spring.data.kafka.group-id}")
-    private String groupId;
-
-    @Value("${spring.data.kafka.deserializer-trusted-packages}")
-    private String deserializerTrustedPackages;
+    private final KafkaConfigProps kafkaProps;
 
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
@@ -48,14 +34,19 @@ public class KafkaConfig {
     }
 
     @Bean
-    public NewTopic postViewTopic() {
-        return new NewTopic(postViewTopic, numPartitions, replicationFactor);
+    public List<NewTopic> topics() {
+        return kafkaProps.getTopics().values().stream()
+                .map(topic -> new NewTopic(
+                        topic.name(),
+                        topic.numPartitions(),
+                        topic.replicationFactor()))
+                .toList();
     }
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
-        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProps.getBootstrapServers());
         return new KafkaAdmin(configs);
     }
 
@@ -64,7 +55,7 @@ public class KafkaConfig {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                bootstrapAddress);
+                kafkaProps.getBootstrapServers());
         configProps.put(
                 ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
                 StringSerializer.class);
@@ -79,10 +70,10 @@ public class KafkaConfig {
         Map<String, Object> props = new HashMap<>();
         props.put(
                 ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                bootstrapAddress);
+                kafkaProps.getBootstrapServers());
         props.put(
                 ConsumerConfig.GROUP_ID_CONFIG,
-                groupId);
+                kafkaProps.getConsumer().getGroupId());
         props.put(
                 ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 JsonDeserializer.class);
@@ -91,7 +82,7 @@ public class KafkaConfig {
                 JsonDeserializer.class);
         props.put(
                 JsonDeserializer.TRUSTED_PACKAGES,
-                deserializerTrustedPackages);
+                kafkaProps.getConsumer().getDeserializerTrustedPackages());
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
