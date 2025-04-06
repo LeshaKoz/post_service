@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class UserBanKafkaPublisher {
+public class UserBanPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Value("${spring.kafka.producer.topics.user-ban}")

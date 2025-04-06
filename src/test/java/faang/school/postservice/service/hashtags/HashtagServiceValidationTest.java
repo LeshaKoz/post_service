@@ -1,4 +1,4 @@
-package faang.school.postservice.hashtags;
+package faang.school.postservice.service.hashtags;
 
 import faang.school.postservice.dto.hashtag.HashtagRequestDto;
 import faang.school.postservice.service.hashtags.HashtagService;

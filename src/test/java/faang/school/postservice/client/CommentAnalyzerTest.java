@@ -1,6 +1,5 @@
-package faang.school.postservice;
+package faang.school.postservice.client;
 
-import faang.school.postservice.client.CommentAnalyzer;
 import faang.school.postservice.dto.commentAnalyzer.request.CommentRequestDto;
 import faang.school.postservice.dto.commentAnalyzer.response.ToxicityScoreDto;
 import faang.school.postservice.exception.CommentAnalyzerException;

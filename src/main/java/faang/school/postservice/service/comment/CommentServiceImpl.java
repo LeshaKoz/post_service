@@ -17,7 +17,7 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.kafka.publisher.UserBanKafkaPublisher;
+import faang.school.postservice.service.kafka.publisher.UserBanPublisher;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -98,7 +98,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final CommentAnalyzer commentAnalyzer;
-    private final UserBanKafkaPublisher userBanKafkaPublisher;
+    private final UserBanPublisher userBanPublisher;
     private final CommentRequestMapper commentRequestMapper;
     private final CommentResponseMapper commentResponseMapper;
     private final UserServiceClient userServiceClient;
@@ -263,7 +263,7 @@ public class CommentServiceImpl implements CommentService {
         unverifiedComments.entrySet()
                 .stream()
                 .filter(entry -> entry.getValue() >= userBanThreshold)
-                .forEach(entry -> userBanKafkaPublisher.publish(entry.getKey()));
+                .forEach(entry -> userBanPublisher.publish(entry.getKey()));
     }
 
     private Mono<Void> moderateComment(Comment comment) {
