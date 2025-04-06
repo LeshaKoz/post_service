@@ -18,6 +18,7 @@ import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
+import faang.school.postservice.service.cache.CacheService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,7 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
+    private final CacheService cacheService;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -79,7 +81,11 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        return postMapper.toDto(postRepository.save(post));
+
+        PostReadDto postPublished = postMapper.toDto(postRepository.save(post));
+        cacheService.savePost(postPublished);
+
+        return postPublished;
     }
 
     public PostReadDto updatePost(long id, PostUpdateDto dto) {

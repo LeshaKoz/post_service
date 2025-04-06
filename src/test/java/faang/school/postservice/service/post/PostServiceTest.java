@@ -20,6 +20,7 @@ import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.GrammarService;
 import faang.school.postservice.service.HashtagService;
 import faang.school.postservice.service.PaginationService;
+import faang.school.postservice.service.cache.CacheService;
 import faang.school.postservice.service.s3.S3Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -83,6 +85,8 @@ public class PostServiceTest {
     private ResourceRepository resourceRepository;
     @Mock
     private PostImageService postImageService;
+    @Mock
+    private CacheService cacheService;
     private Post post;
 
     @BeforeEach
