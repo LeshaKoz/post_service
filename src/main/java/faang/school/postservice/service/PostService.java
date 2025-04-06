@@ -11,9 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -29,19 +28,18 @@ public class PostService {
     private int batchSize;
 
     @Transactional
-    public List<Post> getUnverifiedPosts() {
-        return postRepository.findByVerifiedAtIsNull();
-    }
-
-    @Transactional
-    public void moderatePosts(List<Post> posts) {
-        posts.forEach(post -> {
-            boolean hasBadWords = moderationDictionary.containsBadWord(post.getContent());
-            post.setVerified(!hasBadWords);
-            post.setVerifiedAt(LocalDateTime.now());
-            logModerationResult(post, hasBadWords);
+    public void moderateAllUnverifiedPosts() {
+        List<Post> unverifiedPosts = postRepository.findByVerifiedAtIsNull();
+        List<List<Post>> batches = partitionList(unverifiedPosts, batchSize);
+        batches.forEach(batch -> {
+            batch.forEach(post -> {
+                boolean hasBadWords = moderationDictionary.containsBadWord(post.getContent());
+                post.setVerified(!hasBadWords);
+                post.setVerifiedAt(LocalDateTime.now());
+                logModerationResult(post, hasBadWords);
+            });
+            postRepository.saveAll(batch);
         });
-        postRepository.saveAll(posts);
     }
 
     private void logModerationResult(Post post, boolean hasBadWords) {
@@ -54,18 +52,13 @@ public class PostService {
         }
     }
 
-    public void moderateAllUnverifiedPosts() {
-        List<Post> unverifiedPosts = getUnverifiedPosts();
-
-        List<List<Post>> batches = partitionList(unverifiedPosts, batchSize);
-
-        batches.parallelStream().forEach(this::moderatePosts);
-    }
-
     private <T> List<List<T>> partitionList(List<T> list, int batchSize) {
-        return IntStream.range(0, (list.size() + batchSize - 1) / batchSize)
-                .mapToObj(i -> list.subList(i * batchSize, Math.min((i + 1) * batchSize, list.size())))
-                .collect(Collectors.toList());
+        List<List<T>> partitions = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, list.size());
+            partitions.add(list.subList(i, end));
+        }
+        return partitions;
     }
 
     public Post getPost(Long postId) {
