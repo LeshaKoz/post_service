@@ -16,6 +16,7 @@ import faang.school.postservice.model.AlbumVisibility;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.AlbumRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.validator.album.AlbumValidator;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -61,12 +63,15 @@ class AlbumServiceImplTest {
     private PostRepository postRepository;
     @Mock
     private UserServiceClient userServiceClient;
+    @Mock
+    private AlbumValidator albumValidator;
     @Spy
     private AlbumMapperImpl albumMapper;
 
     @Captor
     private ArgumentCaptor<Album> albumCaptor;
 
+    @InjectMocks
     private AlbumServiceImpl albumService;
 
     private final Long userId = 1L;
@@ -106,10 +111,19 @@ class AlbumServiceImplTest {
     public void init() {
         when(allUsersFilter.getAlbumVisibility()).thenReturn(AlbumVisibility.PUBLIC);
         when(followersFilter.getAlbumVisibility()).thenReturn(AlbumVisibility.FOLLOWERS);
-        albumService = new AlbumServiceImpl(userServiceClient, albumMapper, postRepository,
-                albumRepository, userContext, List.of(allUsersFilter, followersFilter),
-                List.of(mockFilter)
+
+        albumService = new AlbumServiceImpl(
+                albumRepository,
+                userContext,
+                List.of(allUsersFilter, followersFilter),
+                userServiceClient,
+                albumMapper,
+                postRepository,
+                List.of(mockFilter),
+                albumValidator
         );
+
+        albumService.initAlbumVisibilities();
     }
 
     @Nested

@@ -6,13 +6,13 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Post;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
-@UtilityClass
+@Component
 public class AlbumValidator {
 
     private static final String ALBUM_TITLE_IS_BLANK = "Album title mustn't be empty";
