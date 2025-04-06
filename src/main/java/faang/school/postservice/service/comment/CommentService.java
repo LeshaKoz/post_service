@@ -3,6 +3,7 @@ package faang.school.postservice.service.comment;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
+import faang.school.postservice.event.comment.CommentEvent;
 import faang.school.postservice.event.comment.CommentEventType;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.DataValidationException;
@@ -11,10 +12,12 @@ import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.File;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.comment.CommentCreateMessagePublisher;
+import faang.school.postservice.publisher.kafka.comment.CommentEventPublisher;
+import faang.school.postservice.publisher.redis.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.FileRepository;
 import faang.school.postservice.service.UserService;
+import faang.school.postservice.service.cache.RedisCacheService;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,9 @@ public class CommentService {
     private final S3Service s3Service;
     private final FileRepository fileRepository;
     private final CommentCreateMessagePublisher commentCreateMessagePublisher;
+    private final CommentEventPublisher commentEventPublisher;
+    private final RedisCacheService redisCacheService;
+
     @Value("${services.s3.max_image_size}")
     private int maxImageSize;
 
@@ -47,7 +53,11 @@ public class CommentService {
                 commentMapper.toEvent(newComment, CommentEventType.CREATE)
         );
 
-        return commentMapper.toDto(newComment);
+        CommentReadDto commentReadDto = commentMapper.toDto(newComment);
+        redisCacheService.saveAuthorComment(commentReadDto);
+        publishCreatedComment(commentReadDto);
+
+        return commentReadDto;
     }
 
     public CommentReadDto update(CommentUpdateDto updateDto) {
@@ -101,6 +111,17 @@ public class CommentService {
     public Comment getCommentById(long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Комментария с ID " + commentId + " не найден"));
+    }
+
+    private void publishCreatedComment(CommentReadDto dto) {
+        commentEventPublisher.publish(CommentEvent.builder()
+                .commentId(dto.id())
+                .comment(dto.content())
+                .userId(dto.authorId())
+                .postId(dto.postId())
+                .eventType(CommentEventType.CREATE)
+                .createdAt(dto.updatedAt())
+                .build());
     }
 
     private void validateEditorAndAuthorEquality(long editorId, long authorId) {

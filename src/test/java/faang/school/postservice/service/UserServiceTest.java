@@ -27,7 +27,11 @@ public class UserServiceTest {
 
     @Test
     public void testUserExist() {
-        Mockito.when(userServiceClient.getUser(ID)).thenReturn(new UserDto(ID, "Alex", "email"));
+        Mockito.when(userServiceClient.getUser(ID)).thenReturn(UserDto.builder()
+                .id(ID)
+                .username("Alex")
+                .email("email")
+                .build());
 
         assertDoesNotThrow(() -> userService.getUserDtoById(ID));
     }

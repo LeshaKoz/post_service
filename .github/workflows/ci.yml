@@ -3,7 +3,7 @@ name: CI PipeLine
 on:
   pull_request:
     branches:
-      - phoenix-master-stream8
+      - phoenix-master-stream8-aleksandr-k
 
 jobs:
   test:
@@ -12,11 +12,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: SetUp JDK
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'oracle'
-          java-version: 17
+          java-version: '17'
+          distribution: 'temurin'
 
       - name: Run tests
         run: ./gradlew test --stacktrace

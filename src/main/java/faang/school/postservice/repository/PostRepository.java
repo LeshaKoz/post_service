@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -70,4 +71,16 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p JOIN p.hashtags h WHERE h.id = :hashtagId")
     List<Post> findAllByHashtagId(long hashtagId);
+
+    @Query("""
+        SELECT p FROM Post p
+        WHERE p.published = true
+        AND p.deleted = false
+        AND p.authorId IN :authorIds
+        AND (:lastPostId IS NULL OR p.id < :lastPostId)
+        ORDER BY p.id DESC
+        """)
+    List<Post> findPostsByAuthorIds(@Param("authorIds") List<Long> authorIds,
+                                   @Param("lastPostId") Long lastPostId,
+                                   Pageable pageable);
 }

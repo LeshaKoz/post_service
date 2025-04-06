@@ -17,14 +17,81 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
+  kafka:
+    bootstrap-servers: "localhost:9092"
+    pool-size: 3
+
+    consumer:
+      group-id: "group"
+      auto-offset-reset: earliest
+      deserializer-trusted-packages: "java.util,java.lang,faang.school.postservice.event"
+
+    producer:
+      acks: 1
+      retries: 3
+
+    topics:
+      PostViewEvent:
+        name: post_views
+        num-partitions: 6
+        replication-factor: 3
+      PostEvent:
+        name: posts
+        num-partitions: 6
+        replication-factor: 3
+      CommentEvent:
+        name: comments
+        num-partitions: 6
+        replication-factor: 3
+      LikeEvent:
+        name: likes
+        num-partitions: 6
+        replication-factor: 3
+      FeedEvent:
+        name: feed_heater
+        num-partitions: 6
+        replication-factor: 3
+
+  cache:
+    type: redis
+    time-to-live: 86400
+
   data:
     redis:
       port: 6379
       host: localhost
+
+      feed-cache:
+        batch-size: 20
+        max-feed-size: 500
+        key: "feed:"
+        number-of-users-on-page: 3
+        default-post-id: 1
+        partition-size: 30
+
+      post-cache:
+        comments-in-post: 3
+
       channels:
         calculations: calculations_channel
         comment_create: comment_create_channel
         likes: likes_channel
+
+      redisson-client:
+        name-version: version
+        key-for-version: versionedKey
+        start-num-for-version: 1
+        lock-cache-post: "lock:cachePost:"
+
+      zset:
+        range:
+          remove:
+           start:
+            index: 0
+           end:
+            index: 0
+          offset:
+            index: 1
 
   cloud:
     openfeign:
@@ -123,8 +190,8 @@ ad:
 task:
   execution:
     pool:
-      core-size: 4
-      max-size: 8
+      core-size: 24
+      max-size: 48
       keep-alive: 60
 
 ---

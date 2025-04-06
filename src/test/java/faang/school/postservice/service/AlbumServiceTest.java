@@ -87,7 +87,10 @@ public class AlbumServiceTest {
         filterDto = new AlbumFilterDto();
         filterDto.setTitlePattern("Title");
 
-        userDto = new UserDto(USER_ID, "Den", "email");
+        userDto = UserDto.builder().id(USER_ID)
+                .username("Den")
+                .email("email")
+                .build();
 
         userServiceClient = mock(UserServiceClient.class);
         albumRepository = mock(AlbumRepository.class);

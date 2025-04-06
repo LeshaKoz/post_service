@@ -8,6 +8,10 @@ import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
+import faang.school.postservice.dto.post.PostViewDto;
+import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.event.post.PostEvent;
+import faang.school.postservice.event.post.PostViewEvent;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -15,13 +19,17 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.publisher.kafka.post.PostEventPublisher;
+import faang.school.postservice.publisher.kafka.post.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.service.HashtagService;
+import faang.school.postservice.service.cache.RedisCacheService;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,6 +54,9 @@ public class PostService {
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
     private final PostImageService postImageService;
+    private final PostEventPublisher postEventPublisher;
+    private final PostViewEventPublisher postViewEventPublisher;
+    private final RedisCacheService redisCacheService;
 
     @Value("${post.schedule.batch-size}")
     private int batchSize;
@@ -79,7 +90,14 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        return postMapper.toDto(postRepository.save(post));
+
+        PostReadDto publishedPost = postMapper.toDto(postRepository.save(post));
+
+        redisCacheService.savePost(publishedPost);
+        redisCacheService.saveAuthorPost(publishedPost);
+        publishCreatedEvent(publishedPost);
+
+        return publishedPost;
     }
 
     public PostReadDto updatePost(long id, PostUpdateDto dto) {
@@ -140,6 +158,16 @@ public class PostService {
                 .toList();
     }
 
+    public List<PostReadDto> getPostsByAuthorIds(List<Long> authorIds,
+                                                 long startPostId,
+                                                 int batchSize) {
+        List<Post> posts = postRepository
+                .findPostsByAuthorIds(authorIds, startPostId, PageRequest.of(0, batchSize));
+        return posts.stream()
+                .map(postMapper::toDto)
+                .toList();
+    }
+
     public PostReadDto uploadImages(long postId, List<MultipartFile> images) {
         Post post = getPostById(postId);
         validateImageUpload(images, post.getResources().size());
@@ -178,6 +206,26 @@ public class PostService {
         } catch (IOException e) {
             throw new RuntimeException("Ошибка загрузки файла: " + e.getMessage());
         }
+    }
+
+    private void publishCreatedEvent(PostReadDto postReadDto) {
+        UserDto author = userServiceClient.getUser(postReadDto.getAuthorId());
+        PostEvent event = PostEvent.builder()
+                .postId(postReadDto.getId())
+                .authorId(postReadDto.getAuthorId())
+                .subscriberIds(author.subscriberIds())
+                .build();
+        postEventPublisher.publish(event);
+    }
+
+    private void publishViewedPostEvent(PostViewDto postViewDto) {
+        PostViewEvent event = PostViewEvent.builder()
+                .postId(postViewDto.getId())
+                .authorId(postViewDto.getAuthorId())
+                .viewerId(postViewDto.getViewerId())
+                .viewedAt(postViewDto.getViewedAt())
+                .build();
+        postViewEventPublisher.publish(event);
     }
 
     private long getMaxFileSizeBytes() {

@@ -7,8 +7,10 @@ import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.comment.CommentCreateMessagePublisher;
+import faang.school.postservice.publisher.kafka.comment.CommentEventPublisher;
+import faang.school.postservice.publisher.redis.comment.CommentCreateMessagePublisher;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.cache.RedisCacheService;
 import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.service.post.PostService;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
@@ -48,6 +52,12 @@ public class CommentServiceTest {
     @Mock
     private PostService postService;
 
+    @Mock
+    private CommentEventPublisher commentEventPublisher;
+
+    @Mock
+    private RedisCacheService redisCacheService;
+
     @InjectMocks
     private CommentService commentService;
 
@@ -61,12 +71,15 @@ public class CommentServiceTest {
                 .deleted(false)
                 .build();
 
+        when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
         Mockito.when(postService.getPostById(POST_ID)).thenReturn(post);
 
         commentService.create(createDto);
-        Mockito.verify(commentRepository, Mockito.times(1)).save(Mockito.any());
+
+        Mockito.verify(commentRepository, Mockito.times(1)).save(any());
         Mockito.verify(commentCreateMessagePublisher, Mockito.times(1))
-                .publish(Mockito.any());
+                .publish(any());
+        Mockito.verify(commentEventPublisher).publish(any());
     }
 
     @Test

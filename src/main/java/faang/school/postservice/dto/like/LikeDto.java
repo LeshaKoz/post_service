@@ -11,6 +11,7 @@ public record LikeDto(
         @NotNull(message = "ID пользователя не должно быть null")
         @Positive
         Long userId,
+        Long likeId,
         Long commentId,
         Long postId) {
 }

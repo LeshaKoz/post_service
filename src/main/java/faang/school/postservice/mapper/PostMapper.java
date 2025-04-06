@@ -3,8 +3,11 @@ package faang.school.postservice.mapper;
 import faang.school.postservice.dto.post.PostCreateDto;
 import faang.school.postservice.dto.post.PostReadDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
+import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Hashtag;
+import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.cache.PostCache;
 import faang.school.postservice.utils.StringUtils;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Condition;
@@ -17,9 +20,12 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostMapper {
@@ -55,4 +61,59 @@ public interface PostMapper {
     default boolean isNotNull(LocalDateTime value) {
         return value != null;
     }
+
+    @Mapping(source = "id", target = "postId")
+    @Mapping(source = "authorId", target = "authorId")
+    @Mapping(source = "content", target = "content")
+    @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapLikesToLikeIds")
+    @Mapping(source = "likes", target = "numLikes", qualifiedByName = "mapLikesToNumLikes")
+    @Mapping(source = "comments", target = "comments", qualifiedByName = "mapComments")
+    @Mapping(target = "numViews", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    PostCache toPostCache(Post entity);
+
+    @Named("mapLikesToLikeIds")
+    default List<Long> mapLikesToLikeIds(List<Like> likes) {
+        return (likes == null) ? new ArrayList<>() :
+                likes.stream()
+                        .map(Like::getId)
+                        .toList();
+    }
+
+    @Named("mapLikesToNumLikes")
+    default long mapLikesToNumLikes(List<Like> likes) {
+        return (likes == null) ? 0L : likes.size();
+    }
+
+    @Named("mapComments")
+    default LinkedHashSet<String> mapComments(List<Comment> comments) {
+        return (comments == null) ? new LinkedHashSet<>() :
+                comments.stream()
+                        .map(Comment::getContent)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    @Mapping(source = "postId", target = "id")
+    @Mapping(target = "published", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "publishedAt", ignore = true)
+    @Mapping(target = "scheduledAt", ignore = true)
+    @Mapping(target = "hashtagIds", ignore = true)
+    @Mapping(target = "fileKeys", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(source = "likeIds", target = "likesCount", qualifiedByName = "likesSize")
+    PostReadDto toPostReadDto(PostCache postCache);
+
+    @Named("likesSize")
+    default Integer likesSize(List<Long> likes) {
+        return (likes != null) ? likes.size() : 0;
+    }
+
+    @Mapping(source = "id", target = "postId")
+    @Mapping(source = "likesCount", target = "numLikes")
+    @Mapping(target = "likeIds", ignore = true)
+    @Mapping(target = "comments", ignore = true)
+    @Mapping(target = "numViews", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    PostCache toPostCache(PostReadDto postReadDto);
 }

@@ -6,7 +6,8 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.LikeMapperImpl;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.like.LikeEventPublisher;
+import faang.school.postservice.publisher.kafka.like.KafkaLikeEventPublisher;
+import faang.school.postservice.publisher.redis.like.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.service.validator.LikeValidator;
@@ -45,6 +46,8 @@ public class LikeServiceTest {
     private LikeValidator likeValidator;
     @Mock
     private LikeMapperImpl likeMapperImpl;
+    @Mock
+    private KafkaLikeEventPublisher kafkaLikeEventPublisher;
     @InjectMocks
     private LikeService likeService;
 
@@ -57,7 +60,7 @@ public class LikeServiceTest {
 
     @BeforeEach
     public void init() {
-        likeDtoPost = LikeDto.builder().postId(1L).userId(1L).build();
+        likeDtoPost = LikeDto.builder().likeId(1L).postId(1L).userId(1L).build();
         likeDtoComment = LikeDto.builder().commentId(1L).userId(1L).build();
 
         userDto = UserDto.builder()
