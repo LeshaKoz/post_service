@@ -25,6 +25,24 @@ spring:
         calculations: calculations_channel
         comment_create: comment_create_channel
         likes: likes_channel
+      cache:
+        ttl: 21600
+    kafka:
+      bootstrap-servers: localhost:9092
+
+      consumer:
+        group-id: post-service-group
+        deserializer-trusted-packages: "java.util,java.lang,faang.school.postservice.event.kafka"
+
+      producer:
+        acknowledgement: all
+
+      topics:
+        postView:
+          name: post-views
+          partitions: 1
+          replications: 1
+          max-retries: 5
 
     kafka:
       bootstrap-servers: localhost:9092
