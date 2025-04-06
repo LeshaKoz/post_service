@@ -1,0 +1,53 @@
+package faang.school.postservice.service.file.implementations;
+
+import faang.school.postservice.service.file.interfaces.ImageCompressionService;
+import net.coobird.thumbnailator.Thumbnails;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Objects;
+
+@Service
+public class ImageCompressionServiceImpl implements ImageCompressionService {
+    @Value("${file-upload.post.image-size-limits.square.max-length}")
+    private int maxSquareLength;
+
+    @Value("${file-upload.post.image-size-limits.rectangular.max-long-side-length}")
+    private int maxRectangularLongSideLength;
+
+    @Value("${file-upload.post.image-size-limits.rectangular.max-short-side-length}")
+    private int maxRectangularShortSideLength;
+
+    @Override
+    public byte[] compressImage(byte[] data, String extension) throws IOException {
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(data));
+        if (Objects.isNull(image)) {
+            throw new IOException("Failed to read the image from the byte array");
+        }
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int maxWidth, maxHeight;
+        if (width != height) {
+            maxWidth = width > height ? maxRectangularLongSideLength : maxRectangularShortSideLength;
+            maxHeight = width > height ? maxRectangularShortSideLength : maxRectangularLongSideLength;
+        } else {
+            maxWidth = maxSquareLength;
+            maxHeight = maxSquareLength;
+        }
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        if (width > maxWidth || height > maxHeight) {
+            Thumbnails.of(image)
+                    .size(maxWidth, maxHeight)
+                    .outputFormat(extension)
+                    .toOutputStream(outputStream);
+        } else {
+            return data;
+        }
+        return outputStream.toByteArray();
+    }
+}

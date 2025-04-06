@@ -1,32 +1,44 @@
 package faang.school.postservice.controller.post;
 
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.file.FileMetaData;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post_file.PostFileDto;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.service.post.interfaces.PostService;
+import faang.school.postservice.service.post_file.interfaces.PostFileService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PostController.class)
 class PostControllerTest {
-
     @Autowired
     private MockMvc mockMvc;
 
@@ -34,7 +46,33 @@ class PostControllerTest {
     private PostService postService;
 
     @MockBean
+    private PostFileService postFileService;
+
+    @MockBean
     private UserContext userContext;
+
+    private Post testPost;
+    private PostFileDto testPostFileDto;
+    private FileMetaData testFileMetaData;
+    private static final long USER_ID = 1L;
+    private static final String USER_ID_HEADER = "x-user-id";
+
+    @BeforeEach
+    void setUp() {
+        testPost = new Post();
+        testPost.setId(1L);
+
+        testPostFileDto = new PostFileDto();
+        testPostFileDto.setId(1L);
+        testPostFileDto.setName("test.txt");
+
+        testFileMetaData = FileMetaData.builder()
+                .data("test content".getBytes())
+                .originalName("test.txt")
+                .type("text")
+                .extension("txt")
+                .build();
+    }
 
     @Test
     public void testCreatePostDraft_Success() throws Exception {
@@ -325,5 +363,97 @@ class PostControllerTest {
                 .andExpect(content().string("ID must be greater than zero"));
 
         verify(postService, never()).getProjectPublishedPosts(any(PostDto.class));
+    }
+
+    @Test
+    void testUploadFilesToPostSuccessfully() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "files",
+                "test.txt",
+                "text/plain",
+                "test content".getBytes()
+        );
+
+        doNothing().when(postFileService).uploadFilesToPost(anyLong(), any());
+
+        mockMvc.perform(multipart("/post-service/posts/1/files")
+                        .file(file)
+                        .header(USER_ID_HEADER, USER_ID)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void testUploadFilesToPost_whenFilesAreEmpty() throws Exception {
+        mockMvc.perform(multipart("/post-service/posts/1/files")
+                        .header(USER_ID_HEADER, USER_ID)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testGetPostFilesInfoSuccessfully() throws Exception {
+        List<PostFileDto> files = Collections.singletonList(testPostFileDto);
+        when(postFileService.getPostFilesInfo(1L)).thenReturn(files);
+
+        mockMvc.perform(get("/post-service/posts/1/files")
+                        .header(USER_ID_HEADER, USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].name").value("test.txt"));
+    }
+
+    @Test
+    void testGetPostFilesInfo_whenListIsEmpty() throws Exception {
+        when(postFileService.getPostFilesInfo(1L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/post-service/posts/1/files")
+                        .header(USER_ID_HEADER, USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void testDeletePostFileSuccessfully() throws Exception {
+        doNothing().when(postFileService).deletePostFile(1L, 1L);
+
+        mockMvc.perform(delete("/post-service/posts/1/files/1")
+                        .header(USER_ID_HEADER, USER_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testDownloadPostFileSuccessfully() throws Exception {
+        when(postFileService.downloadFile(1L, 1L)).thenReturn(testFileMetaData);
+
+        mockMvc.perform(get("/post-service/posts/1/files/1")
+                .header(USER_ID_HEADER, USER_ID))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "text/txt"))
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=\"test.txt\""))
+                .andExpect(content().bytes("test content".getBytes()));
+    }
+
+    @Test
+    void testDownloadPostFile_whenTypeIsAbsent() throws Exception {
+        FileMetaData noTypeMetaData = FileMetaData.builder()
+                .data("test content".getBytes())
+                .originalName("test.txt")
+                .build();
+        when(postFileService.downloadFile(1L, 1L)).thenReturn(noTypeMetaData);
+
+        mockMvc.perform(get("/post-service/posts/1/files/1")
+                .header(USER_ID_HEADER, USER_ID))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type",
+                        MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=\"test.txt\""))
+                .andExpect(content().bytes("test content".getBytes()));
     }
 }

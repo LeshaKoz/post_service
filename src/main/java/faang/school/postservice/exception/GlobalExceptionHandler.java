@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity<String> handlePostNotFoundException(PostNotFoundException e) {
-        log.warn("Find post error: {}", e.getMessage());
+        log.warn("Post error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
@@ -29,8 +29,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CommentNotFoundException.class)
     public ResponseEntity<String> handleCommentNotFoundException(CommentNotFoundException e) {
-        log.warn("Find comment error: {}", e.getMessage());
+        log.warn("Comment error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(PostDtoValidationException.class)
+    public ResponseEntity<String> handleValidationException(PostDtoValidationException e) {
+        log.warn("Post dto validation exception: {}", e.getMessage());
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
 
     @ExceptionHandler(CommentIdMismatchException.class)
@@ -47,13 +53,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(LikeNotFoundException.class)
     public ResponseEntity<String> handleLikeNotFoundException(LikeNotFoundException e) {
-        log.warn("Find like error: {}", e.getMessage());
+        log.warn("Like error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
-
-    @ExceptionHandler(PostDtoValidationException.class)
-    public ResponseEntity<String> handleValidationException(PostDtoValidationException e) {
-        log.warn("Post dto validation exception: {}", e.getMessage());
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
 }
+

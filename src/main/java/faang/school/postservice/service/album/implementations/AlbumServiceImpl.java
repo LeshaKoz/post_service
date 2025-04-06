@@ -49,7 +49,7 @@ public class AlbumServiceImpl implements AlbumService {
         long userId = userContext.getUserId();
         Album album = getAlbum(albumId);
         albumValidator.validateAuthor(album, userId);
-        Post post = postService.getPost(postId);
+        Post post = postService.getPostById(postId);
         album.addPost(post);
         Album savedAlbum = albumRepository.save(album);
         return albumMapper.toDtoList(savedAlbum);
